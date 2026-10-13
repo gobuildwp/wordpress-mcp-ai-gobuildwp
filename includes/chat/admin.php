@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: the admin screen — menu entry, assets, and page render.
+ * GoBuildWP Chat: the admin screen — menu entry, assets, and page render.
  */
 
 if (!defined('ABSPATH')) {
@@ -102,7 +102,7 @@ function wppilot_render_chat_page(): void
     wppilot_render_admin_header(legend: __('Chat', domain: 'wppilot'));
     ?>
     <div class="wrap wppilot-chat-wrap">
-        <h1 class="screen-reader-text"><?php esc_html_e('WPPilot Chat', domain: 'wppilot'); ?></h1>
+        <h1 class="screen-reader-text"><?php esc_html_e('GoBuildWP Chat', domain: 'wppilot'); ?></h1>
         <?php wppilot_chat_render_usage_meter(get_current_user_id()); ?>
         <div id="wppilot-chat-root"></div>
         <?php wppilot_render_chat_gutenberg_finalizer_runtime(); ?>

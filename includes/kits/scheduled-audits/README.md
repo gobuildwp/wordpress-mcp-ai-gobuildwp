@@ -24,7 +24,7 @@ every audit passes the host's controls and its own permission check, as the rout
 administrator: WP-Cron runs as nobody.
 
 <!-- kit-export:omit -->
-Inside WPPilot those controls are the whole gate pipeline: safety profile, Abilities Hub and every
+Inside GoBuildWP those controls are the whole gate pipeline: safety profile, Abilities Hub and every
 `wppilot_pre_ability_execute` control.
 <!-- /kit-export:omit -->
 
@@ -64,9 +64,9 @@ runs the same stored routines on this site. The kit then does not load (the stri
 reason), because two copies would both answer every tick. Standalone it is always null.
 
 <!-- kit-export:omit -->
-## Inside WPPilot
+## Inside GoBuildWP
 
-The names above are the ones WPPilot Pro 1.10.0's `routines` kit used, kept so routines a site
+The names above are the ones GoBuildWP Pro 1.10.0's `routines` kit used, kept so routines a site
 already has keep running, reporting and undoing once Free carries them. Pro 1.10.0 boots its own
 copy early (`WPPilot\Pro\Kits\register_routines` on `plugins_loaded` 25); while that hook is
 there, `includes/admin/routines.php` answers `routines-elsewhere` and this kit stands aside. The

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit();
 }
 
-// WPPilot Pro 1.10.0 registers this name itself, earlier in the same hook; its copy then answers.
+// GoBuildWP Pro 1.10.0 registers this name itself, earlier in the same hook; its copy then answers.
 if (Runtime\unclaimed('wppilot/security-plugin-status')) {
     wp_register_ability('wppilot/security-plugin-status', [
         'label' => __('Security Plugin Status', domain: 'wppilot'),

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 
 /*
  * Order and customer reads. Personal data: gated on manage_woocommerce as well as the host's
- * own check. Each registers only while WPPilot Pro 1.10.0 has not registered its own copy.
+ * own check. Each registers only while GoBuildWP Pro 1.10.0 has not registered its own copy.
  */
 
 if (Runtime\unclaimed('wppilot/woocommerce-list-orders')) {

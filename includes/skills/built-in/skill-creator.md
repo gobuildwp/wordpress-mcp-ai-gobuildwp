@@ -1,19 +1,19 @@
 ---
 name: skill-creator
-description: Guidance for creating and refining WPPilot skills — the single-document markdown skills stored in WordPress that turn the agent into a specialist for a recurring task. Use when the user asks to "create a skill", "make a skill", "add a skill for X", "refine this skill", or wants to extend the agent with reusable WordPress-specific procedural knowledge.
+description: Guidance for creating and refining GoBuildWP skills — the single-document markdown skills stored in WordPress that turn the agent into a specialist for a recurring task. Use when the user asks to "create a skill", "make a skill", "add a skill for X", "refine this skill", or wants to extend the agent with reusable WordPress-specific procedural knowledge.
 enable_prompt: true
 enable_agentic: true
 ---
 
 # Skill Creator
 
-Guidance for creating effective WPPilot skills.
+Guidance for creating effective GoBuildWP skills.
 
-## What a WPPilot Skill Is
+## What a GoBuildWP Skill Is
 
-A WPPilot skill is a single Markdown document — frontmatter plus body — stored in the WordPress database. When its `description` matches the user's request, the agent loads the body and gains specialized procedural knowledge for the task.
+A GoBuildWP skill is a single Markdown document — frontmatter plus body — stored in the WordPress database. When its `description` matches the user's request, the agent loads the body and gains specialized procedural knowledge for the task.
 
-Unlike file-based skills in other systems, **WPPilot skills are flat**: no bundled `scripts/`, `references/`, or `assets/` directories. Everything the agent needs must live in the single body. The body has a 1 MB hard limit but should usually stay well under 5,000 words.
+Unlike file-based skills in other systems, **GoBuildWP skills are flat**: no bundled `scripts/`, `references/`, or `assets/` directories. Everything the agent needs must live in the single body. The body has a 1 MB hard limit but should usually stay well under 5,000 words.
 
 ### Anatomy
 
@@ -53,7 +53,7 @@ The `description` is the only thing the agent reads to decide whether to load a 
 
 ## Creating a Skill
 
-Use the WPPilot MCP abilities — there is no filesystem step, no init script, no packaging.
+Use the GoBuildWP MCP abilities — there is no filesystem step, no init script, no packaging.
 
 | Goal                         | Ability                  |
 | ---------------------------- | ------------------------ |
@@ -65,7 +65,7 @@ Use the WPPilot MCP abilities — there is no filesystem step, no init script, n
 ### Workflow
 
 1. **Understand the task by example.** Before writing anything, ask the user for 1–3 concrete examples of requests this skill should handle and what the agent should do. ("Show me a message that would trigger this skill.")
-2. **Identify what belongs in the body.** Focus on procedural knowledge the agent cannot derive from inspecting the site: business rules, naming conventions, content style, schema quirks, preferred ordering of fragile operations, specific WPPilot abilities to call. That — and only that — goes in the body.
+2. **Identify what belongs in the body.** Focus on procedural knowledge the agent cannot derive from inspecting the site: business rules, naming conventions, content style, schema quirks, preferred ordering of fragile operations, specific GoBuildWP abilities to call. That — and only that — goes in the body.
 3. **Write the skill.** Call `wppilot/skill-write` with `title`, `description`, and `content`. Leave `on_conflict` at its default (`"fail"`) unless the user has confirmed replacement.
 4. **Verify it round-trips.** Call `wppilot/skill-get` with the returned slug and review the rendered SKILL.md.
 5. **Iterate.** After the user tries the skill, ask what was unclear, wrong, or over-explained, then patch the changed fields with `wppilot/skill-edit`.
@@ -95,7 +95,7 @@ A skill needs a non-empty `description` AND `content` to be discoverable in eith
 - Step-by-step procedures for fragile or multi-step operations.
 - Concrete examples of input → expected output.
 - Templates the agent should reuse verbatim.
-- Pointers to specific WPPilot abilities to call for this task (e.g., "use `wppilot/execute-php` to run …", "use `wppilot/run-wp-cli` for the rewrite").
+- Pointers to specific GoBuildWP abilities to call for this task (e.g., "use `wppilot/execute-php` to run …", "use `wppilot/run-wp-cli` for the rewrite").
 
 ### Exclude
 

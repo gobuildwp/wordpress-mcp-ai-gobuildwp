@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -206,5 +206,17 @@ final class SiteKitSharingTest extends TestCase
         $error = S\restore(['snapshot' => ['type' => S\STRATEGY, 'options' => ['googlesitekit_dashboard_sharing' => ['absent' => true]]]]);
         self::assertInstanceOf(WP_Error::class, $error);
         self::assertSame('kit_rollback_invalid', $error->get_error_code());
+    }
+
+    public function testADamagedSecondRowLeavesBothCurrentOptionsUntouched(): void
+    {
+        Store::$rows[S\SHARING_OPTION] = ['analytics-4' => ['sharedRoles' => ['administrator']]];
+        Store::$rows[S\PSI_SETTINGS_OPTION] = ['ownerID' => 7];
+        $before = Store::$rows;
+        foreach (['damaged', ['absent' => false]] as $broken) {
+            $error = S\restore(['options' => [S\SHARING_OPTION => ['absent' => true], S\PSI_SETTINGS_OPTION => $broken]]);
+            self::assertInstanceOf(WP_Error::class, $error);
+            self::assertSame($before, Store::$rows);
+        }
     }
 }

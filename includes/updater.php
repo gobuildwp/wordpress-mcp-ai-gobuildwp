@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,7 +8,7 @@ declare(strict_types=1);
 /**
  * Self-hosted plugin update checker.
  *
- * Checks https://wppilot.co/api/wppilot/info for new versions
+ * Checks https://gobuildwp.com/api/wppilot/info for new versions
  * and injects update data into the WordPress update system.
  */
 
@@ -163,7 +163,7 @@ function wppilot_request_update_info()
     // add_query_arg() is variadic; named arguments become associative keys in
     // its internal argument array and break WordPress core's numeric indexing.
     // @mago-expect lint:literal-named-argument -- Variadic WordPress helpers require positional arguments.
-    $url = add_query_arg(['v' => WPPILOT_VERSION], 'https://wppilot.co/api/wppilot/info');
+    $url = add_query_arg(['v' => WPPILOT_VERSION], 'https://gobuildwp.com/api/wppilot/info');
 
     $response = wp_remote_get($url, ['timeout' => 10]);
 
@@ -197,7 +197,7 @@ function wppilot_normalize_update_response($raw)
     $banners = is_array($raw['banners'] ?? null) ? $raw['banners'] : [];
 
     return [
-        'name' => (string) ($raw['name'] ?? 'WPPilot'),
+        'name' => (string) ($raw['name'] ?? 'GoBuildWP'),
         'version' => (string) $raw['version'],
         'author' => (string) ($raw['author'] ?? ''),
         'author_homepage' => (string) ($raw['author_homepage'] ?? ''),

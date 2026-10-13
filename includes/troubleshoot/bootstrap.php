@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -24,7 +24,7 @@ require_once __DIR__ . '/doctor-ui.php';
 require_once __DIR__ . '/doctor-ability.php';
 
 /**
- * Record the moment an authenticated request reaches any WPPilot MCP route, per auth method.
+ * Record the moment an authenticated request reaches any GoBuildWP MCP route, per auth method.
  * The Troubleshoot page reads this to auto-detect which connection method to diagnose: a token
  * exchange is not proof the connection works end to end (MCP calls can still be blocked
  * upstream), the first authenticated MCP request is. Throttled to one option write per method
@@ -76,7 +76,7 @@ function record_mcp_request(mixed $result, mixed $server, WP_REST_Request $reque
 }
 
 /**
- * Map a REST route to the WPPilot auth method it implies: the dedicated OAuth server route,
+ * Map a REST route to the GoBuildWP auth method it implies: the dedicated OAuth server route,
  * or the canonical + legacy-alias routes used by Application Password clients. Non-MCP routes
  * return null. Matching mirrors WPPilot\OAuth\Middleware\is_mcp_route (exact slug or slash
  * suffix — `/mcp/wppilot-oauth` must never be treated as a `/mcp/wppilot` prefix match).

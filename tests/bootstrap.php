@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,7 +8,7 @@ declare(strict_types=1);
 /**
  * Unit-test bootstrap.
  *
- * These are unit tests, not WordPress integration tests: they exercise WPPilot's
+ * These are unit tests, not WordPress integration tests: they exercise GoBuildWP's
  * own decision logic (status resolution, post-type exposure, capability gating)
  * against WordPress function doubles rather than a live install. That keeps the
  * safety invariants under test on any machine with PHP, with no database.
@@ -21,7 +21,7 @@ declare(strict_types=1);
 define('ABSPATH', __DIR__ . '/');
 
 // The plugin-file constants the real plugin defines at load. The extension
-// abilities read them to refuse deactivating or deleting WPPilot itself, so the
+// abilities read them to refuse deactivating or deleting GoBuildWP itself, so the
 // suite needs them to exercise that refusal.
 define('WPPILOT_PLUGIN_FILE', ABSPATH . 'wp-content/plugins/wppilot/wppilot.php');
 define('WPPILOT_PRO_FILE', ABSPATH . 'wp-content/plugins/wppilot-pro/wppilot-pro.php');

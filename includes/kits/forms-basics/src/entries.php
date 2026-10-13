@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
  * Paging and date filters every list-entries ability shares.
  *
  * Entries are returned with their (redacted) answers, so a page is kept small: 20 by default and
- * at most 100, where WPPilot Pro's compact listings, which carry no answers, go further.
+ * at most 100, where GoBuildWP Pro's compact listings, which carry no answers, go further.
  */
 
 const ENTRIES_DEFAULT_LIMIT = 20;

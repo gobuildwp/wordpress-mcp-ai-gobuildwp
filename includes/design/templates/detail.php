@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -100,7 +100,7 @@ $page_style = $accent !== '' ? '--ds-accent:' . $accent : '';
                     ))
                 ; ?><span class="wppilot-design-allows-help" title="<?php echo
                     esc_attr__(
-                        'Anti-slop rules this design intentionally waives. WPPilot normally flags these AI tells; here they count as a deliberate house-style choice, not a mistake.',
+                        'Anti-slop rules this design intentionally waives. GoBuildWP normally flags these AI tells; here they count as a deliberate house-style choice, not a mistake.',
                         domain: 'wppilot',
                     )
                 ; ?>">?</span></span>

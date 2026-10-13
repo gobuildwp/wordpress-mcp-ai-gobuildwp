@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ if (!defined('ABSPATH')) {
  * changed in the last AI1WM_ACTIVE_SECONDS: the archive grows with every step. A folder left by an
  * abandoned run stops changing and stops counting; the plugin's daily cron deletes it after a day.
  *
- * The free plugin has no schedule. WPPilot Pro's wppilot/backup-trigger (1.12.2+) runs the
+ * The free plugin has no schedule. GoBuildWP Pro's wppilot/backup-trigger (1.12.2+) runs the
  * plugin's own `ai1wm_export` steps on the server rather than its loopback requests;
  * `trigger.supported` says whether this install has what that runner calls (ai1wm_runner_missing()).
  * No version is compared: whether the install can be started is read from what it has.
@@ -174,11 +174,11 @@ function ai1wm_running(): array
     return ['running' => $jobs !== [], 'jobs' => $jobs];
 }
 
-/** The plugin's functions WPPilot Pro's export runner calls (Pro 1.12.2+, ai1wm_runner_missing()). */
+/** The plugin's functions GoBuildWP Pro's export runner calls (Pro 1.12.2+, ai1wm_runner_missing()). */
 const AI1WM_RUNNER_FUNCTIONS = ['ai1wm_get_filters', 'ai1wm_setup_environment', 'ai1wm_setup_errors', 'ai1wm_storage_path', 'ai1wm_archive_path', 'ai1wm_backup_path'];
 
 /**
- * Why WPPilot Pro's export runner could not run the installed plugin, or null when it could.
+ * Why GoBuildWP Pro's export runner could not run the installed plugin, or null when it could.
  *
  * The same capability set as Pro's ai1wm_runner_missing() (this kit cannot call Pro): the
  * plugin's functions the runner calls, Ai1wm_Export_Controller, Ai1wm_Status with its job id and
@@ -213,7 +213,7 @@ function ai1wm_runner_missing(): ?string
 }
 
 /**
- * Whether WPPilot Pro's wppilot/backup-trigger can start an export here: what its runner calls is
+ * Whether GoBuildWP Pro's wppilot/backup-trigger can start an export here: what its runner calls is
  * present (ai1wm_runner_missing()). Pro replaces this answer with its own when it is active; this
  * one is what a site without Pro, or Cloud reading it, sees.
  *

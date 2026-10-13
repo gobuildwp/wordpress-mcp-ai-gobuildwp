@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 /**
  * Before-images of just the parts of a post a write touches.
  *
- * WPPilot's `restore-post` puts back a whole post: every field, every meta key (deleting any the
+ * GoBuildWP's `restore-post` puts back a whole post: every field, every meta key (deleting any the
  * snapshot does not name) and every term. That is right for "update this post", and wrong for a
  * write that touched one meta key: undoing an alt-text change a week later would also revert
  * every edit a person made to that attachment since. A partial snapshot names the fields and

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 
 /**
  * Admin page for site-level context shown to connected agents. The saved
- * content is prepended to the WPPilot discover-abilities instructions, while
+ * content is prepended to the GoBuildWP discover-abilities instructions, while
  * the read-only preview shows the system instructions without that user layer.
  */
 
@@ -159,7 +159,7 @@ function register_context_menu(): void
         return;
     }
 
-    // Stay out while a WPPilot Pro that still manages custom instructions is
+    // Stay out while a GoBuildWP Pro that still manages custom instructions is
     // active: that Pro owns the instructions UI (its "Memory & Instructions"
     // page) until it is removed or updated to a version that hands context to
     // the base. The base then takes over automatically — see
@@ -235,7 +235,7 @@ function instructions_handle_save(): array
 function context_system_instructions_preview(): string
 {
     if (!function_exists('wppilot_build_server_instructions')) {
-        return __('System instructions are unavailable until the base WPPilot plugin has loaded.', domain: 'wppilot');
+        return __('System instructions are unavailable until the base GoBuildWP plugin has loaded.', domain: 'wppilot');
     }
 
     $previous = instructions_custom_injection_suppression_state(action: 'suppress');
@@ -310,7 +310,7 @@ function render_context_system_section(): void
     <section class="wppilot-context-section" aria-labelledby="wppilot-system-context-heading">
         <h2 id="wppilot-system-context-heading"><?php esc_html_e('System context', domain: 'wppilot'); ?></h2>
         <p class="description"><?php esc_html_e(
-            'Read-only instructions WPPilot generates for this site, adapting them to the plugins you have active. Shown here for visibility and not editable from this page.',
+            'Read-only instructions GoBuildWP generates for this site, adapting them to the plugins you have active. Shown here for visibility and not editable from this page.',
             domain: 'wppilot',
         ); ?></p>
 

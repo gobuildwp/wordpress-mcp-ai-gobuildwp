@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,21 +8,21 @@ declare(strict_types=1);
 // phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
 
 /**
- * WPPilot Pro upsell: submenu entry, Connect-page card, dismissible welcome notice.
+ * GoBuildWP Pro upsell: submenu entry, Connect-page card, dismissible welcome notice.
  */
 
 if (!defined('ABSPATH')) {
     exit();
 }
 
-const WPPILOT_PRO_URL = 'https://wppilot.co/pro/';
+const WPPILOT_PRO_URL = 'https://gobuildwp.com/pro/';
 
 const WPPILOT_PRO_DISMISS_PREFIX = 'wppilot_pro_dismissed_';
 
 const WPPILOT_PRO_WELCOME_KEY = 'welcome';
 
 /**
- * True when the WPPilot Pro plugin is active.
+ * True when the GoBuildWP Pro plugin is active.
  * License state is irrelevant — if Pro is running, the upsell is.
  */
 function wppilot_pro_is_active(): bool
@@ -31,7 +31,7 @@ function wppilot_pro_is_active(): bool
 }
 
 /**
- * Third-party plugins and themes that WPPilot Pro ships dedicated
+ * Third-party plugins and themes that GoBuildWP Pro ships dedicated
  * specializations and skills for. Drives the personalized upsell copy: any of
  * these that is active on the site gets named explicitly.
  *
@@ -268,21 +268,22 @@ function wppilot_pro_upsell_headline(): string
 /**
  * Brand palette, shared by the notice and the card so the two never drift.
  *
- * @return array{ink: string, lime: string, coral: string, paper: string, muted: string}
+ * @return array{ink: string, lime: string, coral: string, paper: string, muted: string, surface: string}
  */
 function wppilot_pro_brand(): array
 {
     return [
-        'ink' => '#142017',
-        'lime' => '#d9ff63',
-        'coral' => '#ff7657',
+        'ink' => '#16152c',
+        'lime' => '#4b3cf0',
+        'coral' => '#9b8cff',
         'paper' => '#f3f0e6',
-        'muted' => 'rgba(255,255,255,.62)',
+        'muted' => '#5a5680',
+        'surface' => '#f5f3ff',
     ];
 }
 
 /**
- * Append a "Get Pro" submenu entry that links out to wppilot.co/pro/.
+ * Append a "Get Pro" submenu entry that links out to gobuildwp.com/pro/.
  * Uses the $submenu global because add_submenu_page() doesn't accept external URLs.
  */
 add_action(
@@ -299,7 +300,7 @@ add_action(
         $entries = $submenu['wppilot-connect'];
         $entries[] = [
             // Lime on the dark admin menu, matching the product palette.
-            '<span style="color:#d9ff63;font-weight:600;">' . esc_html__('Get Pro', domain: 'wppilot') . '</span>',
+            '<span style="color:#c4bcff;font-weight:600;">' . esc_html__('Get Pro', domain: 'wppilot') . '</span>',
             wppilot_manage_capability(),
             esc_url(WPPILOT_PRO_URL . '?utm_source=plugin&utm_medium=submenu'),
         ];
@@ -309,10 +310,10 @@ add_action(
 );
 
 /**
- * Add a "Get Pro" action link on the Plugins page row for WPPilot Free.
+ * Add a "Get Pro" action link on the Plugins page row for GoBuildWP Free.
  */
 add_filter(
-    'plugin_action_links_' . plugin_basename(dirname(__DIR__, 2) . '/wppilot.php'),
+    'plugin_action_links_' . plugin_basename(WPPILOT_PLUGIN_FILE),
     static function (array $links): array {
         if (wppilot_pro_is_active()) {
             return $links;
@@ -337,7 +338,7 @@ add_action('admin_footer', static function (): void {
     (function() {
         var links = document.querySelectorAll('#toplevel_page_wppilot-connect .wp-submenu a');
         for (var i = 0; i < links.length; i++) {
-            if (links[i].href.indexOf('wppilot.co/pro') !== -1) {
+            if (links[i].href.indexOf('gobuildwp.com/pro') !== -1) {
                 links[i].target = '_blank';
                 links[i].rel = 'noopener';
             }
@@ -422,7 +423,7 @@ function wppilot_render_pro_welcome_notice(): void
     if (get_user_meta($user_id, WPPILOT_PRO_DISMISS_PREFIX . WPPILOT_PRO_WELCOME_KEY, single: true)) {
         return;
     }
-    // Don't show on the Pro page itself or irrelevant screens outside WPPilot admin.
+    // Don't show on the Pro page itself or irrelevant screens outside GoBuildWP admin.
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     $on_wppilot =
         $screen
@@ -456,9 +457,7 @@ function wppilot_render_pro_welcome_notice(): void
                 esc_url($pro_url)
             ; ?>" target="_blank" rel="noopener" class="button" style="background:<?php echo
                 esc_attr($brand['lime'])
-            ; ?>;border-color:<?php echo esc_attr($brand['ink']); ?>;color:<?php echo
-                esc_attr($brand['ink'])
-            ; ?>;font-weight:700;text-shadow:none;box-shadow:none;">
+            ; ?>;border-color:<?php echo esc_attr($brand['lime']); ?>;color:#fff;font-weight:700;text-shadow:none;box-shadow:none;">
                 <?php esc_html_e('See what Pro adds', domain: 'wppilot'); ?>
             </a>
             <a href="<?php echo
@@ -498,9 +497,9 @@ function wppilot_render_pro_upsell_card(): void
     $brand = wppilot_pro_brand();
     $pricing_url = WPPILOT_PRO_URL . '?utm_source=plugin&utm_medium=connect_card_pricing';
     ?>
-    <div class="wppilot-pro-card" style="position:relative;overflow:hidden;margin:24px 0;padding:26px 28px;border-radius:14px;background:<?php echo
-        esc_attr($brand['ink'])
-    ; ?>;color:#fff;">
+    <div class="wppilot-pro-card" style="position:relative;overflow:hidden;margin:24px 0;padding:26px 28px;border-radius:14px;border:1px solid #dfd9ff;background:<?php echo
+        esc_attr($brand['surface'])
+    ; ?>;color:<?php echo esc_attr($brand['ink']); ?>;">
         <span aria-hidden="true" style="position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,<?php echo
             esc_attr($brand['lime'])
         ; ?>,<?php echo esc_attr($brand['coral']); ?>);"></span>
@@ -508,9 +507,9 @@ function wppilot_render_pro_upsell_card(): void
         <p style="margin:0 0 10px;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:<?php echo
             esc_attr($brand['lime'])
         ; ?>;">
-            <?php esc_html_e('WPPilot Pro', domain: 'wppilot'); ?>
+            <?php esc_html_e('GoBuildWP Pro', domain: 'wppilot'); ?>
         </p>
-        <h2 style="margin:0 0 10px;font-size:21px;line-height:1.25;font-weight:800;letter-spacing:-.02em;color:#fff;">
+        <h2 style="margin:0 0 10px;font-size:21px;line-height:1.25;font-weight:800;letter-spacing:-.02em;color:<?php echo esc_attr($brand['ink']); ?>;">
             <?php echo esc_html(wppilot_pro_upsell_headline()); ?>
         </h2>
         <p style="margin:0 0 18px;max-width:70ch;font-size:13.5px;line-height:1.7;color:<?php echo
@@ -523,9 +522,7 @@ function wppilot_render_pro_upsell_card(): void
                 esc_url($pro_url)
             ; ?>" target="_blank" rel="noopener" class="button" style="background:<?php echo
                 esc_attr($brand['lime'])
-            ; ?>;border-color:<?php echo esc_attr($brand['lime']); ?>;color:<?php echo
-                esc_attr($brand['ink'])
-            ; ?>;font-weight:700;text-shadow:none;box-shadow:none;">
+            ; ?>;border-color:<?php echo esc_attr($brand['lime']); ?>;color:#fff;font-weight:700;text-shadow:none;box-shadow:none;">
                 <?php esc_html_e('See what Pro adds', domain: 'wppilot'); ?>
             </a>
             <a href="<?php echo

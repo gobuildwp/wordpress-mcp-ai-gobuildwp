@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -20,7 +20,7 @@ declare(strict_types=1);
  * profile). Both only ever tighten: see wppilot_ability_requires_confirmation()
  * and wppilot_ability_safety_policy(). They apply to any registered ability,
  * third-party ones included, which is the point: a builder's own abilities pass
- * through the same pipeline as WPPilot's.
+ * through the same pipeline as GoBuildWP's.
  */
 
 if (!defined('ABSPATH')) {
@@ -93,7 +93,7 @@ function wppilot_update_ability_rules(array $rules): void
         $clean[$ability_name] = array_filter($rule, static fn(mixed $value): bool => $value !== false && $value !== '');
     }
 
-    // A rule the owner changes is the owner's from then on: WPPilot Cloud may only lift blocks it set
+    // A rule the owner changes is the owner's from then on: GoBuildWP Cloud may only lift blocks it set
     // and nobody has touched since. The Cloud's own apply skips this, see includes/cloud/policy.php.
     if (function_exists('wppilot_cloud_release_changed_rules') && empty($GLOBALS['wppilot_cloud_policy_applying'])) {
         wppilot_cloud_release_changed_rules(wppilot_get_ability_rules(), $clean);
@@ -268,7 +268,7 @@ function wppilot_enrich_disabled_ability_error(mixed $result, mixed $args): mixe
     $result['error'] = sprintf(
         /* translators: %s: the ability name, e.g. wppilot/execute-php */
         __(
-            "Ability '%s' exists but is switched off in WPPilot's AI Abilities settings. Ask the site admin to re-enable it there, then retry.",
+            "Ability '%s' exists but is switched off in GoBuildWP's AI Abilities settings. Ask the site admin to re-enable it there, then retry.",
             domain: 'wppilot',
         ),
         $name,

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,8 +15,8 @@ use WP_REST_Response;
 /**
  * Connection Doctor: why an MCP client that should connect does not.
  *
- * The other diagnostics establish that WPPilot is configured correctly. This module looks at what
- * stands between a client and WPPilot: a CDN or WAF answering in WordPress's place, a web server that
+ * The other diagnostics establish that GoBuildWP is configured correctly. This module looks at what
+ * stands between a client and GoBuildWP: a CDN or WAF answering in WordPress's place, a web server that
  * drops the Authorization header before PHP sees it, a clock far enough off to spoil OAuth grants,
  * and URL settings that make OAuth redirect and issuer checks fail. It sends real requests to the
  * site's own MCP endpoints — with and without credentials — and classifies each answer by who sent it:
@@ -301,7 +301,7 @@ function authorization_fix(string $stack): string
 }
 
 /**
- * The exact change that lets MCP traffic past a detected layer, scoped to WPPilot's paths only.
+ * The exact change that lets MCP traffic past a detected layer, scoped to GoBuildWP's paths only.
  *
  * @param string $mcp_path   Path prefix of the MCP routes, e.g. `/wp-json/mcp/`.
  * @param string $home_path  The site's path, '' for a root install.
@@ -312,7 +312,7 @@ function layer_fix(string $kind, string $mcp_path, string $home_path): string
 
     return match ($kind) {
         'cloudflare_block', 'cloudflare_challenge' => "Cloudflare dashboard > Security > WAF > Custom rules > Create rule\n"
-            . "Rule name: Allow WPPilot MCP\n"
+            . "Rule name: Allow GoBuildWP MCP\n"
             . 'Expression: (starts_with(http.request.uri.path, "' . $mcp_path . '")) or (starts_with(http.request.uri.path, "' . $well_known . '"))' . "\n"
             . "Action: Skip - All remaining custom rules, Rate limiting rules, All managed rules, Super Bot Fight Mode\n"
             . "Place it first in the rule order.\n"
@@ -393,11 +393,11 @@ function check_mcp_probe(string $id, string $label, array $class, array $evidenc
                 : __('A request carrying an Authorization header reached WordPress and was judged by it (the probe credential is deliberately invalid).', domain: 'wppilot'), $evidence);
         }
         if ($code === 404) {
-            return check($id, 'fail', $label, __('WordPress answered, but the MCP route is not registered.', domain: 'wppilot'), $evidence, __('Turn on AI Abilities on the Overview screen. If it is on, reinstall the WPPilot release ZIP: the MCP Adapter did not load.', domain: 'wppilot'));
+            return check($id, 'fail', $label, __('WordPress answered, but the MCP route is not registered.', domain: 'wppilot'), $evidence, __('Turn on AI Abilities on the Overview screen. If it is on, reinstall the GoBuildWP release ZIP: the MCP Adapter did not load.', domain: 'wppilot'));
         }
         $result = is_array($class['json']['result'] ?? null) ? $class['json']['result'] : [];
         if ($code === 200 && array_key_exists('serverInfo', $result)) {
-            return check($id, 'fail', $label, __('The MCP endpoint completed a handshake without valid credentials. Anyone who can reach it can drive the site.', domain: 'wppilot'), $evidence, __('Turn AI Abilities off, then look for a plugin that force-authenticates REST requests.', domain: 'wppilot'));
+            return check($id, 'fail', $label, __('The MCP endpoint completed a handshake without valid credentials, so something is authenticating requests WordPress should refuse. Anyone who can reach the endpoint may be able to use it.', domain: 'wppilot'), $evidence, __('Turn AI Abilities off, then look for a plugin that force-authenticates REST requests.', domain: 'wppilot'));
         }
 
         return check($id, 'warn', $label, sprintf(
@@ -499,7 +499,7 @@ function check_application_passwords(bool $available, bool $is_ssl, string $envi
     }
     $evidence = ['is_ssl: ' . ($is_ssl ? 'yes' : 'no'), 'WP_ENVIRONMENT_TYPE: ' . $environment];
     $alternative = $tokens_available
-        ? ' ' . __('A WPPilot access token (Bearer) works without them.', domain: 'wppilot')
+        ? ' ' . __('A GoBuildWP access token (Bearer) works without them.', domain: 'wppilot')
         : '';
     if (!$is_ssl && $environment !== 'local') {
         return check('application_passwords', 'fail', $label, __('WordPress disables Application Passwords on a site that is not served over HTTPS, so every client using Basic auth gets 401.', domain: 'wppilot') . $alternative, $evidence, __('Serve the site over HTTPS. On a development site only, set define( "WP_ENVIRONMENT_TYPE", "local" ); in wp-config.php.', domain: 'wppilot'));
@@ -509,7 +509,7 @@ function check_application_passwords(bool $available, bool $is_ssl, string $envi
         $fix = $blocker['remedy'] . ($blocker['url'] !== '' ? ' ' . $blocker['url'] : '');
         return check('application_passwords', 'fail', $label, $blocker['message'], $evidence, $fix);
     }
-    return check('application_passwords', 'fail', $label, __('Application Passwords are switched off by a plugin or by code (the wp_is_application_passwords_available filter), so every client using Basic auth gets 401.', domain: 'wppilot') . $alternative, $evidence, __('Find the security plugin or snippet that disables Application Passwords and allow them, or connect with a WPPilot access token.', domain: 'wppilot'));
+    return check('application_passwords', 'fail', $label, __('Application Passwords are switched off by a plugin or by code (the wp_is_application_passwords_available filter), so every client using Basic auth gets 401.', domain: 'wppilot') . $alternative, $evidence, __('Find the security plugin or snippet that disables Application Passwords and allow them, or connect with a GoBuildWP access token.', domain: 'wppilot'));
 }
 
 /**
@@ -708,7 +708,7 @@ function http_request(string $method, string $url, array $headers = [], string $
 }
 
 /**
- * The JSON-RPC frame the MCP probes send: the legacy handshake every WPPilot version answers.
+ * The JSON-RPC frame the MCP probes send: the legacy handshake every GoBuildWP version answers.
  */
 function handshake_body(): string
 {

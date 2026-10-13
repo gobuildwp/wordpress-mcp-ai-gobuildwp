@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ function wppilot_agent_prompt_auth_line(string $method): string
             domain: 'wppilot',
         ),
         'token' => __(
-            'A WPPilot access token, sent as an Authorization: Bearer header. The value is already in the configuration below. Treat it as a secret: never commit it, never echo it back to me in full, and never send it anywhere except this site.',
+            'A GoBuildWP access token, sent as an Authorization: Bearer header. The value is already in the configuration below. Treat it as a secret: never commit it, never echo it back to me in full, and never send it anywhere except this site.',
             domain: 'wppilot',
         ),
         default => __(

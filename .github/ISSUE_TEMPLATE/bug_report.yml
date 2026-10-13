@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Run **WPPilot → Diagnostics** first - it runs the same checks an AI client
+        Run **GoBuildWP → Diagnostics** first - it runs the same checks an AI client
         does and often names the problem outright.
 
         **Never paste a password, application password, API key or licence key
@@ -30,7 +30,7 @@ body:
     id: versions
     attributes:
       label: Versions
-      placeholder: "WPPilot 1.6.1, WordPress 6.9, PHP 8.3, Pro 1.1.2 (or none)"
+      placeholder: "GoBuildWP 1.6.1, WordPress 6.9, PHP 8.3, Pro 1.1.2 (or none)"
     validations:
       required: true
   - type: dropdown

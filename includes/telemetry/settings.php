@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ const OPTION_INSTALL_ID = 'wppilot_install_id';
 
 const CRON_HOOK = 'wppilot_telemetry_ping';
 
-const ENDPOINT = 'https://wppilot.co/api/wppilot/telemetry';
+const ENDPOINT = 'https://gobuildwp.com/api/wppilot/telemetry';
 
 /**
  * Whether this site reports.
@@ -130,7 +130,7 @@ function set_enabled(bool $on): void
 }
 
 /**
- * Add the toggle to the WPPilot settings screen.
+ * Add the toggle to the GoBuildWP settings screen.
  *
  * @param mixed $sections
  * @return mixed
@@ -154,7 +154,7 @@ function register_setting(mixed $sections): mixed
                 'name' => OPTION_ENABLED,
                 'label' => __('Send anonymous usage data once a day', domain: 'wppilot'),
                 'help' => __(
-                    'Sends this site\'s URL, the WPPilot, WordPress and PHP versions, your locale, whether Pro is active, your safety profile, and how many connections exist. It never sends usernames, email addresses, post content, or any record of what an agent did. Turning this off sends one final message asking us to delete what was collected.',
+                    'Sends this site\'s URL, the GoBuildWP, WordPress and PHP versions, your locale, whether Pro is active, your safety profile, and how many connections exist. It never sends usernames, email addresses, post content, or any record of what an agent did. Turning this off sends one final message asking us to delete what was collected.',
                     domain: 'wppilot',
                 ),
                 'value' => enabled(),

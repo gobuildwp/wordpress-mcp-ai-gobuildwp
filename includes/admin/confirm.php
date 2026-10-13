@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -18,7 +18,7 @@ declare(strict_types=1);
  *
  * Any administrator may decide, not only the account the agent is acting as. Agents often run as
  * a dedicated account nobody signs in to, and every account an agent can connect as already
- * manages WPPilot, so no privilege is borrowed. Who decided is recorded and reaches the ledger.
+ * manages GoBuildWP, so no privilege is borrowed. Who decided is recorded and reaches the ledger.
  */
 
 if (!defined('ABSPATH')) {

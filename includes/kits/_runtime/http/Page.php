@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
  * Fetch a page of this site as a visitor receives it, and parse it.
  *
  * Audits read served HTML, not post content: what a builder, a theme and three plugins made of
- * the content is what a screen reader and a search engine see. Modelled on WPPilot's design
+ * the content is what a screen reader and a search engine see. Modelled on GoBuildWP's design
  * checker (includes/design/rendered.php) and kept separate from it, so a kit carries it into a
  * plugin that has no design checker.
  *

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ function register(): void
 }
 
 /**
- * Create the WPPilot OAuth keys if they do not exist yet, then verify they are usable.
+ * Create the GoBuildWP OAuth keys if they do not exist yet, then verify they are usable.
  *
  * Reports existence and usability only. No key material and no encryption key is ever printed.
  *
@@ -48,7 +48,7 @@ function generate_command(): void
     } catch (\Throwable $e) {
         \WP_CLI::error(sprintf(
             /* translators: %s: underlying key generation error. */
-            __('WPPilot could not create its OAuth keys. %s', domain: 'wppilot'),
+            __('GoBuildWP could not create its OAuth keys. %s', domain: 'wppilot'),
             $e->getMessage(),
         ));
 
@@ -57,7 +57,7 @@ function generate_command(): void
 
     if (!keys_are_usable($keys['private']->getKeyContents(), $keys['public']->getKeyContents())) {
         \WP_CLI::error(__(
-            'The stored WPPilot OAuth private key exists but cannot sign. Delete the "wppilot_oauth_private_key" option and run this command again.',
+            'The stored GoBuildWP OAuth private key exists but cannot sign. Delete the "wppilot_oauth_private_key" option and run this command again.',
             domain: 'wppilot',
         ));
 
@@ -66,8 +66,8 @@ function generate_command(): void
 
     \WP_CLI::success(
         $existed
-            ? __('WPPilot OAuth keys already existed and are usable.', domain: 'wppilot')
-            : __('WPPilot OAuth keys created and verified as usable.', domain: 'wppilot'),
+            ? __('GoBuildWP OAuth keys already existed and are usable.', domain: 'wppilot')
+            : __('GoBuildWP OAuth keys created and verified as usable.', domain: 'wppilot'),
     );
 }
 

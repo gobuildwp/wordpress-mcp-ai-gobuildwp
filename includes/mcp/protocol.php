@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -10,7 +10,7 @@ namespace WPPilot\Mcp;
 /**
  * Protocol-era vocabulary and request classification.
  *
- * WPPilot is a dual-era MCP server. The vendored MCP Adapter implements the
+ * GoBuildWP is a dual-era MCP server. The vendored MCP Adapter implements the
  * legacy, session-based revisions (`2025-11-25` and earlier): `initialize`,
  * `notifications/initialized`, and the `Mcp-Session-Id` header. The modern
  * revision `2026-07-28` removes all of that — there is no handshake and no
@@ -40,7 +40,7 @@ const VERSION_LEGACY = '2025-11-25';
  *
  * Only these two are advertised. The adapter also answers `2025-06-18` and
  * `2024-11-05` for clients that ask for them by name during `initialize`, but
- * WPPilot does not advertise revisions it has not verified against this build.
+ * GoBuildWP does not advertise revisions it has not verified against this build.
  *
  * @var list<string>
  */

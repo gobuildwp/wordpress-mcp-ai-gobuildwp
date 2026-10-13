@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 /**
  * WooCommerce presence, the error vocabulary, and input coercion shared by every ability.
  *
- * The error codes and HTTP statuses are the ones WPPilot Pro's WooCommerce abilities return, so an
+ * The error codes and HTTP statuses are the ones GoBuildWP Pro's WooCommerce abilities return, so an
  * agent that learned them against Pro's copy of these abilities reads Free's the same way.
  */
 

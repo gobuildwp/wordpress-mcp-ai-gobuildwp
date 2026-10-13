@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 /**
  * Whether this site has asked for debug logging.
  *
- * WPPilot writes to the PHP error log only behind this. A plugin that logs
+ * GoBuildWP writes to the PHP error log only behind this. A plugin that logs
  * unconditionally fills a production log with noise its owner never asked for,
  * and the directory guidelines treat that as a defect.
  *
@@ -381,7 +381,7 @@ function wppilot_app_passwords_status(): array
         'available' => false,
         'reason' => 'filtered',
         'message' => __(
-            'Application Passwords have been disabled on this site, likely by a security plugin. Check your security plugin settings (e.g. Solid Security, Wordfence, All In One WP Security) and re-enable Application Passwords, or connect with OAuth or a WPPilot access token, which do not use them.',
+            'Application Passwords have been disabled on this site, likely by a security plugin. Check your security plugin settings (e.g. Solid Security, Wordfence, All In One WP Security) and re-enable Application Passwords, or connect with OAuth or a GoBuildWP access token, which do not use them.',
             domain: 'wppilot',
         ),
         'blocker' => null,

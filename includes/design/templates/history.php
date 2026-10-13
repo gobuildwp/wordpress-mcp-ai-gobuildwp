@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ $date_format = (string) get_option('date_format') . ' ' . (string) get_option('t
         <span class="wppilot-detail-count"><?php echo esc_html((string) count($history)); ?></span>
     <?php endif; ?></h2>
     <p class="wppilot-history-intro"><?php esc_html_e(
-        'WPPilot keeps at most five snapshots. Restoring one creates a new current version, so the change remains reversible.',
+        'GoBuildWP keeps at most five snapshots. Restoring one creates a new current version, so the change remains reversible.',
         domain: 'wppilot',
     ); ?></p>
 

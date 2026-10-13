@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -118,12 +118,12 @@ function wppilot_build_connector_install_link(string $mcp_url, string $connector
 }
 
 /**
- * Human-readable connector name shown in Claude. Empty site name falls back to "WPPilot".
+ * Human-readable connector name shown in Claude. Empty site name falls back to "GoBuildWP".
  */
 function wppilot_build_connector_display_name(string $site_name): string
 {
     $site_name = trim($site_name);
-    return $site_name !== '' ? 'WPPilot - ' . $site_name : 'WPPilot';
+    return $site_name !== '' ? 'GoBuildWP - ' . $site_name : 'GoBuildWP';
 }
 
 /**
@@ -246,7 +246,7 @@ function wppilot_oauth_chatgpt_steps(string $mcp_name, string $mcp_url): array
         [
             'title' => __('Create the app', domain: 'wppilot'),
             'body' => __(
-                'Back on the Apps screen, press Create app. Give it this name, or one you will recognize with "WPPilot" in it:',
+                'Back on the Apps screen, press Create app. Give it this name, or one you will recognize with "GoBuildWP" in it:',
                 domain: 'wppilot',
             ),
             'copy' => $mcp_name,
@@ -655,7 +655,7 @@ function wppilot_oauth_connector_steps(string $app_label, string $mcp_name, stri
         [
             'title' => __('Add a custom connector', domain: 'wppilot'),
             'body' => __(
-                'Click "Add custom connector" and give it this name, or one you’ll recognize with "WPPilot" in it:',
+                'Click "Add custom connector" and give it this name, or one you’ll recognize with "GoBuildWP" in it:',
                 domain: 'wppilot',
             ),
             'copy' => $mcp_name,

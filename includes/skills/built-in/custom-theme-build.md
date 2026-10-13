@@ -49,7 +49,7 @@ live without an explicit yes.
 - **A full-custom page on an existing, live site:** do NOT swap the theme, and do NOT
   strip the messy document. Render your page as a **minimal, self-owned document** that
   loads only your assets: control the head up front instead of loading everything and
-  removing it. The **WPPilot blank canvas** is the clean, plugin-owned surface for
+  removing it. The **GoBuildWP blank canvas** is the clean, plugin-owned surface for
   exactly this: a barebones document where you inject the design, with nothing foreign
   to fight. Scoped to that one page, the rest of the site untouched.
 - **A page that must keep the site's own header, footer, and nav:** keep the current
@@ -124,7 +124,7 @@ then by the task:
   a deliberately calm and minimal landing.
 
 Note: the taste tradition these moves come from treats static interfaces as
-forbidden and motion as mandatory. That stance does not hold here. WPPilot serves
+forbidden and motion as mandatory. That stance does not hold here. GoBuildWP serves
 the whole range, from a maximalist landing to a plain form, so restraint is a
 deliberate design choice, not a missing feature. Forced acrobatics are their own
 kind of slop.
@@ -139,7 +139,7 @@ plugins:
   - A leaked property you never declared still wins: a Divi `border-left` / `padding` landed on a bare `<blockquote>` because scoping only overrides properties you actually set.
   - A builder can **re-inject a stylesheet after your template closes**: it echoes a placeholder comment on `wp_head` / `wp_footer` (e.g. `<!-- BREAKDANCE_HEADER_DEPENDENCIES -->`) and expands it into real `<link>`s via `str_replace` on the whole response, so at your strip time it is a comment, not a link.
 
-  Do NOT fix this by stripping the whole document (`ob_start` plus removing every inline `<style>` and foreign `<link>`). That nukes legitimate CSS too: the WordPress **admin bar** loses its styles, and any functional plugin CSS on the page (forms, widgets) breaks. Instead: for a full-custom page, render it as a **self-owned minimal document** that never loads the foreign CSS in the first place (the **WPPilot blank canvas**); for a page that keeps the theme, **scope and override** (higher specificity, `:where()` resets, explicit fonts and colors), and reset `border` / `margin` / `padding` on any bare element you reuse (`blockquote`, `figure`, `ul`, `dl`), since scoping guards only declared properties.
+  Do NOT fix this by stripping the whole document (`ob_start` plus removing every inline `<style>` and foreign `<link>`). That nukes legitimate CSS too: the WordPress **admin bar** loses its styles, and any functional plugin CSS on the page (forms, widgets) breaks. Instead: for a full-custom page, render it as a **self-owned minimal document** that never loads the foreign CSS in the first place (the **GoBuildWP blank canvas**); for a page that keeps the theme, **scope and override** (higher specificity, `:where()` resets, explicit fonts and colors), and reset `border` / `margin` / `padding` on any bare element you reuse (`blockquote`, `figure`, `ul`, `dl`), since scoping guards only declared properties.
 - **Neutralize UA resets with `:where()`, not blanket selectors.** A reset like `body.x h1, h2, ... { font: inherit }` has real specificity (0,1,2) and silently beats a single-class component rule such as `.hero__title { font-family: var(--font-display) }` (0,1,0), so every heading quietly falls back to the body font. Wrap reset selectors in `:where(...)` to drop them to specificity (0,0,0): author origin still neutralizes UA defaults, but any component rule wins.
 - **The display font must actually load, or the platform font wins.** Setting `font-family` is not enough if the face is never delivered: the site's global font (often Inter, enqueued by the theme or builder) becomes the fallback. Self-host your faces with `@font-face` + `font-display: swap` and enqueue them on this template, or set the site's global font tokens so the whole site is on-brand, not just this page.
 - **Scroll-reveal must degrade to visible.** A `.reveal { opacity: 0 }` that only becomes visible when JS adds a class hides all content if the script never runs (no-JS, crawler, print). Gate the hiding behind a JS-added class on `<html>` (no-JS renders visible), and honor `prefers-reduced-motion` by forcing the visible state. (When screenshotting such a page, force the end state first, e.g. add the reveal class to every `.reveal`, or a full-page capture shows blank bands.)
@@ -175,13 +175,13 @@ zigzag cap).
 
 ## The real tradeoff (state it honestly to the user)
 
-Custom theme is not "static" or "developer-only". WPPilot stays underneath, so
+Custom theme is not "static" or "developer-only". GoBuildWP stays underneath, so
 the site remains fully changeable: the client asks in natural language ("make the
 hero calmer", "swap the accent to green") and the agent edits the theme files.
 The only real difference from a builder is the **editing interface**:
 
 - **Builder**: the client can also self-serve in a visual drag-and-drop editor, without the agent.
-- **Custom theme**: changes go through WPPilot (conversational). No visual canvas, but fully editable via the agent.
+- **Custom theme**: changes go through GoBuildWP (conversational). No visual canvas, but fully editable via the agent.
 
 The surface was chosen upstream, with the user; on this one, custom code is the
 native vocabulary. If the client expects a visual canvas they open themselves,

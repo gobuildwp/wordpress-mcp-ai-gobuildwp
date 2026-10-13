@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ function wppilot_boot_ability_rest_surface(): bool
 }
 
 /**
- * Register WPPilot Ability hooks independently of protocol-adapter initialization.
+ * Register GoBuildWP Ability hooks independently of protocol-adapter initialization.
  */
 function wppilot_register_ability_hooks(): bool
 {
@@ -47,7 +47,7 @@ function wppilot_register_ability_hooks(): bool
 }
 
 /**
- * Keep policy enforcement active even when WPPilot is disabled so independently registered skill
+ * Keep policy enforcement active even when GoBuildWP is disabled so independently registered skill
  * or extension Abilities are removed according to the existing rules.
  */
 function wppilot_register_ability_policy_hook(): bool
@@ -62,7 +62,7 @@ function wppilot_register_ability_policy_hook(): bool
 }
 
 /**
- * Register categories owned by WPPilot's built-in Abilities.
+ * Register categories owned by GoBuildWP's built-in Abilities.
  */
 function wppilot_register_ability_categories(): void
 {

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -276,7 +276,7 @@ function wordpress_private_taxonomy_remedy(string $taxonomy): string
         );
     }
 
-    return ' It belongs to Polylang: set the language and translations in the Polylang editor — WPPilot Pro adds Polylang abilities that set a post\'s language and link its translations.';
+    return ' It belongs to Polylang: set the language and translations in the Polylang editor — GoBuildWP Pro adds Polylang abilities that set a post\'s language and link its translations.';
 }
 
 /**

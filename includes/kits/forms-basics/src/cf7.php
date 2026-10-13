@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
  * and remembers in the form's `_flamingo` post meta; entries are read through
  * Flamingo_Inbound_Message::find() / count() (verified against Flamingo 2.6.4). Without Flamingo,
  * cf7-list-entries still answers, with what the user needs to know: there are no stored entries,
- * and what to install. The form list is the same answer WPPilot Pro 1.10.0's cf7-list-forms gives.
+ * and what to install. The form list is the same answer GoBuildWP Pro 1.10.0's cf7-list-forms gives.
  */
 
 const CF7_MIN_VERSION = '5.8.0';

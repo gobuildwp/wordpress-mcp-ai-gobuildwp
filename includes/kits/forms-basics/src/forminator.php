@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
  * A form is a `forminator_forms` post whose `forminator_form_meta` holds its fields and settings;
  * Forminator_Base_Form_Model::get_model() reads it the way Forminator's admin does. Entries live in
  * Forminator's own tables, read with Forminator_Form_Entry_Model::query_entries(). The form list is
- * the same answer WPPilot Pro 1.10.0's forminator-list-forms gives.
+ * the same answer GoBuildWP Pro 1.10.0's forminator-list-forms gives.
  */
 
 const FORMINATOR_POST_TYPE = 'forminator_forms';

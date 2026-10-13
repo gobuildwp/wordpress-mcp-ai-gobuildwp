@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -360,18 +360,18 @@ final class ProtocolTest extends TestCase
 
     public function testModernResultCarriesResultTypeAndServerInfo(): void
     {
-        $result = \WPPilot\Mcp\decorate_modern_result([], 'tools/call', 'WPPilot', '1.1.0');
+        $result = \WPPilot\Mcp\decorate_modern_result([], 'tools/call', 'GoBuildWP', '1.1.0');
 
         self::assertSame('complete', $result['resultType']);
         self::assertSame(
-            ['name' => 'WPPilot', 'version' => '1.1.0'],
+            ['name' => 'GoBuildWP', 'version' => '1.1.0'],
             $result['_meta']['io.modelcontextprotocol/serverInfo'],
         );
     }
 
     public function testOrdinaryResultHasNoCacheHints(): void
     {
-        $result = \WPPilot\Mcp\decorate_modern_result([], 'tools/call', 'WPPilot', '1.1.0');
+        $result = \WPPilot\Mcp\decorate_modern_result([], 'tools/call', 'GoBuildWP', '1.1.0');
 
         self::assertArrayNotHasKey('ttlMs', $result);
         self::assertArrayNotHasKey('cacheScope', $result);
@@ -380,7 +380,7 @@ final class ProtocolTest extends TestCase
     #[DataProvider('cacheableMethods')]
     public function testCacheableResultsCarryBoundedPrivateHints(string $method): void
     {
-        $result = \WPPilot\Mcp\decorate_modern_result([], $method, 'WPPilot', '1.1.0');
+        $result = \WPPilot\Mcp\decorate_modern_result([], $method, 'GoBuildWP', '1.1.0');
 
         self::assertArrayHasKey('ttlMs', $result);
         self::assertGreaterThan(0, $result['ttlMs']);
@@ -504,7 +504,7 @@ final class ProtocolTest extends TestCase
     }
 
     /**
-     * Advertising a subscription capability WPPilot cannot honour would leave a
+     * Advertising a subscription capability GoBuildWP cannot honour would leave a
      * client holding an open stream that never delivers anything.
      */
     public function testSubscriptionsAndTasksAreNeverAdvertised(): void
@@ -521,7 +521,7 @@ final class ProtocolTest extends TestCase
         $result = \WPPilot\Mcp\decorate_modern_result(
             build_discover_result(build_capabilities(1, 0, 0), 'read-only'),
             'server/discover',
-            'WPPilot',
+            'GoBuildWP',
             '1.1.0',
         );
 

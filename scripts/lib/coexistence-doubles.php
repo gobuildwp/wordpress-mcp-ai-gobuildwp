@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,7 +12,7 @@ declare(strict_types=1);
  * so these win where both exist and the unit suite's doubles fill in the rest. They differ from
  * the unit suite's on purpose: actions really run, and every hook, option, ability, cron event,
  * route, post type, handle and nonce a call names is recorded against the copy of the kit code
- * that named it — WPPilot's or the export's — worked out from the call stack.
+ * that named it — GoBuildWP's or the export's — worked out from the call stack.
  */
 
 final class Kit_Coexistence

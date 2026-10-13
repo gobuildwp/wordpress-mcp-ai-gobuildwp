@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -77,7 +77,7 @@ function register(): void
     wp_register_ability('wppilot/compare-references', [
         'label' => __('Compare References', domain: 'wppilot'),
         'description' => __(
-            'Turn measurements of several reference pages into a report of what is convention and what is cliche. Supply what you observed on each reference, one object per site, using the dimension names this returns when called with no observations. Everyone else ships a file per industry saying what a dentist\'s homepage contains: it works instantly, it is stale the month it is written, it only covers the industries somebody listed, and it hands every dentist the same page. This answers the same question from evidence and answers one more with it. A property present on every reference is a convention, and what to do about it depends on which kind: a booking button above the fold appearing eight times out of eight means it works and breaking it costs the client money, while three equal cards appearing eight times out of eight is exactly what makes all eight look alike. The report keeps those apart, because a single frequency table cannot tell you which way to move. Honour the functional agreements, diverge from the decorative ones, and say in the design which you broke and why.',
+            'Turn measurements of several reference pages into a report of what is convention and what is cliche. Supply what you observed on each reference, one object per site, using the dimension names this returns when called with no observations. A fixed per-industry checklist of what a homepage contains goes stale and gives every site in that industry the same page; this answers the question from the references you measured instead. A property present on every reference is a convention, and what to do about it depends on which kind: a booking button above the fold on eight of eight references is probably functional and worth keeping, while three equal cards on eight of eight is decoration that makes the sites look alike. The report keeps those apart, because a single frequency table cannot tell you which way to move. Honour the functional agreements, diverge from the decorative ones, and say in the design which you broke and why.',
             domain: 'wppilot',
         ),
         'category' => Abilities\CATEGORY,

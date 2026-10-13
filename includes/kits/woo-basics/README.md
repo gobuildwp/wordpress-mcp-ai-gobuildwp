@@ -51,10 +51,10 @@ Needs WooCommerce 9.0 or newer; below that the kit is skipped and says why.
 <!-- kit-export:omit -->
 ## Tests
 
-`tests/Unit/Kits/WooBasics/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/WooBasics/` in the GoBuildWP repository (not shipped).
 
 Ability names, input schemas, output shapes and error codes are those of the same abilities in
-WPPilot Pro 1.10.0, so an agent reads either copy the same way. That release still registers all
+GoBuildWP Pro 1.10.0, so an agent reads either copy the same way. That release still registers all
 thirteen itself, ahead of the kits, so on a site running it this kit stands aside. Later Pro
 releases keep only their richer `wppilot/woocommerce-edit-product`.
 <!-- /kit-export:omit -->

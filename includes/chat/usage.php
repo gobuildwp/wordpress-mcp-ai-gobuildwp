@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
  * so a person can see what their chats cost, and a limit can stop a model call before it is
  * made instead of after the bill. Only the counts are kept, never the prompt or the answer.
  *
- * Free has no limits; `wppilot_chat_usage_limits` lets WPPilot Pro (or any code) set a daily
+ * Free has no limits; `wppilot_chat_usage_limits` lets GoBuildWP Pro (or any code) set a daily
  * and a monthly token limit per user.
  */
 

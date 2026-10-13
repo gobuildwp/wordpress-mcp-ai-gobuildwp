@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,7 +15,7 @@ use WP_Error;
 use WPPilot_Test_State;
 
 /**
- * WPPilot's approvals for writes through other plugins' MCP servers (includes/foreign-gate.php).
+ * GoBuildWP's approvals for writes through other plugins' MCP servers (includes/foreign-gate.php).
  *
  * REST_REQUEST is a constant, so the tests that need it run in their own process.
  */
@@ -85,7 +85,7 @@ final class ForeignGateTest extends TestCase
         self::assertInstanceOf(WP_Error::class, $refused);
         self::assertSame('wppilot_human_confirmation_unavailable', $refused->get_error_code());
 
-        // The same call after WPPilot's own gate passed it is not held a second time.
+        // The same call after GoBuildWP's own gate passed it is not held a second time.
         wppilot_gate_mark_passed('woocommerce/product-delete');
         self::assertSame($sentinel, wppilot_foreign_gate($sentinel, 'woocommerce/product-delete', ['id' => 5], self::write('woocommerce/product-delete')));
     }

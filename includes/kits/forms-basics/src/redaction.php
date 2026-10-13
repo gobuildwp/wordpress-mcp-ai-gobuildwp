@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 /**
  * What a submitted answer may leave the site as, for every form plugin this kit reads.
  *
- * Two layers. The first withholds what WPPilot Pro's form-entry rule withholds by default:
+ * Two layers. The first withholds what GoBuildWP Pro's form-entry rule withholds by default:
  * passwords, card and payment data, uploaded files and signatures, told apart by the field's type
  * and, for a plain text field someone labelled "Card number" or "Password", by its label. The
  * second is stricter than Pro, because these abilities answer an agent rather than a person asking
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
  * not what it was: an email or phone field is withheld whole, and an email address or phone
  * number typed into any other answer is cut out of it. The submitter's IP is never returned.
  *
- * There is no way to ask for the withheld values here. WPPilot Pro's own entry abilities return
+ * There is no way to ask for the withheld values here. GoBuildWP Pro's own entry abilities return
  * them to a person who explicitly asks, and the form plugin's admin screens always show them.
  */
 
@@ -38,7 +38,7 @@ const NUMERIC_TYPES = ['date', 'datepicker', 'datetime', 'date-time', 'time', 't
 const CONTACT_TYPES = ['email' => 'email', 'phone' => 'phone', 'tel' => 'phone'];
 
 /**
- * Why a field's answers are withheld by WPPilot Pro's shared rule, or null when they are not.
+ * Why a field's answers are withheld by GoBuildWP Pro's shared rule, or null when they are not.
  *
  * The same classification Pro's form-entry export uses (sensitive_reason() in its
  * form-entries module), carried here so both withhold exactly the same fields.

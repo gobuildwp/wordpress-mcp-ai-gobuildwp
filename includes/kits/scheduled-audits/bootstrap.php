@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
  * recorded earlier can be undone.
  *
  * The host may already run routines from another copy of this feature over the same stored
- * routines — inside WPPilot, a WPPilot Pro release that still carries its own. Two copies would
+ * routines — inside GoBuildWP, a GoBuildWP Pro release that still carries its own. Two copies would
  * both answer every cron tick, running each audit twice and sending every email twice, so when
  * the host's `routines-elsewhere` extension point names that owner, this copy does not load.
  */

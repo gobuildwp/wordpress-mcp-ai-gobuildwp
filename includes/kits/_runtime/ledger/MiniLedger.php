@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -14,9 +14,9 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * A change ledger for a kit running outside WPPilot.
+ * A change ledger for a kit running outside GoBuildWP.
  *
- * Same promises as WPPilot's, on a smaller scale: a row for every write a kit ability makes, a
+ * Same promises as GoBuildWP's, on a smaller scale: a row for every write a kit ability makes, a
  * before-image where the kit supplies one, an undo that re-reads the target and refuses to call
  * itself done unless it matches, and one row per item for bulk writes under a shared group.
  * Rows live in one option, capped by count and bytes, written under a database lock so two
@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
  * record_items() — never the host plugin's other writes, which are not the kit's to undo.
  *
  * Given the host id, it also keeps an `audit-read` row for each call of that host's read-only
- * abilities that declare `meta.safety.audit_reads` (a raw SQL SELECT), as WPPilot's ledger does:
+ * abilities that declare `meta.safety.audit_reads` (a raw SQL SELECT), as GoBuildWP's ledger does:
  * the result never, the redacted input always, so the site owner can see who read what.
  */
 final class MiniLedger implements Ledger
@@ -218,7 +218,7 @@ final class MiniLedger implements Ledger
      *
      * Write-time redaction goes by key name, so an address typed into a text field is stored in
      * full; masking here rather than at write time keeps what was recorded exact. Same pattern as
-     * the WPPilot ledger, including leaving retina names such as `logo@2x.png` alone.
+     * the GoBuildWP ledger, including leaving retina names such as `logo@2x.png` alone.
      */
     public static function mask_emails(mixed $value, int $depth = 0): mixed
     {

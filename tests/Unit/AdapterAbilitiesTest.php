@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,7 +12,7 @@ use WPPilot_Test_State;
 
 /**
  * The adapter only hooks its get-ability-info and execute-ability abilities from its own init(),
- * so a plugin that reads the Abilities registry earlier leaves every WPPilot MCP server with
+ * so a plugin that reads the Abilities registry earlier leaves every GoBuildWP MCP server with
  * discover-abilities alone: a client can list abilities and never run one. The fallback must
  * fill that gap, and must stand aside when the adapter's own hook already ran.
  */

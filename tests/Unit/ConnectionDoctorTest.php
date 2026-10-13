@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -301,7 +301,7 @@ final class ConnectionDoctorTest extends TestCase
 
     public function testAnonymousHandshakeIsAFailure(): void
     {
-        $class = classify_response(self::response(200, [], '{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{"name":"WPPilot"}}}'));
+        $class = classify_response(self::response(200, [], '{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{"name":"GoBuildWP"}}}'));
 
         self::assertSame('fail', check_mcp_probe('mcp_anonymous', 'MCP', $class, [], true, self::MCP_PATH, '')['status']);
     }

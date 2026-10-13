@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -470,7 +470,7 @@ function wordpress_builder_meta_error(array $meta): ?WP_Error
  * Editor holding `edit_posts` could not use the content wrappers at all).
  *
  * The `wppilot_is_enabled()` half is not optional: without it these abilities
- * would keep executing after an administrator switches WPPilot off.
+ * would keep executing after an administrator switches GoBuildWP off.
  */
 function wordpress_core_permission(): bool
 {
@@ -758,7 +758,7 @@ function wordpress_update_status_capability_error(object $post, array $input): ?
 /**
  * Register a WordPress-core ability, skipping names another plugin already owns.
  *
- * These abilities shipped in WPPilot Pro before this release. A site still running an
+ * These abilities shipped in GoBuildWP Pro before this release. A site still running an
  * older Pro alongside this build would otherwise register each name twice, so the
  * first registration wins and the duplicate is dropped without a fatal or a
  * `_doing_it_wrong()` notice. Free registers on `wp_abilities_api_init` at priority
@@ -789,7 +789,7 @@ function builder_remedy(string $ability, string $builder): string
     }
 
     return sprintf(
-        'edit this content in the %1$s editor instead — WPPilot Pro adds typed %1$s abilities that write it safely',
+        'edit this content in the %1$s editor instead — GoBuildWP Pro adds typed %1$s abilities that write it safely',
         $builder,
     );
 }

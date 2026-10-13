@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -98,7 +98,7 @@ final class ElementorAtomicAuditTest extends TestCase
     public function test_an_addons_widget_is_reported_as_third_party(): void
     {
         // Worth its own class: whether it ever gets an atomic equivalent is the
-        // addon author's decision, not Elementor's and not WPPilot's.
+        // addon author's decision, not Elementor's and not GoBuildWP's.
         self::assertSame('third_party', el_audit_classify('acme-slider', self::REGISTRY));
     }
 

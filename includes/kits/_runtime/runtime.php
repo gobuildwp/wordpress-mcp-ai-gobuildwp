@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -69,12 +69,12 @@ function has_host(): bool
  * first.
  *
  * Some kits carry abilities an older release of a companion plugin still registers itself under
- * the same name — WPPilot 1.16.0 took the WooCommerce reads, the backup and security status
+ * the same name — GoBuildWP 1.16.0 took the WooCommerce reads, the backup and security status
  * reads, the basic per-post SEO and form reads and the scheduled audits from Pro 1.10.0, which
  * keeps registering its own copies until its next release, and a richer Pro version of a write
  * keeps its name on purpose. Registering a name twice is refused by core with a doing_it_wrong
  * notice on every request, so the kit checks first and stands aside: the first registration
- * wins, and on a WPPilot site that is Pro's, which loads its integrations at
+ * wins, and on a GoBuildWP site that is Pro's, which loads its integrations at
  * wp_abilities_api_init priority 10, ahead of the kit loader's 20.
  *
  * A kit that stands aside must also leave the name's ledger capture alone, since the ability that
@@ -174,7 +174,7 @@ function profile_check(string $ability_name, string $profile): bool|WP_Error
  * Run another ability from inside a kit ability, through the same controls a direct call meets.
  *
  * Calling `$ability->execute()` straight away would skip everything the host enforces before
- * execute(): inside WPPilot the safety profile, the confirmation contract, the rate limit and the
+ * execute(): inside GoBuildWP the safety profile, the confirmation contract, the rate limit and the
  * design and preview gates; standalone the confirm flag. A kit that runs abilities on an agent's
  * behalf (a network kit running one on another site) would then be a way around all of them.
  *
@@ -251,7 +251,7 @@ function discover(string $kits_dir): array
     }
     // Pro-tier kits first, then by slug. A Pro kit can carry a richer copy of an ability a Free kit
     // also carries (the SEO plugins' per-post edits), and the Free copy stands aside through
-    // unclaimed() for whichever registered first. Inside WPPilot, Pro registers ahead of the kit
+    // unclaimed() for whichever registered first. Inside GoBuildWP, Pro registers ahead of the kit
     // loader anyway; an export that carries both tiers gets the same winner this way.
     usort($found, static fn(array $a, array $b): int => [($a['tier'] ?? '') === 'pro' ? 0 : 1, (string) $a['slug']]
         <=> [($b['tier'] ?? '') === 'pro' ? 0 : 1, (string) $b['slug']]);
@@ -405,7 +405,7 @@ function pending_kits(?array $manifest = null, array $files = []): array
 /**
  * Register the categories kits declare, where the host has not already.
  *
- * kit.json `categories` maps a slug to its label and description. Inside WPPilot most kits reuse
+ * kit.json `categories` maps a slug to its label and description. Inside GoBuildWP most kits reuse
  * a category the host registers (`changes`); standalone that category does not exist, and an
  * ability whose category is missing is refused by core.
  */

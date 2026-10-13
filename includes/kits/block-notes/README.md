@@ -59,5 +59,5 @@ is undoable. Permission is the host's plus `edit_post` on the note's post, check
 <!-- kit-export:omit -->
 ## Tests
 
-`tests/Unit/Kits/BlockNotes/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/BlockNotes/` in the GoBuildWP repository (not shipped).
 <!-- /kit-export:omit -->

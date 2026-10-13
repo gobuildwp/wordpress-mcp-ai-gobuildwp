@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,10 +15,10 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * The skills that ship inside loaded kits, as one source in WPPilot's skill catalog.
+ * The skills that ship inside loaded kits, as one source in GoBuildWP's skill catalog.
  *
  * A kit carries its SKILL.md under skills/<slug>/ so the prompt travels with the abilities it
- * names when the folder is copied into another plugin. Inside WPPilot they join the catalog like
+ * names when the folder is copied into another plugin. Inside GoBuildWP they join the catalog like
  * the built-ins do, for free and Pro kits alike — only kits that actually loaded, so a skill never
  * names an ability that is not registered.
  */

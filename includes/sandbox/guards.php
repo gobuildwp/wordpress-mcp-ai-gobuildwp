@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -20,10 +20,10 @@ if (!defined('ABSPATH')) {
 /**
  * Get the sandbox directory path for AI-written PHP plugins.
  *
- * The sandbox is an operational boundary for generated PHP: it gives WPPilot
+ * The sandbox is an operational boundary for generated PHP: it gives GoBuildWP
  * one place to load AI-written PHP files from, disable them, and recover from
  * crashes. It is not a security isolation boundary for all filesystem writes.
- * Authenticated WPPilot administrators may intentionally read, write, edit,
+ * Authenticated GoBuildWP administrators may intentionally read, write, edit,
  * upload, and delete non-PHP files elsewhere under the configured filesystem
  * base directory.
  *
@@ -55,7 +55,7 @@ function wppilot_sandbox_guard_files(): array
     return [
         'index.php' => "<?php\n// Silence is golden.\n",
         '.htaccess' =>
-            "# WPPilot sandbox: agent-authored PHP. Never serve this directory over HTTP.\n"
+            "# GoBuildWP sandbox: agent-authored PHP. Never serve this directory over HTTP.\n"
                 . "<IfModule mod_authz_core.c>\n"
                 . "    Require all denied\n"
                 . "</IfModule>\n"
@@ -154,7 +154,7 @@ function wppilot_validate_sandbox_path($resolved)
 /**
  * Check that a resolved PHP-execution path is inside the sandbox directory.
  *
- * This is deliberately scoped to files that WPPilot may execute as PHP or
+ * This is deliberately scoped to files that GoBuildWP may execute as PHP or
  * files that can alter PHP execution. Non-PHP filesystem access outside the
  * sandbox is expected behavior, not a sandbox bypass.
  *
@@ -203,10 +203,11 @@ function wppilot_check_php_sandbox(string $resolved): bool|WP_Error
  */
 function wppilot_path_requires_php_sandbox(string $resolved): bool
 {
-    $filename = strtolower(basename($resolved));
-    $extension = strtolower(pathinfo($resolved, PATHINFO_EXTENSION));
+    // Windows drops trailing dots and spaces from a filename, so "x.php." is saved as x.php.
+    $filename = rtrim(strtolower(basename($resolved)), characters: '. ');
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-    if ($extension === 'php') {
+    if (wppilot_is_php_extension($extension)) {
         return true;
     }
 
@@ -221,6 +222,20 @@ function wppilot_path_requires_php_sandbox(string $resolved): bool
         ],
         strict: true,
     );
+}
+
+/**
+ * Whether a file extension is one a web server may hand to PHP.
+ *
+ * Not only `php`: stock Debian and Ubuntu PHP packages execute .phtml and .phar, and hosts
+ * commonly still map .php3-.php8, .pht and .phps. Treating only .php as PHP let agent-written
+ * code land in uploads/ as .phtml, where a request could run it outside the WordPress bootstrap
+ * and therefore outside the safety policy entirely. Compared case-insensitively, because
+ * Windows and macOS filesystems and some handler configurations are.
+ */
+function wppilot_is_php_extension(string $extension): bool
+{
+    return preg_match('/^(?:php\d*|phtml|pht|phar|phps)$/i', $extension) === 1;
 }
 
 /**

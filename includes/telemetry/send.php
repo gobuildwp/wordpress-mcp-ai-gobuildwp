@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -79,7 +79,7 @@ function send(string $event = 'ping'): void
         'redirection' => 0,
         'headers' => ['Content-Type' => 'application/json'],
         'body' => wp_json_encode(payload($event)),
-        'user-agent' => 'WPPilot/' . (defined('WPPILOT_VERSION') ? WPPILOT_VERSION : '0') . '; ' . home_url(),
+        'user-agent' => 'GoBuildWP/' . (defined('WPPILOT_VERSION') ? WPPILOT_VERSION : '0') . '; ' . home_url(),
     ]);
 }
 

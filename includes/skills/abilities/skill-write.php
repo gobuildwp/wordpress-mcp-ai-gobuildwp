@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -25,7 +25,7 @@ function register(): void
     wp_register_ability('wppilot/skill-write', [
         'label' => __('Write Skill', domain: 'wppilot'),
         'description' => __(
-            'Create or update a WPPilot user skill. The `title` is the only identifier — it is sanitised server-side (lowercase, dash-separated) and becomes both the human label and the slug used for lookups.',
+            'Create or update a GoBuildWP user skill. The `title` is the only identifier — it is sanitised server-side (lowercase, dash-separated) and becomes both the human label and the slug used for lookups.',
             domain: 'wppilot',
         ),
         'category' => 'skill',

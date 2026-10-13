@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -552,7 +552,7 @@ function unavailable_error(string $ability_name): WP_Error
     if (function_exists('wppilot_get_ability_rules')) {
         $rules = \wppilot_get_ability_rules();
         if (($rules[$ability_name]['disabled'] ?? false) === true) {
-            $hint = 'It is switched off on the WPPilot Abilities screen.';
+            $hint = 'It is switched off on the GoBuildWP Abilities screen.';
         }
     }
 

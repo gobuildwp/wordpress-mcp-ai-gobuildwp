@@ -65,12 +65,12 @@ result at 256 KB.
 the standalone host's MiniLedger keeps.
 
 <!-- kit-export:omit -->
-Inside WPPilot the profile answer is WPPilot's own (`wppilot_safety_check_ability()`) and the
+Inside GoBuildWP the profile answer is GoBuildWP's own (`wppilot_safety_check_ability()`) and the
 audit row is a change-log `audit-read` row.
 <!-- /kit-export:omit -->
 
 <!-- kit-export:omit -->
 ## Tests
 
-`tests/Unit/Kits/DbRead/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/DbRead/` in the GoBuildWP repository (not shipped).
 <!-- /kit-export:omit -->

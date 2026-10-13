@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * `wp wppilot mcp serve`: WPPilot over stdio, for clients that run on the same machine as the
+ * `wp wppilot mcp serve`: GoBuildWP over stdio, for clients that run on the same machine as the
  * site (Claude Code, Cursor, a CI job) and would rather launch a process than hold a credential.
  *
  * It serves the same MCP server the HTTP endpoint does — the adapter's `wppilot` server, its
@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) {
  *   read as a malformed protocol message and drop the connection. Errors go to stderr and output
  *   produced while handling a message is diverted there too.
  *
- * The adapter's own `wp mcp-adapter serve` exists too; this command differs in picking WPPilot's
+ * The adapter's own `wp mcp-adapter serve` exists too; this command differs in picking GoBuildWP's
  * server by default (the adapter picks the first registered one, which is Elementor's when both are
  * installed), printing nothing to stdout, refusing to run without a user, and the three points above.
  */
@@ -46,14 +46,14 @@ function register(): void
     }
 
     \WP_CLI::add_command('wppilot mcp serve', __NAMESPACE__ . '\\serve_command', [
-        'shortdesc' => 'Serve WPPilot\'s MCP server over stdio, as the WordPress user given with --user.',
+        'shortdesc' => 'Serve GoBuildWP\'s MCP server over stdio, as the WordPress user given with --user.',
         'longdesc' => implode("\n", [
             'Runs until the client closes stdin. Requires the global --user parameter.',
             '',
             '## EXAMPLES',
             '',
             '    # Claude Code, on the machine that runs the site',
-            '    claude mcp add wppilot-local -- wp --path=/var/www/html wppilot mcp serve --user=admin',
+            '    claude mcp add gobuildwp-local -- wp --path=/var/www/html wppilot mcp serve --user=admin',
             '',
             '    # One request from a script',
             '    printf \'%s\n\' \'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}\' | wp wppilot mcp serve --user=admin',
@@ -85,7 +85,7 @@ function serve_command(array $args, array $assoc_args): void
         \WP_CLI::error('Pass --user=<id|login|email>. The server runs as that WordPress user, and every ability checks that user\'s permissions, exactly as over HTTP.');
     }
     if (!function_exists('wppilot_is_enabled') || !\wppilot_is_enabled()) {
-        \WP_CLI::error('WPPilot\'s AI abilities are switched off on this site. Switch them on under WPPilot > Connect first.');
+        \WP_CLI::error('GoBuildWP\'s AI abilities are switched off on this site. Switch them on under GoBuildWP > Connect first.');
     }
     /** This filter belongs to the MCP adapter; a site that switched stdio off there has switched it off here too. */
     if (!(bool) apply_filters('mcp_adapter_enable_stdio_transport', true) || !(bool) apply_filters('wppilot_stdio_enabled', true)) {
@@ -95,6 +95,11 @@ function serve_command(array $args, array $assoc_args): void
     $router = router((string) ($assoc_args['server'] ?? DEFAULT_SERVER));
     if (is_string($router)) {
         \WP_CLI::error($router);
+    }
+    // There is no REST route over stdio, so say which server this process is; GoBuildWP's servers
+    // publish by GoBuildWP's exposure rule (includes/mcp/legacy-access.php).
+    if (function_exists('WPPilot\Mcp\Legacy\stdio_server')) {
+        \WPPilot\Mcp\Legacy\stdio_server((string) ($assoc_args['server'] ?? DEFAULT_SERVER));
     }
 
     if (function_exists('wp_raise_memory_limit')) {
@@ -111,7 +116,7 @@ function serve_command(array $args, array $assoc_args): void
     ];
     identify($session, $agent);
 
-    log_line(sprintf('WPPilot MCP stdio server ready: server %s, user %s (#%d), session %s.', (string) ($assoc_args['server'] ?? DEFAULT_SERVER), $user->user_login, $user->ID, $session));
+    log_line(sprintf('GoBuildWP MCP stdio server ready: server %s, user %s (#%d), session %s.', (string) ($assoc_args['server'] ?? DEFAULT_SERVER), $user->user_login, $user->ID, $session));
 
     // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fgets -- Reading the protocol stream.
     while (($line = fgets(STDIN)) !== false) {
@@ -149,7 +154,7 @@ function serve_command(array $args, array $assoc_args): void
 function router(string $server_id): object|string
 {
     if (!class_exists('WP\\MCP\\Core\\McpAdapter')) {
-        return 'The MCP adapter is not loaded, so there is no MCP server to serve. Reinstall the WPPilot release build.';
+        return 'The MCP adapter is not loaded, so there is no MCP server to serve. Reinstall the GoBuildWP release build.';
     }
     $server = \WP\MCP\Core\McpAdapter::instance()->get_server($server_id);
     if ($server === null) {

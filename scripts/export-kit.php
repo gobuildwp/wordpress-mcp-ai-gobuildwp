@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -20,13 +20,13 @@ declare(strict_types=1);
  * Why a rewrite and not runtime prefixing: two plugins that each carry a copy of the same kit
  * must not share one PHP symbol, option, hook, cron event or ability name, or the second one to
  * load either fatals on a redeclaration or quietly reads and writes the first one's data. Kit
- * source therefore keeps WPPilot's literal names — the verifiers and the website count literal
+ * source therefore keeps GoBuildWP's literal names — the verifiers and the website count literal
  * `wp_register_ability('wppilot/…')` calls — and this script renames them on the way out:
  *
  *   PHP namespace   WPPilot\Kits\…                  → --namespace\…   (names, `use`, strings)
  *   ability names   'wppilot/<name>'                 → '<prefix>/<name>'
  *   host abilities  wppilot/list-changes, rollback-change → <prefix>/kit-list-changes, kit-rollback-change
- *                   (the standalone host's equivalents; a skill pointing at WPPilot's own
+ *                   (the standalone host's equivalents; a skill pointing at GoBuildWP's own
  *                   ledger abilities would otherwise name something that does not exist there)
  *   storage names   wppilot_kit_…, _wppilot_kit_…    → <prefix>_kit_…, _<prefix>_kit_…
  *   handles, REST   wppilot-kit…                     → <prefix>-kit…
@@ -34,8 +34,8 @@ declare(strict_types=1);
  *                   esc_html__() and friends          → --text-domain
  *   categories      a slug a kit declares in kit.json `categories` → <prefix>-<slug>, in kit.json
  *                   and wherever kit PHP passes it as `'category' =>` or to a category function.
- *                   Inside WPPilot a kit reuses the host's category; exported, it must not
- *                   register WPPilot's `changes` before WPPilot does, which makes WPPilot's own
+ *                   Inside GoBuildWP a kit reuses the host's category; exported, it must not
+ *                   register GoBuildWP's `changes` before GoBuildWP does, which makes GoBuildWP's own
  *                   registration fail with a notice on every request.
  *   tests only      WPPilot\Tests\Unit\Kits → --namespace\Tests, and the source paths
  *                   /includes/kits/_runtime/ and /includes/kits/ → /runtime/ and /kits/. Tests
@@ -46,22 +46,22 @@ declare(strict_types=1);
  * it is about. JSON, Markdown, JS and CSS are rewritten as text with rules anchored on word
  * boundaries; kit.json is decoded, rewritten field by field, and re-encoded.
  *
- * Comments: rewritten by the same rules; a PHP comment that still names WPPilot afterwards (a
- * docblock explaining how the WPPilot host differs, say) is removed whole and replaced by as many
+ * Comments: rewritten by the same rules; a PHP comment that still names GoBuildWP afterwards (a
+ * docblock explaining how the GoBuildWP host differs, say) is removed whole and replaced by as many
  * newlines as it spanned, so every line of emitted code keeps the line number it has in the
  * source and a stack trace from the copy points at the right line here. Markdown has no such
- * fallback: wrap WPPilot-only prose in `<!-- kit-export:omit -->` … `<!-- /kit-export:omit -->`
+ * fallback: wrap GoBuildWP-only prose in `<!-- kit-export:omit -->` … `<!-- /kit-export:omit -->`
  * and it is dropped; anything left over fails the export. JS and CSS comments are not touched,
  * so the same applies to them. The one deliberate exception is the SPDX-FileCopyrightText line
  * of each PHP file: it is a copyright notice, kept as written unless --copyright replaces it, and
- * it is the only line the leftover scan allows to name WPPilot.
+ * it is the only line the leftover scan allows to name GoBuildWP.
  *
  * Output under --out:
  *   load.php      the entry the receiving plugin requires once (generated here)
  *   config.php    its settings; written only when absent, never overwritten or hashed
  *   EXPORT.json   source git SHAs, kit versions, runtime API_VERSION, the rewrite map and the
  *                 sha256 of every emitted file, keys sorted
- *   runtime/      includes/kits/_runtime without hosts/wppilot.php (WPPilot-only glue)
+ *   runtime/      includes/kits/_runtime without hosts/wppilot.php (GoBuildWP-only glue)
  *   kits/<slug>/  each kit, minus any tests/ folder inside it, plus every kit a requested one
  *                 names in kit.json `requires.kits` (transitively), reported on stdout
  *   tests/        the kit's tests from this repo (kit.json `tests`, else tests/Unit/Kits/<Kit>)
@@ -104,11 +104,21 @@ use const WPPilot\Scripts\Kits\CATEGORY_SLUG_PATTERN;
 
 require_once __DIR__ . '/lib/kit-tools.php';
 
-/** WPPilot's ledger abilities, and what the standalone host calls its equivalent. */
+/** GoBuildWP's ledger abilities, and what the standalone host calls its equivalent. */
 const HOST_EQUIVALENTS = ['list-changes' => 'kit-list-changes', 'rollback-change' => 'kit-rollback-change'];
 
-/** The runtime file that is WPPilot's glue and never leaves this repository. */
+/** The runtime file that is GoBuildWP's glue and never leaves this repository. */
 const WPPILOT_ONLY = 'hosts/wppilot.php';
+
+/**
+ * Whether text names the source plugin: its code name (wppilot, in every identifier a kit is
+ * rewritten from) or its product name, GoBuildWP. Either one left in an export ties the copy to
+ * this plugin.
+ */
+function names_source_plugin(string $text): bool
+{
+    return stripos($text, 'wppilot') !== false || stripos($text, 'gobuildwp') !== false;
+}
 
 /** Longest suffix the runtime appends to a key prefix (Runner: `lease_` + a UUID). */
 const KEY_TAIL = 42;
@@ -294,14 +304,14 @@ final class Rewriter
         );
     }
 
-    /** The rewritten comment, or null when it still names WPPilot and has to go. */
+    /** The rewritten comment, or null when it still names GoBuildWP and has to go. */
     private function comment(string $text, bool $test): ?string
     {
         if (preg_match('/^(\/\/\s*SPDX-FileCopyrightText:)/', $text, $m) === 1) {
             return $this->copyright === null ? $text : $m[1] . ' ' . $this->copyright;
         }
         $rewritten = $this->text($text, $test);
-        return stripos($rewritten, 'wppilot') === false ? $rewritten : null;
+        return names_source_plugin($rewritten) ? null : $rewritten;
     }
 
     public function markdown(string $text): string
@@ -362,16 +372,16 @@ function options(array $argv): array
     if (preg_match('/^[A-Z][A-Za-z0-9_]*(?:\\\\[A-Z][A-Za-z0-9_]*)*$/', $namespace) !== 1) {
         throw new ExportError('--namespace must be a PHP namespace such as "Acme\\Kits"');
     }
-    if (stripos($namespace, 'wppilot') !== false) {
-        throw new ExportError('--namespace must not name WPPilot: the point of an export is that it shares nothing with it');
+    if (names_source_plugin($namespace)) {
+        throw new ExportError('--namespace must not name GoBuildWP: the point of an export is that it shares nothing with it');
     }
     // Letters and digits only: the prefix becomes an ability namespace (no `_`), an option and
     // hook prefix (no `-` wanted in an identifier-like name) and a category slug prefix.
-    if (preg_match('/^[a-z][a-z0-9]{1,31}$/', (string) $parsed['prefix']) !== 1 || str_contains((string) $parsed['prefix'], 'wppilot')) {
+    if (preg_match('/^[a-z][a-z0-9]{1,31}$/', (string) $parsed['prefix']) !== 1 || names_source_plugin((string) $parsed['prefix'])) {
         throw new ExportError('--prefix must be 2-32 lower-case letters and digits, starting with a letter, and not wppilot');
     }
-    if (preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', (string) $parsed['text-domain']) !== 1 || str_contains((string) $parsed['text-domain'], 'wppilot')) {
-        throw new ExportError('--text-domain must be a lower-case slug, and not WPPilot\'s');
+    if (preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', (string) $parsed['text-domain']) !== 1 || names_source_plugin((string) $parsed['text-domain'])) {
+        throw new ExportError('--text-domain must be a lower-case slug, and not GoBuildWP\'s (wppilot)');
     }
     $copyright = isset($parsed['copyright']) ? trim((string) $parsed['copyright']) : null;
     if ($copyright !== null && ($copyright === '' || str_contains($copyright, "\n"))) {
@@ -501,15 +511,15 @@ function validate(array $emitted, Rewriter $rewriter, array $abilities, array $c
         if ($path === 'EXPORT.json') {
             continue;
         }
-        // Leftovers: nothing emitted may still name WPPilot, bar the copyright notices.
+        // Leftovers: nothing emitted may still name GoBuildWP, bar the copyright notices.
         foreach (preg_split('/\R/', $contents) ?: [] as $index => $line) {
-            if (stripos($line, 'wppilot') === false) {
+            if (!names_source_plugin($line)) {
                 continue;
             }
             if ($rewriter->copyright === null && preg_match('/^\s*\/\/\s*SPDX-FileCopyrightText:/', $line) === 1) {
                 continue;
             }
-            $problems[] = sprintf('%s:%d: still names WPPilot: %s', $path, $index + 1, trim($line));
+            $problems[] = sprintf('%s:%d: still names GoBuildWP: %s', $path, $index + 1, trim($line));
         }
         // Every ability the copy mentions has to exist in the copy.
         if (preg_match_all('/(?<![A-Za-z0-9_.\/-])' . preg_quote($prefix, '/') . '\/([a-z0-9][a-z0-9-]*)/', $contents, $mentions, PREG_OFFSET_CAPTURE) > 0) {

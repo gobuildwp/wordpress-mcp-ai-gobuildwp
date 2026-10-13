@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('wppilot/system-status', [
     'label' => __('System Status', domain: 'wppilot'),
     'description' => __(
-        'Return a concise WordPress, PHP, database, cron, cache, and WPPilot runtime status report.',
+        'Return a concise WordPress, PHP, database, cron, cache, and GoBuildWP runtime status report.',
         domain: 'wppilot',
     ),
     'input_schema' => WPPILOT_NO_INPUT_SCHEMA,
@@ -260,7 +260,7 @@ function wppilot_security_audit(): array
         wppilot_diagnostic_check(
             'wppilot_safety_profile',
             $safety_profile === 'production' ? 'pass' : 'recommendation',
-            sprintf('WPPilot safety profile is %s.', $safety_profile),
+            sprintf('GoBuildWP safety profile is %s.', $safety_profile),
         ),
     ];
 

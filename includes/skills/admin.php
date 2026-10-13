@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -32,9 +32,9 @@ function current_user_can_manage(): bool
 }
 
 /**
- * Skills lives as a submenu under the WPPilot top-level menu registered
+ * Skills lives as a submenu under the GoBuildWP top-level menu registered
  * in `wppilot.php`. The parent slug `wppilot-connect` is the canonical
- * Configuration page. Its position in the WPPilot submenu is set by the
+ * Configuration page. Its position in the GoBuildWP submenu is set by the
  * admin_menu priority in bootstrap.php.
  */
 function register_menu(): void
@@ -89,7 +89,7 @@ function register_post_handlers(): void
 function enqueue_assets(string $hook): void
 {
     // Submenu page hook id is `<parent>_page_<slug>` where `<parent>` is
-    // the sanitised menu_title of the parent top-level menu ("WPPilot").
+    // the sanitised menu_title of the parent top-level menu ("GoBuildWP").
     if ($hook !== 'wppilot_page_' . PAGE_SLUG) {
         return;
     }

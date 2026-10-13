@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: image attachments on user messages.
+ * GoBuildWP Chat: image attachments on user messages.
  *
  * Validates and normalizes what the client sends, and rebuilds attachments
  * when replaying a session to the model.

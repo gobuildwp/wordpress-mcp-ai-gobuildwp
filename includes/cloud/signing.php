@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -55,10 +55,10 @@ function wppilot_cloud_keys(bool $create = true): array|WP_Error
         return $keys;
     }
     if (!$create) {
-        return new WP_Error('keys', __('This site has no WPPilot Cloud signing key.', domain: 'wppilot'));
+        return new WP_Error('keys', __('This site has no GoBuildWP Cloud signing key.', domain: 'wppilot'));
     }
     if (!wppilot_cloud_sodium_available()) {
-        return new WP_Error('keys', __('This PHP build cannot create the Ed25519 key WPPilot Cloud needs (sodium is unavailable).', domain: 'wppilot'));
+        return new WP_Error('keys', __('This PHP build cannot create the Ed25519 key GoBuildWP Cloud needs (sodium is unavailable).', domain: 'wppilot'));
     }
 
     $pair = sodium_crypto_sign_keypair();
@@ -139,13 +139,13 @@ function wppilot_cloud_signed_post(string $base, string $path, string|int $site_
         return $keys;
     }
     if (!wppilot_cloud_sodium_available()) {
-        return new WP_Error('keys', __('sodium is unavailable, so this site cannot sign WPPilot Cloud requests.', domain: 'wppilot'));
+        return new WP_Error('keys', __('sodium is unavailable, so this site cannot sign GoBuildWP Cloud requests.', domain: 'wppilot'));
     }
 
     $body = wppilot_cloud_signed_body($site_id, $payload);
     $signature = wppilot_cloud_sign($body, $keys['secret']);
     if ($signature === '') {
-        return new WP_Error('keys', __('This site has no WPPilot Cloud signing key.', domain: 'wppilot'));
+        return new WP_Error('keys', __('This site has no GoBuildWP Cloud signing key.', domain: 'wppilot'));
     }
 
     return wppilot_cloud_post($base, $path, $body, ['X-WPPilot-Signature' => $signature]);

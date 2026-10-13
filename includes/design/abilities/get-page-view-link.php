@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -13,7 +13,7 @@ use WP_Post;
 /**
  * Ability: a URL the agent's own browser can open to look at a page.
  *
- * Every other check in WPPilot reads the page: the markup, the stylesheets, the
+ * Every other check in GoBuildWP reads the page: the markup, the stylesheets, the
  * contrast of colours declared in CSS. None of them can see it. An agent builds
  * a hero, and whether the headline sits on top of the image or under it, whether
  * the button is legible on that photograph, whether the third card wrapped onto
@@ -28,7 +28,7 @@ use WP_Post;
  * confirmation, and Production Safe refuses it. An ability annotated read-only
  * that handed one out would walk straight past all three.
  *
- * Deliberately not a screenshot ability. WPPilot has no renderer; when the
+ * Deliberately not a screenshot ability. GoBuildWP has no renderer; when the
  * caller has no browser either, wppilot/capture-page asks the site's own
  * logged-in tab to take the picture instead.
  */

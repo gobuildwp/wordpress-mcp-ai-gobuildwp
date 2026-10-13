@@ -1,6 +1,6 @@
 # Elementor MCP
 
-Editing an Elementor page is free, in this repository, since WPPilot 1.10.0.
+Editing an Elementor page is free, in this repository, since GoBuildWP 1.10.0.
 The abilities register automatically when Elementor 3.6 or newer is active and
 stay unregistered otherwise, so an agent is never offered a tool that cannot
 work on this site. Elementor Pro is not required for anything below.
@@ -12,7 +12,7 @@ typed element tree, and Elementor renders from that tree and ignores
 `post_content` entirely. Writing generated HTML into a post therefore produces a
 call that reports success and changes nothing a visitor sees - the single most
 common failure mode when a general-purpose WordPress tool meets a builder site.
-WPPilot refuses that write by name instead of reporting a false success.
+GoBuildWP refuses that write by name instead of reporting a false success.
 
 The abilities below work on the tree itself.
 
@@ -68,8 +68,8 @@ from documentation is a silently dropped property; a key read from
 
 ## What Pro adds
 
-The free abilities are primitives, and they compose. [WPPilot
-Pro](https://wppilot.co/pro) adds the authoring layer above them plus everything
+The free abilities are primitives, and they compose. [GoBuildWP
+Pro](https://gobuildwp.com/pro) adds the authoring layer above them plus everything
 Elementor keeps outside a single document: whole-page composition from one
 compact description (`elementor-build-page`), reproduction specs compiled into
 global classes and a matching tree, templates and theme parts with display

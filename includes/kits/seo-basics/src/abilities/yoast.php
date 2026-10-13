@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit();
 }
 
-// WPPilot Pro registers richer abilities under these names first on a licensed site; this copy
+// GoBuildWP Pro registers richer abilities under these names first on a licensed site; this copy
 // then stands aside, and so does its undo capture, because the ability that runs is Pro's.
 
 if (Runtime\unclaimed('wppilot/yoast-get-post-seo')) {

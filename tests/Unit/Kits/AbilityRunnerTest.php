@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,8 +15,8 @@ use WPPilot\Tests\Unit\Kits\Multisite\RecordingAbility;
 use WPPilot_Test_State;
 
 /**
- * WPPilot's ability runner: what a kit ability that runs another ability goes through inside
- * WPPilot. It is the gate pipeline under the `nested` transport, plus the Abilities Hub switch
+ * GoBuildWP's ability runner: what a kit ability that runs another ability goes through inside
+ * GoBuildWP. It is the gate pipeline under the `nested` transport, plus the Abilities Hub switch
  * of the site the request is on at that moment.
  */
 final class AbilityRunnerTest extends TestCase

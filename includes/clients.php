@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * The AI clients WPPilot knows about, and how each one connects.
+ * The AI clients GoBuildWP knows about, and how each one connects.
  *
  * Three separate places used to hold a partial answer to "which AI clients does
  * this support": the config-snippet builder knew fourteen clients but nothing
@@ -163,7 +163,7 @@ function wppilot_clients_web_ui(): array
             'match' => ['codex-app', 'codex desktop', 'codex-desktop'],
             'methods' => ['oauth'],
             'note' => __(
-                'In the Codex desktop app open Settings from your account menu, add WPPilot as a remote MCP server, and approve the browser sign-in.',
+                'In the Codex desktop app open Settings from your account menu, add GoBuildWP as a remote MCP server, and approve the browser sign-in.',
                 domain: 'wppilot',
             ),
         ],
@@ -201,7 +201,7 @@ function wppilot_clients_native_oauth_editors(): array
         ],
         // Factory's Droid CLI discovers the authorization server, registers via
         // Dynamic Client Registration, and uses Factory's published client
-        // metadata where the server supports it — so it reaches WPPilot's OAuth
+        // metadata where the server supports it — so it reaches GoBuildWP's OAuth
         // natively. Servers are configured in ~/.factory/mcp.json, or per
         // project in .factory/mcp.json.
         'factory-droid' => [
@@ -457,16 +457,16 @@ function wppilot_client_proxy_shapes(): array
             'hidden' => true,
         ],
         // Not a client anyone configures: the Cloud pairs itself from the
-        // Connect screen's WPPilot Cloud card. It introduces itself as
+        // Connect screen's GoBuildWP Cloud card. It introduces itself as
         // `wppilot-cloud` on initialize and in its User-Agent
         // (`WPPilot-Cloud/1`), and the AI client behind it only in a display
         // header, so its connections are labelled as the Cloud.
         'wppilot-cloud' => [
-            'label' => 'WPPilot Cloud',
+            'label' => 'GoBuildWP Cloud',
             'match' => ['wppilot-cloud'],
             'oauth' => 'native',
             'methods' => ['token'],
-            'note' => __('Connected through WPPilot Cloud with the access token it was given when the site was paired.', domain: 'wppilot'),
+            'note' => __('Connected through GoBuildWP Cloud with the access token it was given when the site was paired.', domain: 'wppilot'),
             'hidden' => true,
         ],
         'wordpress-remote' => [
@@ -501,7 +501,7 @@ function wppilot_clients_with_oauth_route(array $group, string $oauth): array
 }
 
 /**
- * Every AI client WPPilot can describe a connection for.
+ * Every AI client GoBuildWP can describe a connection for.
  *
  * @return array<string, array<array-key, mixed>>
  */
@@ -601,6 +601,27 @@ function wppilot_client_key(string $reported): ?string
     }
 
     return null;
+}
+
+/**
+ * "Label (reported name)" for a connection, or just the label when the reported
+ * name adds nothing a person needs.
+ *
+ * GoBuildWP Cloud reports its User-Agent (`WPPilot-Cloud/1 (+...)`), a machine
+ * string kept so existing firewall allowlists still match; it is not shown.
+ */
+function wppilot_client_display(string $label, string $reported): string
+{
+    $reported = trim($reported);
+    if ($reported === '' || $reported === $label) {
+        return $label;
+    }
+    $key = wppilot_client_key($reported);
+    if ($key !== null && !empty(wppilot_clients()[$key]['hidden']) && wppilot_client_label($reported) === $label) {
+        return $label;
+    }
+
+    return $label . ' (' . $reported . ')';
 }
 
 /**

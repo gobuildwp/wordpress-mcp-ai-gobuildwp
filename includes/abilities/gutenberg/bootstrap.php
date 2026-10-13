@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -717,7 +717,7 @@ function validate_dynamic_only_blocks(array $blocks): ?WP_Error
             return new WP_Error(
                 'gutenberg_static_blocks_require_finalization',
                 sprintf(
-                    'Block "%s" is not a registered WPPilot-owned dynamic-only block. Native/static Gutenberg blocks must be queued with wppilot/gutenberg-add-pending-change and finalized in a browser before they are live.',
+                    'Block "%s" is not a registered GoBuildWP-owned dynamic-only block. Native/static Gutenberg blocks must be queued with wppilot/gutenberg-add-pending-change and finalized in a browser before they are live.',
                     $name !== '' ? $name : '(missing name)',
                 ),
                 [
@@ -912,7 +912,7 @@ function user_instruction(WP_Post $batch): string
     $runtime = finalizer_runtime_status($batch);
     if (($runtime['online'] ?? false) === true && ($runtime['can_finalize_batch'] ?? false) === true) {
         return sprintf(
-            'The WPPilot Block Editor Queue page is open and should automatically finalize Gutenberg batch #%d: %s. Do not ask the user to do anything unless the page goes offline; stream %s with curl -N, or poll %s with curl, until the batch becomes finalized, failed, or conflicted. Do not treat these Gutenberg changes as live until finalization completes.',
+            'The GoBuildWP Block Editor Queue page is open and should automatically finalize Gutenberg batch #%d: %s. Do not ask the user to do anything unless the page goes offline; stream %s with curl -N, or poll %s with curl, until the batch becomes finalized, failed, or conflicted. Do not treat these Gutenberg changes as live until finalization completes.',
             $batch->ID,
             batch_label($batch),
             (string) ($runtime['sse_url'] ?? finalizer_runtime_sse_url($batch->ID)),
@@ -922,7 +922,7 @@ function user_instruction(WP_Post $batch): string
 
     if (($runtime['online'] ?? false) === true) {
         return sprintf(
-            'A WPPilot Block Editor Queue page is open, but that browser user may not be able to finalize Gutenberg batch #%d: %s. Ask the user to open %s as a user who can edit every target. Do not treat these Gutenberg changes as live until finalization completes.',
+            'A GoBuildWP Block Editor Queue page is open, but that browser user may not be able to finalize Gutenberg batch #%d: %s. Ask the user to open %s as a user who can edit every target. Do not treat these Gutenberg changes as live until finalization completes.',
             $batch->ID,
             batch_label($batch),
             finalizer_dashboard_url(),
@@ -930,7 +930,7 @@ function user_instruction(WP_Post $batch): string
     }
 
     return sprintf(
-        'The WPPilot Block Editor Queue page is not currently online. Ask the user to open %s and keep it open. It will automatically finalize Gutenberg batch #%d: %s when it can. Do not treat these Gutenberg changes as live until finalization completes.',
+        'The GoBuildWP Block Editor Queue page is not currently online. Ask the user to open %s and keep it open. It will automatically finalize Gutenberg batch #%d: %s when it can. Do not treat these Gutenberg changes as live until finalization completes.',
         finalizer_dashboard_url(),
         $batch->ID,
         batch_label($batch),

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -155,7 +155,7 @@ function register_setting(mixed $sections): mixed
         'id' => 'wppilot-preview',
         'title' => __('Preview before write', domain: 'wppilot'),
         'description' => __(
-            'Agents can always call WPPilot Preview on their own. This makes it mandatory for the writes it covers.',
+            'Agents can always call GoBuildWP Preview on their own. This makes it mandatory for the writes it covers.',
             domain: 'wppilot',
         ),
         'fields' => [
@@ -164,7 +164,7 @@ function register_setting(mixed $sections): mixed
                 'name' => OPTION,
                 'label' => __('Require a reviewed preview before agent writes (MCP and REST)', domain: 'wppilot'),
                 'help' => __(
-                    'A write that WPPilot can preview is refused unless it goes through wppilot/preview-ability and wppilot/apply-preview, so a person sees the diff first. Abilities WPPilot cannot preview are unaffected, rather than being blocked with no way through. The built-in Chat screen is not covered — it has its own approval step.',
+                    'A write that GoBuildWP can preview is refused unless it goes through wppilot/preview-ability and wppilot/apply-preview, so a person sees the diff first. Abilities GoBuildWP cannot preview are unaffected, rather than being blocked with no way through. The built-in Chat screen is not covered — it has its own approval step.',
                     domain: 'wppilot',
                 ),
                 'value' => required(),

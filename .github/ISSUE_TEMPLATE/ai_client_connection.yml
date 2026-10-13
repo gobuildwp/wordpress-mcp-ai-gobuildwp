@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Run **WPPilot → Diagnostics** first - it runs the same checks a client
+        Run **GoBuildWP → Diagnostics** first - it runs the same checks a client
         does and usually names the problem outright.
 
         **Never paste an application password, access token, OAuth client
@@ -58,7 +58,7 @@ body:
     id: versions
     attributes:
       label: Versions
-      placeholder: "WPPilot 1.11.0, WordPress 6.9, PHP 8.3, Pro 1.6.1 (or none)"
+      placeholder: "GoBuildWP 1.11.0, WordPress 6.9, PHP 8.3, Pro 1.6.1 (or none)"
     validations:
       required: true
   - type: checkboxes

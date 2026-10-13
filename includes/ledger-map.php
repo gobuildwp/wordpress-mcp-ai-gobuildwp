@@ -1,15 +1,15 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * A declarative ledger map for abilities WPPilot did not write.
+ * A declarative ledger map for abilities GoBuildWP did not write.
  *
  * Builders, SEO plugins, WooCommerce and core now register their own abilities.
- * When an agent runs one through WPPilot it already passes the safety profile,
+ * When an agent runs one through GoBuildWP it already passes the safety profile,
  * the confirmation contract and the Hub rules, but the ledger had nothing to
  * snapshot, so every such write was filed "No supported before-image" and could
  * not be undone. Writing a PHP capture callback per third-party ability does not
@@ -43,7 +43,7 @@ declare(strict_types=1);
  *   generic one, so the Changes screen says why it cannot be undone.
  *
  * The map is read by a `wppilot_capture_before_image` listener at priority 20, so
- * WPPilot's own captures and any code-level capture (priority 10) always win over
+ * GoBuildWP's own captures and any code-level capture (priority 10) always win over
  * a declaration. Reads are never recorded, so a read-only ability needs no entry.
  */
 
@@ -60,7 +60,7 @@ const WPPILOT_LEDGER_MAP_OPTION_TYPE = 'ledger-map/option';
 const WPPILOT_LEDGER_MAP_IRREVERSIBLE_TYPE = 'ledger-map/irreversible';
 
 /**
- * The map WPPilot ships.
+ * The map GoBuildWP ships.
  *
  * WordPress 7.1 core registers three abilities — `core/get-site-info`,
  * `core/get-user-info` and `core/get-environment-info` — and all three are
@@ -112,8 +112,8 @@ function wppilot_default_ability_ledger_map(): array
     $map['elementor/reorder-classes'] = ['strategy' => 'post-partial', 'target' => 'option.elementor_active_kit', 'meta_keys' => $classes];
     $map['elementor/manage-global-variable'] = ['strategy' => 'post-partial', 'target' => 'option.elementor_active_kit', 'meta_keys' => ['_elementor_global_variables']];
     $map['elementor/create-page'] = ['strategy' => 'irreversible', 'reason' => 'Elementor created a new page. Undo by trashing it.'];
-    $map['elementor/manage-component'] = ['strategy' => 'irreversible', 'reason' => 'Elementor components span several posts; WPPilot cannot put one back as it was.'];
-    $map['elementor/manage-default-styles'] = ['strategy' => 'irreversible', 'reason' => 'Elementor stores default styles where WPPilot cannot snapshot them.'];
+    $map['elementor/manage-component'] = ['strategy' => 'irreversible', 'reason' => 'Elementor components span several posts; GoBuildWP cannot put one back as it was.'];
+    $map['elementor/manage-default-styles'] = ['strategy' => 'irreversible', 'reason' => 'Elementor stores default styles where GoBuildWP cannot snapshot them.'];
 
     // WooCommerce 10.3's own abilities. A product is a post with meta and terms; an order is not
     // always a post (HPOS), and changing its status or adding a note can email the customer.
@@ -134,7 +134,7 @@ function wppilot_default_ability_ledger_map(): array
     // and discounts live in EDD's own tables, and receipts are emailed.
     $map['edd/product-update'] = ['strategy' => 'post', 'target' => 'input.product_id'];
     $map['edd/product-create'] = ['strategy' => 'irreversible', 'reason' => 'EDD created a new download. Undo by trashing it.'];
-    $edd_tables = 'EDD keeps this in its own tables, which WPPilot does not snapshot. Change it back in Downloads.';
+    $edd_tables = 'EDD keeps this in its own tables, which GoBuildWP does not snapshot. Change it back in Downloads.';
     foreach (['edd/order-create', 'edd/order-update-status', 'edd/customer-create', 'edd/customer-update', 'edd/discount-create', 'edd/discount-update', 'edd/discount-delete'] as $ability) {
         $map[$ability] = ['strategy' => 'irreversible', 'reason' => $edd_tables];
     }
@@ -339,7 +339,7 @@ function wppilot_ledger_map_capture_post_partial(array $entry, array $input): ?a
     }
 
     // The same privacy rule as the whole-post snapshot: a key that looks like it holds a
-    // credential is never copied into the ledger, which every WPPilot admin can read.
+    // credential is never copied into the ledger, which every GoBuildWP admin can read.
     $meta_keys = array_values(array_filter(
         $entry['meta_keys'],
         static fn(string $key): bool => !wppilot_change_key_is_sensitive($key),

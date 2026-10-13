@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ if (!defined('ABSPATH')) {
  * - Yoast's indexables table caches what the page prints. Its post meta watcher rebuilds a
  *   post's indexable at shutdown whenever any `_yoast_wpseo_` key is added, updated or deleted,
  *   which covers both these writes and a restore through the post-partial strategy, so nothing
- *   here refreshes it by hand (WPPilot Pro's copy does not either).
+ *   here refreshes it by hand (GoBuildWP Pro's copy does not either).
  */
 const CODE = 'yoast';
 

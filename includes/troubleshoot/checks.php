@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -169,7 +169,7 @@ function check_change_ledger(): array
             $status['error']['message'],
         ),
         __(
-            'Ask your host to grant the WordPress database user the CREATE and ALTER privileges. WPPilot tries again every hour and moves the existing history across on its own.',
+            'Ask your host to grant the WordPress database user the CREATE and ALTER privileges. GoBuildWP tries again every hour and moves the existing history across on its own.',
             domain: 'wppilot',
         ),
     );
@@ -309,7 +309,7 @@ function check_transport(): array
         'transport',
         $label,
         __(
-            'This site is served over plain HTTP on a non-local environment. WPPilot does not register any OAuth endpoint here, because authorization codes and tokens would travel in cleartext.',
+            'This site is served over plain HTTP on a non-local environment. GoBuildWP does not register any OAuth endpoint here, because authorization codes and tokens would travel in cleartext.',
             domain: 'wppilot',
         ),
         __(
@@ -355,7 +355,7 @@ function check_permalinks(): array
 /**
  * Confirm the PHP sandbox is not reachable over HTTP.
  *
- * The sandbox holds agent-authored PHP under wp-content. WPPilot writes
+ * The sandbox holds agent-authored PHP under wp-content. GoBuildWP writes
  * .htaccess and web.config guards into it, but nginx and Caddy read neither, so
  * on those servers the only way to know is to ask the server itself. A sandbox
  * that answers 200 executes agent PHP outside the WordPress bootstrap, and so
@@ -435,7 +435,7 @@ function check_sandbox_exposure(): array
         sprintf(
             /* translators: 1: HTTP status code, 2: sandbox URL */
             __(
-                'The sandbox directory is served over HTTP (HTTP %1$d at %2$s). Any PHP an agent writes there can be executed by anyone who knows the filename, outside WordPress and outside the WPPilot safety policy.',
+                'The sandbox directory is served over HTTP (HTTP %1$d at %2$s). Any PHP an agent writes there can be executed by anyone who knows the filename, outside WordPress and outside the GoBuildWP safety policy.',
                 domain: 'wppilot',
             ),
             $code,
@@ -467,7 +467,7 @@ function check_schema(): array
         $label,
         __('The OAuth tables are missing, so no OAuth client can register or authenticate.', domain: 'wppilot'),
         __(
-            'Deactivate and reactivate WPPilot to re-run the installer, then run these checks again.',
+            'Deactivate and reactivate GoBuildWP to re-run the installer, then run these checks again.',
             domain: 'wppilot',
         ),
     );
@@ -633,7 +633,7 @@ function check_mcp_handshake(): array
             $label,
             __('The MCP endpoint is not registered, so no AI client can connect.', domain: 'wppilot'),
             __(
-                'Turn on AI Abilities on the Overview screen. If it is already on, the MCP Adapter failed to load — reinstall the WPPilot release build ZIP.',
+                'Turn on AI Abilities on the Overview screen. If it is already on, the MCP Adapter failed to load — reinstall the GoBuildWP release build ZIP.',
                 domain: 'wppilot',
             ),
         );
@@ -890,7 +890,7 @@ function check_registration(): array
         'sslverify' => !\wppilot_likely_self_signed_https(),
         'headers' => ['Content-Type' => 'application/json', 'X-WPPilot-Self-Test' => $token],
         'body' => (string) wp_json_encode([
-            'client_name' => 'WPPilot Self-Test',
+            'client_name' => 'GoBuildWP Self-Test',
             'redirect_uris' => ['https://claude.ai/api/mcp/auth_callback'],
         ]),
     ]);
@@ -1169,7 +1169,7 @@ function check_bot_filter(): array
         copy: sprintf(
             /* translators: 1: site URL, 2: probed discovery URL, 3: blocked user agent, 4: response it received */
             __(
-                'Hello, my WordPress site %1$s runs WPPilot, a plugin that lets AI clients (Claude, ChatGPT and similar services) connect to the site through OAuth. Your edge layer is rejecting those clients\' requests before they reach WordPress, so the connection cannot complete. I can reproduce it: a request to %2$s with the user agent "%3$s" is rejected (%4$s), while the same request with a regular user agent goes through. Could you allow this traffic for my site? The affected paths are /.well-known/oauth-* and /wp-json/. Thank you.',
+                'Hello, my WordPress site %1$s runs GoBuildWP, a plugin that lets AI clients (Claude, ChatGPT and similar services) connect to the site through OAuth. Your edge layer is rejecting those clients\' requests before they reach WordPress, so the connection cannot complete. I can reproduce it: a request to %2$s with the user agent "%3$s" is rejected (%4$s), while the same request with a regular user agent goes through. Could you allow this traffic for my site? The affected paths are /.well-known/oauth-* and /wp-json/. Thank you.',
                 domain: 'wppilot',
             ),
             home_url(),
@@ -1294,10 +1294,10 @@ function check_environment(array $headers): array
 function build_support_report(array $meta, array $detected_layers, array $checks): string
 {
     $lines = [];
-    $lines[] = 'WPPilot connection diagnostic';
+    $lines[] = 'GoBuildWP connection diagnostic';
     $lines[] = 'Site: ' . $meta['site_url'];
     $lines[] =
-        'WPPilot: '
+        'GoBuildWP: '
         . $meta['wppilot_version']
         . ' | WordPress: '
         . $meta['wp_version']
@@ -1309,7 +1309,7 @@ function build_support_report(array $meta, array $detected_layers, array $checks
     $lines[] = 'Checks:';
 
     // Every check, not just the failing ones: the full battery makes the report self-describing, and
-    // since different WPPilot versions ship different checks, the list itself shows what this
+    // since different GoBuildWP versions ship different checks, the list itself shows what this
     // version verified.
     if ($checks === []) {
         $lines[] = '- none';

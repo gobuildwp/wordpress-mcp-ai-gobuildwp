@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: shared constants, feature gate, and consent state.
+ * GoBuildWP Chat: shared constants, feature gate, and consent state.
  *
  * Loaded first by chat.php. Everything else in this directory may rely on
  * the constants and predicates defined here.
@@ -34,7 +34,7 @@ const WPPILOT_CHAT_MAX_SESSIONS_PER_USER = 50;
 const WPPILOT_CHAT_CONSENT_META = 'wppilot_chat_consent';
 
 /**
- * Whether WPPilot Chat is enabled. Site owners can turn the feature off entirely
+ * Whether GoBuildWP Chat is enabled. Site owners can turn the feature off entirely
  * with `add_filter('wppilot_chat_enabled', '__return_false')`: no menu entry, no
  * assets, no REST routes, and the page itself refuses to render.
  */
@@ -44,7 +44,7 @@ function wppilot_chat_is_enabled(): bool
 }
 
 /**
- * Whether the current user has accepted the one-time WPPilot Chat cost notice.
+ * Whether the current user has accepted the one-time GoBuildWP Chat cost notice.
  */
 function wppilot_chat_user_has_consented(): bool
 {
@@ -61,7 +61,7 @@ function wppilot_chat_status(): array
             'available' => false,
             'reason' => 'missing_ai_client',
             'message' => __(
-                'WPPilot Chat requires WordPress 7 or newer, with an AI provider configured.',
+                'GoBuildWP Chat requires WordPress 7 or newer, with an AI provider configured.',
                 domain: 'wppilot',
             ),
         ];
@@ -72,7 +72,7 @@ function wppilot_chat_status(): array
             'available' => false,
             'reason' => 'missing_native_tool_calling',
             'message' => __(
-                'WPPilot Chat requires WordPress AI Client native function calling support.',
+                'GoBuildWP Chat requires WordPress AI Client native function calling support.',
                 domain: 'wppilot',
             ),
         ];
@@ -81,7 +81,7 @@ function wppilot_chat_status(): array
     return [
         'available' => true,
         'reason' => 'available',
-        'message' => __('Ready to run WPPilot with native tool calls.', domain: 'wppilot'),
+        'message' => __('Ready to run GoBuildWP with native tool calls.', domain: 'wppilot'),
     ];
 }
 

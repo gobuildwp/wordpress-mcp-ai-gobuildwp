@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
  * A form is a `wpforms` post whose post_content is the whole definition as JSON. Entries exist
  * only on WPForms Pro, which keeps them in its own `wpforms_entries` table behind
  * wpforms()->obj('entry') (WPForms_Entry_Handler); Lite stores none, and says so rather than
- * listing nothing. The form list is the same answer WPPilot Pro 1.10.0's wpforms-list-forms gives.
+ * listing nothing. The form list is the same answer GoBuildWP Pro 1.10.0's wpforms-list-forms gives.
  */
 
 const WPFORMS_MIN_VERSION = '1.8.0';
@@ -94,6 +94,8 @@ function wpforms_list_forms(array $input): array|WP_Error
         'no_found_rows' => false,
         'update_post_meta_cache' => false,
         'update_post_term_cache' => false,
+        // List the installed form inventory across languages, independent of frontend query filters.
+        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- This administrative inventory intentionally includes all languages.
         'suppress_filters' => true,
     ];
     if (isset($input['search']) && $input['search'] !== '') {
@@ -243,7 +245,7 @@ function wpforms_list_entries(array $input): array|WP_Error
 }
 
 /**
- * One entry row: the fields WPPilot Pro's compact row carries (no IP), and the answers from the
+ * One entry row: the fields GoBuildWP Pro's compact row carries (no IP), and the answers from the
  * entry's `fields` JSON, redacted. WPForms stores each answer with its field's id, type and label
  * (`name`) at submission time.
  *

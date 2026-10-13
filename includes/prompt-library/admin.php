@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ function register_nav(mixed $map): mixed
         return $map;
     }
 
-    $map[PromptLibrary\PAGE] = ['label' => __('Prompts', domain: 'wppilot'), 'group' => 'studio'];
+    $map[PromptLibrary\PAGE] = ['label' => __('Prompts', domain: 'wppilot'), 'group' => 'prompts'];
 
     return $map;
 }
@@ -163,7 +163,7 @@ function render(): void
         } else {
             printf(
                 /* translators: 1: briefs included free, 2: further briefs that come with Pro */
-                esc_html__('%1$d briefs are free; %2$d more come with WPPilot Pro and are marked with a lock.', domain: 'wppilot'),
+                esc_html__('%1$d briefs are free; %2$d more come with GoBuildWP Pro and are marked with a lock.', domain: 'wppilot'),
                 (int) $free_count,
                 (int) ($total - $free_count),
             );
@@ -381,7 +381,7 @@ function render_brief(array $brief, string $builder, bool $licensed): void
                 <p class="wppilot-prompt__meta">
                     <span class="wppilot-prompt__industry"><?php echo esc_html($industry); ?></span>
                     <?php if ($pro) { ?>
-                        <span class="wppilot-prompt-lock" aria-label="<?php esc_attr_e('Pro', domain: 'wppilot'); ?>">&#128274;</span>
+                        <span class="wppilot-prompt-lock"><?php if ($is_locked) { ?><span class="dashicons dashicons-lock" aria-hidden="true"></span><?php } ?> <?php esc_html_e('Pro', domain: 'wppilot'); ?></span>
                     <?php } ?>
                 </p>
                 <h3 class="wppilot-prompt__title"><?php echo esc_html($title); ?></h3>
@@ -402,7 +402,7 @@ function render_brief(array $brief, string $builder, bool $licensed): void
         </div>
         <?php if ($is_locked) { ?>
             <p class="description" style="margin:0;"><?php esc_html_e(
-                'Included with WPPilot Pro.',
+                'Included with GoBuildWP Pro.',
                 domain: 'wppilot',
             ); ?></p>
         <?php } else { ?>

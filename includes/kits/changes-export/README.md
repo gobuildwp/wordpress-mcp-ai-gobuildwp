@@ -16,8 +16,8 @@ Standalone, the runtime's MiniLedger answers all three, covering the changes the
 kits recorded, and there is no download screen.
 
 <!-- kit-export:omit -->
-Inside WPPilot these are the Changes screen's own reader (`wppilot_query_change_log()`), so the
-ability, the screen and the CSV/JSON download always agree, and `download_url()` is WPPilot's
+Inside GoBuildWP these are the Changes screen's own reader (`wppilot_query_change_log()`), so the
+ability, the screen and the CSV/JSON download always agree, and `download_url()` is GoBuildWP's
 Changes screen.
 <!-- /kit-export:omit -->
 
@@ -29,5 +29,5 @@ confirmation-gated. The row shape leaves out rollback snapshots by construction.
 <!-- kit-export:omit -->
 ## Tests
 
-`tests/Unit/Kits/ChangesExport/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/ChangesExport/` in the GoBuildWP repository (not shipped).
 <!-- /kit-export:omit -->

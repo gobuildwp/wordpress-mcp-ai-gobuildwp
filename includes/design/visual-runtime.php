@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ use WPPilot\Design\Capture;
  * `wppilot/get-page-view-link` covers the client that has its own browser. A
  * great many do not - an access-token caller, a cron job, a client whose only
  * tool is the MCP connection - and for those the site has to take the picture
- * itself. WPPilot bundles no renderer, so the browser it uses is a logged-in
+ * itself. GoBuildWP bundles no renderer, so the browser it uses is a logged-in
  * wp-admin tab, exactly as the Block Editor Queue already does for blocks.
  *
  * The capture is a **re-render, not a screenshot**. The tab loads the page in a
@@ -74,7 +74,7 @@ function register_page(): void
 {
     add_submenu_page(
         parent_slug: '',
-        page_title: __('WPPilot Visual Runtime', domain: 'wppilot'),
+        page_title: __('GoBuildWP Visual Runtime', domain: 'wppilot'),
         menu_title: '',
         capability: 'edit_posts',
         menu_slug: PAGE_SLUG,
@@ -107,7 +107,7 @@ function render_page(): void
         wp_die(esc_html__('You cannot capture pages on this site.', domain: 'wppilot'));
     }
 
-    echo '<div class="wrap"><h1>' . esc_html__('WPPilot Visual Runtime', domain: 'wppilot') . '</h1>';
+    echo '<div class="wrap"><h1>' . esc_html__('GoBuildWP Visual Runtime', domain: 'wppilot') . '</h1>';
     echo '<p>' . esc_html__(
         'Leave this tab open. It takes the screenshots an agent asked for, one page at a time, by loading each page and rendering what it sees. Closing the tab stops the captures; nothing else on the site is affected.',
         domain: 'wppilot',

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 final class ClientConfigsTest extends TestCase
 {
     private const URL = 'https://example.test/wp-json/mcp/wppilot';
-    private const NAME = 'wppilot-example';
+    private const NAME = 'gobuildwp-example';
     private const TOKEN = 'wpp_test-token';
 
     protected function setUp(): void
@@ -271,7 +271,7 @@ final class ClientConfigsTest extends TestCase
         );
         self::assertNotEmpty($public['zcode']['steps']);
         self::assertSame(self::URL, $public['zcode']['steps'][0]['copy']);
-        self::assertSame("droid mcp add 'wppilot-example' '" . self::URL . "' --type http", $public['factory-droid']['code']);
+        self::assertSame("droid mcp add 'gobuildwp-example' '" . self::URL . "' --type http", $public['factory-droid']['code']);
     }
 
     public function test_manus_takes_an_access_token(): void
@@ -281,5 +281,13 @@ final class ClientConfigsTest extends TestCase
         self::assertContains(self::URL, $steps);
         self::assertContains(self::TOKEN, $steps);
         self::assertSame('manus', wppilot_web_apps()['manus']['bearer_steps'] ?? null);
+    }
+
+    public function test_the_suggested_server_name_carries_the_product_name_within_25_characters(): void
+    {
+        $name = wppilot_get_mcp_server_name_default();
+
+        self::assertSame('gobuildwp-example-test', $name);
+        self::assertLessThanOrEqual(25, strlen($name));
     }
 }

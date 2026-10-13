@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -145,7 +145,7 @@ function layouts(): array
  *
  * The named splits cover the ratios worth having an opinion about — sevens to
  * fives, sixty-five to thirty-five — and a real page measured off a reference
- * does not land on them. wppilot.co alone uses 46:54, 36:64 and 54:46, none of
+ * does not land on them. gobuildwp.com alone uses 46:54, 36:64 and 54:46, none of
  * which is in the list, and rounding each to the nearest named split is how a
  * reproduction quietly becomes an approximation.
  *

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -74,7 +74,7 @@ function wppilot_handle_toggle_enabled(): ?bool
 function wppilot_handle_admin_bar_toggle(): void
 {
     if (!wppilot_current_user_can_manage()) {
-        wp_die(esc_html__('You are not allowed to manage WPPilot settings.', domain: 'wppilot'));
+        wp_die(esc_html__('You are not allowed to manage GoBuildWP settings.', domain: 'wppilot'));
     }
 
     check_admin_referer('wppilot_toggle_ai_abilities');
@@ -127,7 +127,7 @@ function wppilot_render_enable_toggle(): void
         <p class="description" style="margin:0 0 8px;">
             <strong style="color:#d63638;"><?php esc_html_e('Security note:', domain: 'wppilot'); ?></strong>
             <?php esc_html_e(
-                'WPPilot enforces the selected safety profile on the server for MCP and REST calls. Critical and destructive calls also require explicit confirmation.',
+                'GoBuildWP enforces the selected safety profile on the server for MCP and REST calls. Critical and destructive calls also require explicit confirmation.',
                 domain: 'wppilot',
             ); ?>
         </p>

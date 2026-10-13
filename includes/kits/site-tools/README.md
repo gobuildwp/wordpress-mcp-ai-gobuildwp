@@ -37,5 +37,5 @@ boot registers.
 <!-- kit-export:omit -->
 ## Tests
 
-`tests/Unit/Kits/SiteTools/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/SiteTools/` in the GoBuildWP repository (not shipped).
 <!-- /kit-export:omit -->

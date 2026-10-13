@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -136,7 +136,7 @@ final class CoreSurfaceTest extends TestCase
     }
 
     /**
-     * Switching WPPilot off must close the surface. Without this the abilities
+     * Switching GoBuildWP off must close the surface. Without this the abilities
      * would keep executing after an administrator disables the plugin.
      */
     public function testCorePermissionIsClosedWhenWppilotIsDisabled(): void

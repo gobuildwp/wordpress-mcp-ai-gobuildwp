@@ -626,7 +626,7 @@ function App() {
 
 	// Fill the viewport below the layout's top edge instead of a fixed offset, so
 	// the chat stays full-height and only the transcript scrolls — never the page —
-	// regardless of the admin bar and WPPilot header height.
+	// regardless of the admin bar and GoBuildWP header height.
 	useEffect(() => {
 		const applyHeight = () => {
 			const element = layoutRef.current;
@@ -1083,8 +1083,8 @@ function App() {
 				<div className="wppilot-chat__consent">
 					<div className="wppilot-chat__consent-card">
 						<strong>Before you start</strong>
-						<p>WPPilot Chat runs on your own AI provider API key. Every message and tool call is billed to that key, not a flat subscription.</p>
-						<p>If you use an expensive model, large jobs can get expensive fast, so WPPilot Chat is best for quick changes on the fly. For heavier work, <a href={config.backUrl}>connect WPPilot over MCP</a>, where you can use your subscription instead.</p>
+						<p>GoBuildWP Chat runs on your own AI provider API key. Every message and tool call is billed to that key, not a flat subscription.</p>
+						<p>If you use an expensive model, large jobs can get expensive fast, so GoBuildWP Chat is best for quick changes on the fly. For heavier work, <a href={config.backUrl}>connect GoBuildWP over MCP</a>, where you can use your subscription instead.</p>
 						{error && <Notice status="error" onRemove={() => setError('')}>{error}</Notice>}
 						<div className="wppilot-chat__consent-actions">
 							<Button variant="tertiary" href={config.backUrl}>Go back</Button>
@@ -1108,7 +1108,7 @@ function App() {
 							<strong>{status.available ? 'Connect an AI provider to start' : 'WordPress 7 required'}</strong>
 							<p>
 								{status.available
-									? 'WPPilot Chat runs on your own AI provider. It needs one with a function-calling model. Once it is connected, reload this page.'
+									? 'GoBuildWP Chat runs on your own AI provider. It needs one with a function-calling model. Once it is connected, reload this page.'
 									: status.message}
 							</p>
 							{status.available && (
@@ -1186,7 +1186,7 @@ function App() {
 					<div className="wppilot-chat__chat">
 						<div className="wppilot-chat__runbar">
 							<div>
-								<strong>WPPilot Chat</strong>
+								<strong>GoBuildWP Chat</strong>
 								<span>{currentModelLabel}</span>
 							</div>
 							<ToggleControl
@@ -1209,9 +1209,9 @@ function App() {
 									className="wppilot-chat__confirm-modal"
 								>
 									<Notice status="warning" isDismissible={false}>
-										<strong>Security note:</strong> This turns on automatic approval for all of WPPilot Chat, not just this conversation. Every tool call then runs automatically, without asking you first, including executing PHP code and changing files on this site. You will not see a confirmation before each action.
+										<strong>Security note:</strong> This turns on automatic approval for all of GoBuildWP Chat, not just this conversation. Every tool call then runs automatically, without asking you first, including executing PHP code and changing files on this site. You will not see a confirmation before each action.
 									</Notice>
-									<p>Turn it on only when you trust what WPPilot Chat will do without reviewing each step first. You can switch it off anytime to go back to confirming every action.</p>
+									<p>Turn it on only when you trust what GoBuildWP Chat will do without reviewing each step first. You can switch it off anytime to go back to confirming every action.</p>
 									<div className="wppilot-chat__confirm-actions">
 										<Button variant="tertiary" onClick={closeConfirmYolo}>Cancel</Button>
 										<Button variant="primary" isDestructive onClick={acceptConfirmYolo}>Allow everything</Button>
@@ -1251,16 +1251,16 @@ function App() {
 								</div>
 							) : (
 								<div className="wppilot-chat__empty">
-									<strong>Welcome to WPPilot Chat</strong>
-									<p>Another way to use WPPilot: instead of connecting an external client over MCP, you work with it right here in your dashboard, on your own API keys, using the AI client built into WordPress 7.</p>
+									<strong>Welcome to GoBuildWP Chat</strong>
+									<p>Another way to use GoBuildWP: instead of connecting an external client over MCP, you work with it right here in your dashboard, on your own API keys, using the AI client built into WordPress 7.</p>
 									<Notice status="info" isDismissible={false}>
-										Each message is billed to your own API key, so it's best for quick changes. For heavier work, <a href={config.backUrl}>connect WPPilot over MCP</a>.
+										Each message is billed to your own API key, so it's best for quick changes. For heavier work, <a href={config.backUrl}>connect GoBuildWP over MCP</a>.
 									</Notice>
 								</div>
 							)}
 							{awaitingContinue && !isBusy && (
 								<div className="wppilot-chat__continue">
-									<p>WPPilot Chat has run {AUTO_APPROVE_STEP_LIMIT} steps automatically with Allow everything on. Continue?</p>
+									<p>GoBuildWP Chat has run {AUTO_APPROVE_STEP_LIMIT} steps automatically with Allow everything on. Continue?</p>
 									<div className="wppilot-chat__confirm-actions">
 										<Button variant="tertiary" onClick={() => setAwaitingContinue(null)}>Stop</Button>
 										<Button variant="primary" onClick={continueRun}>Continue</Button>
@@ -1318,7 +1318,7 @@ function App() {
 								<textarea
 									className="wppilot-chat__prompt"
 									aria-label="Message"
-									placeholder={activeSession ? 'Message WPPilot Chat...' : 'Ask WPPilot Chat to change, inspect, or build something on your WordPress...'}
+									placeholder={activeSession ? 'Message GoBuildWP Chat...' : 'Ask GoBuildWP Chat to change, inspect, or build something on your WordPress...'}
 									value={draft}
 									onChange={(event) => setDraft(event.target.value)}
 									onKeyDown={(event) => {
@@ -1724,8 +1724,8 @@ function Timeline({
 
 function ChatActivity() {
 	return (
-		<div className="wppilot-chat__activity" role="status" aria-live="polite" aria-label="WPPilot Chat is working">
-			<div className="wppilot-chat__activity-label">WPPilot Chat is working</div>
+		<div className="wppilot-chat__activity" role="status" aria-live="polite" aria-label="GoBuildWP Chat is working">
+			<div className="wppilot-chat__activity-label">GoBuildWP Chat is working</div>
 			<div className="wppilot-chat__activity-card">
 				<span className="wppilot-chat__activity-dot" />
 				<span className="wppilot-chat__activity-dot" />

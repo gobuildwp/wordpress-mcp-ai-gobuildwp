@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -30,10 +30,10 @@ if (!defined('ABSPATH')) {
  *   explicit index or follow clears it, keeping the post's advanced flags;
  * - a write through the model's save() changes only the table. AIOSEO's own savePost() also
  *   mirrors the title and description into `_aioseo_*` post meta for multilingual plugins; this
- *   kit writes the way WPPilot Pro's copy does, through save(), and leaves that meta alone.
+ *   kit writes the way GoBuildWP Pro's copy does, through save(), and leaves that meta alone.
  *
  * Undo is this kit's own: the before-image is the columns a write changes, and the restore puts
- * them back through the same model and re-reads them to verify. WPPilot's generic post restore
+ * them back through the same model and re-reads them to verify. GoBuildWP's generic post restore
  * cannot, since none of this is post meta.
  */
 const CODE = 'aioseo';

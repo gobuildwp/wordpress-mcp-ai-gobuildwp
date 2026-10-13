@@ -94,7 +94,7 @@ carries its `change_id`.
 - The whole plan: undo every row of the group. Use `wppilot/list-changes` to find the rows.
 
 <!-- kit-export:omit -->
-Inside WPPilot, the person can also open the Changes screen, filter by the group, and use
+Inside GoBuildWP, the person can also open the Changes screen, filter by the group, and use
 "Undo this batch" to undo the whole plan at once. `wppilot/export-changes` with `group` lists the
 rows of one plan.
 <!-- /kit-export:omit -->

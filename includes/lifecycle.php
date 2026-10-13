@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,7 +8,7 @@ declare(strict_types=1);
 /**
  * Plugin lifecycle: activation, deactivation, and new-site provisioning.
  *
- * One owner for everything that must happen when WPPilot is switched on or off.
+ * One owner for everything that must happen when GoBuildWP is switched on or off.
  * Registering several activation hooks from several files made it easy for one
  * of them to miss multisite: only the first looped the network, so a
  * network-activated install provisioned exactly one site.
@@ -78,7 +78,7 @@ function wppilot_activate(bool $network_wide = false): void
  * Everything activation installs into a single site's tables and options.
  *
  * Must stay idempotent: it also runs when a new site is added to a network that
- * already has WPPilot network-activated.
+ * already has GoBuildWP network-activated.
  */
 function wppilot_activate_current_site(): void
 {
@@ -160,7 +160,7 @@ function wppilot_deactivate(bool $network_wide = false): void
 }
 
 /**
- * Tear down the scheduled work WPPilot owns on a single site.
+ * Tear down the scheduled work GoBuildWP owns on a single site.
  *
  * Options and tables are intentionally left in place: deactivation is
  * reversible and must not destroy configuration. Cron events are not
@@ -187,7 +187,7 @@ function wppilot_deactivate_current_site(): void
 }
 
 /**
- * Provision a site created after WPPilot was already network-activated.
+ * Provision a site created after GoBuildWP was already network-activated.
  *
  * Without this, such a site has no chat sessions table and no safety profile
  * until something else happens to trigger the lazy installers.

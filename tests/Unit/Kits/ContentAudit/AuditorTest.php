@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -199,7 +199,7 @@ final class AuditorTest extends TestCase
     }
 
     /**
-     * With a provider registry (WPPilot Pro) the audit reads through it: a deactivated plugin's
+     * With a provider registry (GoBuildWP Pro) the audit reads through it: a deactivated plugin's
      * leftover meta is ignored, an unregistered fix ability is not suggested, and a provider the
      * kit has no meta keys for is still read and named.
      */

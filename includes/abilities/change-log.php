@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -10,9 +10,9 @@ if (!defined('ABSPATH')) {
 }
 
 wp_register_ability('wppilot/list-changes', [
-    'label' => __('List WPPilot Changes', domain: 'wppilot'),
+    'label' => __('List GoBuildWP Changes', domain: 'wppilot'),
     'description' => __(
-        'Lists the verified WPPilot change ledger newest first, including ability, actor, the agent credential and client behind the write, risk, timing, rollback availability, and rollback state. Secrets are redacted at write time.',
+        'Lists the verified GoBuildWP change ledger newest first, including ability, actor, the agent credential and client behind the write, risk, timing, rollback availability, and rollback state. Secrets are redacted at write time.',
         domain: 'wppilot',
     ),
     'category' => 'changes',
@@ -37,9 +37,9 @@ wp_register_ability('wppilot/list-changes', [
 ]);
 
 wp_register_ability('wppilot/get-change', [
-    'label' => __('Get WPPilot Change', domain: 'wppilot'),
+    'label' => __('Get GoBuildWP Change', domain: 'wppilot'),
     'description' => __(
-        'Returns one redacted WPPilot change record with rollback eligibility and verification details.',
+        'Returns one redacted GoBuildWP change record with rollback eligibility and verification details.',
         domain: 'wppilot',
     ),
     'category' => 'changes',
@@ -63,7 +63,7 @@ wp_register_ability('wppilot/get-change', [
 ]);
 
 wp_register_ability('wppilot/rollback-change', [
-    'label' => __('Rollback WPPilot Change', domain: 'wppilot'),
+    'label' => __('Rollback GoBuildWP Change', domain: 'wppilot'),
     'description' => __(
         'Rolls back a reversible change and verifies the observed state against the stored before-image fingerprint. It never marks success when writes fail or verification differs. Requires explicit confirmation.',
         domain: 'wppilot',

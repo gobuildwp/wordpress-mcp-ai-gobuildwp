@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('wppilot/gutenberg-get-finalizer-runtime', [
     'label' => __('Get Block Editor Queue Runtime', domain: 'wppilot'),
     'description' => __(
-        'Reports whether the WPPilot Block Editor Queue admin page is open and heartbeating, including token-gated SSE and poll URLs that agents can watch with curl. Call this at the start of Gutenberg work: if the runtime is offline, ask the user to open the returned generic Block Editor Queue page URL and keep it open while static/native Gutenberg changes are queued and finalized.',
+        'Reports whether the GoBuildWP Block Editor Queue admin page is open and heartbeating, including token-gated SSE and poll URLs that agents can watch with curl. Call this at the start of Gutenberg work: if the runtime is offline, ask the user to open the returned generic Block Editor Queue page URL and keep it open while static/native Gutenberg changes are queued and finalized.',
         domain: 'wppilot',
     ),
     'category' => 'gutenberg',

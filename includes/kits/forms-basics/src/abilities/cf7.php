@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit();
 }
 
-// WPPilot Pro 1.10.0 registers both names itself, earlier in the same hook; its copies then answer.
+// GoBuildWP Pro 1.10.0 registers both names itself, earlier in the same hook; its copies then answer.
 if (Runtime\unclaimed('wppilot/cf7-list-forms')) {
     wp_register_ability('wppilot/cf7-list-forms', [
         'label' => __('List Contact Form 7 Forms', domain: 'wppilot'),
@@ -61,7 +61,7 @@ if (Runtime\unclaimed('wppilot/cf7-list-entries')) {
     wp_register_ability('wppilot/cf7-list-entries', [
         'label' => __('List Contact Form 7 Entries (Flamingo)', domain: 'wppilot'),
         'description' => __(
-            'List the submissions Flamingo stored for one Contact Form 7 form, newest first, with their answers: id, date, status, subject and answers (field_id and label are the form-tag name, type its base type, value). Contact Form 7 itself stores nothing: without the Flamingo plugin this returns cf7_flamingo_inactive. Filters: status (inbox | spam | trash | any, default inbox), date_from / date_to (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, inclusive). limit defaults to 20 (max 100), offset pages. Personal data is withheld: email and phone answers, passwords, card data, file uploads and signatures come back as "[REDACTED]" with a redacted reason, and email addresses or phone numbers typed into any other answer or the subject are cut out of it (redacted: "contact_in_text"); the submitter\'s IP is never returned. There is no option to return them here; the full values need the Pro edition (with the person\'s explicit approval) or Flamingo\'s Inbound Messages screen.',
+            'List the submissions Flamingo stored for one Contact Form 7 form, newest first, with their answers: id, date, status, subject and answers (field_id and label are the form-tag name, type its base type, value). Contact Form 7 itself stores nothing: without the Flamingo plugin this returns cf7_flamingo_inactive. Filters: status (inbox | spam | trash | any, default inbox), date_from / date_to (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, inclusive). limit defaults to 20 (max 100), offset pages. Contact details and sensitive fields are withheld (names and other answers are not): email and phone answers, passwords, card data, file uploads and signatures come back as "[REDACTED]" with a redacted reason, and email addresses or phone numbers typed into any other answer or the subject are cut out of it (redacted: "contact_in_text"); the submitter\'s IP is never returned. There is no option to return them here; the full values need the Pro edition (with the person\'s explicit approval) or Flamingo\'s Inbound Messages screen.',
             domain: 'wppilot',
         ),
         'category' => 'forms',

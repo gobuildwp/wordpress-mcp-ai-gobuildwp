@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -474,7 +474,7 @@ function category_to_array(WP_Term $term): array
 }
 
 /**
- * WooCommerce keeps a category's sort position in the `order` term meta. Early WPPilot Pro builds
+ * WooCommerce keeps a category's sort position in the `order` term meta. Early GoBuildWP Pro builds
  * wrote it under `order_<id>`; that is read as a fallback, and left for Pro to migrate, since a
  * read never writes.
  */

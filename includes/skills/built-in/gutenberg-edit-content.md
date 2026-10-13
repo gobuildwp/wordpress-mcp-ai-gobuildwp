@@ -1,24 +1,24 @@
 ---
 name: gutenberg-edit-content
-description: Create or edit WordPress content in the native Gutenberg/block editor using WPPilot Gutenberg abilities. Activate when the user asks to build, rebuild, migrate, or update a post, page, template, template part, or navigation using Gutenberg/native blocks.
+description: Create or edit WordPress content in the native Gutenberg/block editor using GoBuildWP Gutenberg abilities. Activate when the user asks to build, rebuild, migrate, or update a post, page, template, template part, or navigation using Gutenberg/native blocks.
 ---
 
 # Editing Gutenberg Content
 
 Use this playbook for native WordPress block editor work. Gutenberg static
 blocks need the browser JavaScript serializer before queued content becomes
-live, so a WPPilot browser finalizer runtime must be online. In Dashboard
-Agent that runtime is embedded in the WPPilot Chat page; external MCP
+live, so a GoBuildWP browser finalizer runtime must be online. In Dashboard
+Agent that runtime is embedded in the GoBuildWP Chat page; external MCP
 clients use the standalone Block Editor Queue admin page.
 
 ## Start Here
 
 1. Call `wppilot/gutenberg-get-finalizer-runtime`.
-2. If you are running inside WPPilot Chat and `finalizer_runtime.online` is
+2. If you are running inside GoBuildWP Chat and `finalizer_runtime.online` is
    true, do not ask the user to open a separate finalization page. The embedded
    runtime should process ready batches while this dashboard remains open.
-3. If you are running inside WPPilot Chat and `finalizer_runtime.online` is
-   false, ask the user to reload WPPilot Chat. Continue planning and reading
+3. If you are running inside GoBuildWP Chat and `finalizer_runtime.online` is
+   false, ask the user to reload GoBuildWP Chat. Continue planning and reading
    content, but do not assume a queued static/native block batch can finalize
    until the runtime is online and able to process queued changes.
 4. If you are running as an external MCP client and `finalizer_runtime.online`
@@ -76,7 +76,7 @@ own editor JavaScript, so never hand-write a block's HTML.
      `finalizer_runtime.sse_url` with `curl -N` until the batch reaches
      `finalized`, `failed`, or `conflicted`.
   4. If the runtime is offline or becomes offline while polling, ask the user
-     to reload WPPilot Chat when running inside WPPilot Chat. External
+     to reload GoBuildWP Chat when running inside GoBuildWP Chat. External
      MCP clients should ask the user to reopen the returned
      `finalization_url`.
 

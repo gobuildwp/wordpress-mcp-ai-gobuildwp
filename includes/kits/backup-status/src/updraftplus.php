@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -24,7 +24,7 @@ if (!defined('ABSPATH')) {
  * Running jobs are the ones with an `updraft_backup_resume` cron event (the resumption UpdraftPlus
  * schedules for every job it boots; args [resumption, nonce]); that is how its own admin lists
  * active jobs. A Backup Now queued as one of UpdraftPlus's own `updraft_backupnow_*` WP-Cron events
- * (the way WPPilot Pro's wppilot/backup-trigger starts one) and not yet picked up is `queued`.
+ * (the way GoBuildWP Pro's wppilot/backup-trigger starts one) and not yet picked up is `queued`.
  */
 
 const UPDRAFTPLUS_EVENTS = [

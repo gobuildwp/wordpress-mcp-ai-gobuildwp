@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,10 +8,10 @@ declare(strict_types=1);
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Uninstall removes this plugin's own custom tables and options; direct queries and the DROP are the entire job of this file, and it runs only when WordPress itself invokes an uninstall.
 
 /**
- * Remove everything WPPilot stored.
+ * Remove everything GoBuildWP stored.
  *
  * WordPress runs this file in a request where the plugin is NOT loaded, so it
- * cannot call any WPPilot function or reference any WPPilot constant. Every
+ * cannot call any GoBuildWP function or reference any GoBuildWP constant. Every
  * key is repeated literally here on purpose; the lists are grouped to match the
  * files that own them so a new key is easy to add in the right place.
  *
@@ -23,11 +23,21 @@ declare(strict_types=1);
  * - Designs and skills are documents somebody wrote, for the same reason. They
  *   are removed only when the site has explicitly opted in by setting
  *   wppilot_delete_content_on_uninstall; absent means keep.
- * - Nothing outside WPPilot's own prefixes is touched.
+ * - Nothing outside GoBuildWP's own prefixes is touched.
  */
 
 if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit();
+}
+
+// The two Free distributions own the same tables, options and authored data.
+// Removing one installed copy must not erase the surviving copy's state,
+// including when that copy is temporarily inactive during a channel switch.
+$wppilot_removing_directory = basename(__DIR__);
+$wppilot_other_directory = $wppilot_removing_directory === 'gobuildwp' ? 'wppilot' : 'gobuildwp';
+$wppilot_other_main = $wppilot_other_directory === 'gobuildwp' ? 'gobuildwp.php' : 'wppilot.php';
+if (is_file(WP_PLUGIN_DIR . '/' . $wppilot_other_directory . '/' . $wppilot_other_main)) {
+    return;
 }
 
 function wppilot_uninstall_wpdb(): wpdb
@@ -40,7 +50,7 @@ function wppilot_uninstall_wpdb(): wpdb
 }
 
 /**
- * Tables created by WPPilot on each site.
+ * Tables created by GoBuildWP on each site.
  *
  * @return list<string>
  */
@@ -61,7 +71,7 @@ function wppilot_uninstall_tables(): array
 }
 
 /**
- * Options written by WPPilot, by owning file.
+ * Options written by GoBuildWP, by owning file.
  *
  * @return list<string>
  */
@@ -137,7 +147,7 @@ function wppilot_uninstall_options(): array
 }
 
 /**
- * Post types holding data WPPilot generated, which goes with the plugin.
+ * Post types holding data GoBuildWP generated, which goes with the plugin.
  *
  * @return list<string>
  */
@@ -201,7 +211,7 @@ function wppilot_uninstall_user_meta_keys(): array
 }
 
 /**
- * Cron hooks WPPilot schedules.
+ * Cron hooks GoBuildWP schedules.
  *
  * @return list<string>
  */
@@ -252,7 +262,7 @@ function wppilot_uninstall_delete_posts(string $post_type): void
  * Delete every option whose name starts with the given prefix.
  *
  * Covers the generated keys — pending OAuth authorizations and the transients
- * WPPilot stores under its own prefixes — that cannot be listed literally.
+ * GoBuildWP stores under its own prefixes — that cannot be listed literally.
  */
 function wppilot_uninstall_delete_options_like(string $prefix): void
 {
@@ -277,7 +287,7 @@ function wppilot_uninstall_delete_options_like(string $prefix): void
 }
 
 /**
- * Remove every WPPilot trace from the current site.
+ * Remove every GoBuildWP trace from the current site.
  */
 function wppilot_uninstall_current_site(): void
 {
@@ -307,7 +317,7 @@ function wppilot_uninstall_current_site(): void
         delete_option($option);
     }
 
-    // Generated option names: pending OAuth authorizations, plus WPPilot's own
+    // Generated option names: pending OAuth authorizations, plus GoBuildWP's own
     // transients and their timeout twins.
     foreach ([
         'wppilot_oauth_pending_',

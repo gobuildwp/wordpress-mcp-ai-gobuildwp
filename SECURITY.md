@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Email <security@wppilot.co>. That address reaches the maintainers through a
+Email <security@gobuildwp.com>. That address reaches the maintainers through a
 channel meant for disclosure, and it is the same one named in
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -28,10 +28,10 @@ already been exposed, rotate it - deleting a message does not un-send it.
 
 ## Supported versions
 
-The current release line receives security fixes. WPPilot is distributed as
+The current release line receives security fixes. GoBuildWP is distributed as
 GitHub releases rather than through the WordPress.org directory, so an install
 that has not been updated is not receiving them. `wppilot.zip` on the
-[releases page](https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot/releases)
+[releases page](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases)
 is always the newest build, and the in-plugin updater points at the same file.
 
 ## Scope
@@ -42,7 +42,7 @@ ledger, rate limiting, the developer abilities, and anything that lets an MCP
 caller exceed the capabilities of the WordPress user it authenticated as.
 
 Out of scope: vulnerabilities in WordPress core, in a third-party plugin, or in
-an AI client, unless WPPilot's handling of them turns into a privilege
+an AI client, unless GoBuildWP's handling of them turns into a privilege
 escalation here. A finding that depends on Developer Full Access having been
 enabled deliberately is in scope only where the profile itself is bypassed.
 
@@ -54,7 +54,7 @@ enabled deliberately is in scope only where the profile itself is bypassed.
 - Use HTTPS for remotely reachable sites and revoke connected apps that are no longer needed.
 - Grant AI access only to a WordPress account with the minimum capabilities required.
 - Maintain tested backups before enabling mutation workflows.
-- Review the WPPilot change ledger and WordPress/WooCommerce logs after consequential operations. Ledger entries name the agent credential behind each write, so a site connected by more than one AI client can attribute a change to one of them rather than to the shared WordPress account.
+- Review the GoBuildWP change ledger and WordPress/WooCommerce logs after consequential operations. Ledger entries name the agent credential behind each write, so a site connected by more than one AI client can attribute a change to one of them rather than to the shared WordPress account.
 - Treat Developer Full Access as privileged server administration access.
 
-WPPilot's diagnostics inspect selected WordPress and PHP configuration. They are not a malware scanner, penetration test, compliance certification, accounting audit, or availability monitor.
+GoBuildWP's diagnostics inspect selected WordPress and PHP configuration. They are not a malware scanner, penetration test, compliance certification, accounting audit, or availability monitor.

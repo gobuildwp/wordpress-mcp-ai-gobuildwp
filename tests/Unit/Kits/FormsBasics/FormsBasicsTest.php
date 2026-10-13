@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,7 +15,7 @@ use WPPilot\Kits\Runtime;
 /**
  * The forms-basics kit: the redaction rule (Pro's sensitive fields plus contact details), each
  * vendor's form list and redacted entries, bootstrap listing only active vendors, and standing
- * aside when WPPilot Pro already registered a name.
+ * aside when GoBuildWP Pro already registered a name.
  */
 final class FormsBasicsTest extends TestCase
 {

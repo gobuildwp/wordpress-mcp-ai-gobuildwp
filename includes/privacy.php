@@ -1,11 +1,11 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Privacy operations must read and erase WPPilot's custom tables. Table names are fixed plugin tables and every value is prepared.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Privacy operations must read and erase GoBuildWP's custom tables. Table names are fixed plugin tables and every value is prepared.
 
 if (!defined('ABSPATH')) {
     exit();
@@ -21,46 +21,46 @@ function wppilot_add_privacy_policy_content(): void
     $content =
         '<p>'
         . wp_kses_post(__(
-            'WPPilot stores AI-client connection history, the associated WordPress user, client identity, request counts, and last-used times. Its change ledger records each write an AI client makes, with the WordPress user, the agent credential identifier and client name behind it, and a redacted summary of the change. When WPPilot Chat is used, it stores chat sessions, messages, image attachments, tool calls, and tool results in this site’s database.',
+            'GoBuildWP stores AI-client connection history, the associated WordPress user, client identity, request counts, and last-used times. Its change ledger records each write an AI client makes, with the WordPress user, the agent credential identifier and client name behind it, and a redacted summary of the change. When GoBuildWP Chat is used, it stores chat sessions, messages, image attachments, tool calls, and tool results in this site’s database.',
             domain: 'wppilot',
         ))
         . '</p>';
     $content .=
         '<p>'
         . wp_kses_post(__(
-            'WPPilot Chat sends the conversation history, selected attachments, site instructions, available tool definitions, and relevant tool results to the AI provider and model selected through the WordPress AI Client. That provider is an external service and its own terms and privacy policy apply. The MCP server itself connects AI clients directly to this WordPress site and does not require a WPPilot-hosted content relay.',
+            'GoBuildWP Chat sends the conversation history, selected attachments, site instructions, available tool definitions, and relevant tool results to the AI provider and model selected through the WordPress AI Client. That provider is an external service and its own terms and privacy policy apply. The MCP server itself connects AI clients directly to this WordPress site and does not require a GoBuildWP-hosted content relay.',
             domain: 'wppilot',
         ))
         . '</p>';
     $content .=
         '<p>'
         . wp_kses_post(__(
-            'OAuth records include registered client names, redirect addresses, a one-way registration IP hash, user-linked authorization records, expiry times, and revocation status. Access tokens are stored against the user who created them as a one-way digest with a name, the last four characters, and created, last-used and expiry times; the token itself is never stored and cannot be exported. Site administrators can revoke connected applications and individual access tokens. WordPress personal-data export and erase tools include WPPilot records associated with a user email address.',
+            'OAuth records include registered client names, redirect addresses, a one-way registration IP hash, user-linked authorization records, expiry times, and revocation status. Access tokens are stored against the user who created them as a one-way digest with a name, the last four characters, and created, last-used and expiry times; the token itself is never stored and cannot be exported. Site administrators can revoke connected applications and individual access tokens. WordPress personal-data export and erase tools include GoBuildWP records associated with a user email address.',
             domain: 'wppilot',
         ))
         . '</p>';
 
-    // Only builds from wppilot.co carry the telemetry code; the wordpress.org
+    // Only builds from gobuildwp.com carry the telemetry code; the wordpress.org
     // build has the directory removed by scripts/package.sh. Suggesting text
     // about reporting that cannot happen would be its own kind of inaccuracy.
     if (function_exists('WPPilot\Telemetry\enabled')) {
         $content .=
             '<p>'
             . wp_kses_post(__(
-                'If anonymous usage reporting has been switched on under WPPilot → Settings, WPPilot sends a daily report to wppilot.co containing this site’s address, a random installation identifier, the WPPilot, WordPress and PHP versions, the site locale, whether WPPilot Pro is active, the active safety profile, and the number of recorded AI-client connections. It is off unless somebody switches it on, and it contains no usernames, no email addresses, no page or post content, and no record of what an AI client did. Switching it back off also sends a request to delete the reports already collected. Detailed reports are kept for 90 days and then reduced to daily totals, and an installation that stops reporting for 400 days is deleted.',
+                'If anonymous usage reporting has been switched on under GoBuildWP → Settings, GoBuildWP sends a daily report to gobuildwp.com containing this site’s address, a random installation identifier, the GoBuildWP, WordPress and PHP versions, the site locale, whether GoBuildWP Pro is active, the active safety profile, and the number of recorded AI-client connections. It is off unless somebody switches it on, and it contains no usernames, no email addresses, no page or post content, and no record of what an AI client did. Switching it back off also sends a request to delete the reports already collected. Detailed reports are kept for 90 days and then reduced to daily totals, and an installation that stops reporting for 400 days is deleted.',
                 domain: 'wppilot',
             ))
             . '</p>';
     }
 
-    wp_add_privacy_policy_content(__('WPPilot', domain: 'wppilot'), wpautop($content, br: false));
+    wp_add_privacy_policy_content(__('GoBuildWP', domain: 'wppilot'), wpautop($content, br: false));
 }
 
 /** @param array<string, array{exporter_friendly_name: string, callback: callable}> $exporters */
 function wppilot_register_personal_data_exporter(array $exporters): array
 {
     $exporters['wppilot'] = [
-        'exporter_friendly_name' => __('WPPilot data', domain: 'wppilot'),
+        'exporter_friendly_name' => __('GoBuildWP data', domain: 'wppilot'),
         'callback' => 'wppilot_personal_data_exporter',
     ];
 
@@ -71,7 +71,7 @@ function wppilot_register_personal_data_exporter(array $exporters): array
 function wppilot_register_personal_data_eraser(array $erasers): array
 {
     $erasers['wppilot'] = [
-        'eraser_friendly_name' => __('WPPilot data', domain: 'wppilot'),
+        'eraser_friendly_name' => __('GoBuildWP data', domain: 'wppilot'),
         'callback' => 'wppilot_personal_data_eraser',
     ];
 
@@ -127,11 +127,11 @@ function wppilot_privacy_user_rows(int $user_id, int $offset, int $limit): array
     /** @var wpdb $wpdb */
 
     $groups = [
-        'wppilot-connections' => ['label' => __('WPPilot connections', domain: 'wppilot'), 'rows' => []],
-        'wppilot-chat' => ['label' => __('WPPilot Chat sessions', domain: 'wppilot'), 'rows' => []],
-        'wppilot-oauth-codes' => ['label' => __('WPPilot OAuth authorizations', domain: 'wppilot'), 'rows' => []],
-        'wppilot-oauth-tokens' => ['label' => __('WPPilot OAuth access grants', domain: 'wppilot'), 'rows' => []],
-        'wppilot-access-tokens' => ['label' => __('WPPilot access tokens', domain: 'wppilot'), 'rows' => []],
+        'wppilot-connections' => ['label' => __('GoBuildWP connections', domain: 'wppilot'), 'rows' => []],
+        'wppilot-chat' => ['label' => __('GoBuildWP Chat sessions', domain: 'wppilot'), 'rows' => []],
+        'wppilot-oauth-codes' => ['label' => __('GoBuildWP OAuth authorizations', domain: 'wppilot'), 'rows' => []],
+        'wppilot-oauth-tokens' => ['label' => __('GoBuildWP OAuth access grants', domain: 'wppilot'), 'rows' => []],
+        'wppilot-access-tokens' => ['label' => __('GoBuildWP access tokens', domain: 'wppilot'), 'rows' => []],
     ];
 
     $connections = wppilot_connections_table();
@@ -201,7 +201,7 @@ function wppilot_privacy_results(string $sql): array
     global $wpdb;
     /** @var wpdb $wpdb */
     /** @var mixed $rows */
-    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Every caller passes a fully prepared query built from trusted WPPilot table names.
+    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Every caller passes a fully prepared query built from trusted GoBuildWP table names.
     $rows = $wpdb->get_results($sql, ARRAY_A);
 
     if (!is_array($rows)) {
@@ -248,7 +248,7 @@ function wppilot_personal_data_eraser(string $email_address, int $page = 1): arr
     return [
         'items_removed' => $removed,
         'items_retained' => false,
-        'messages' => $removed ? [__('WPPilot records associated with this user were erased.', domain: 'wppilot')] : [],
+        'messages' => $removed ? [__('GoBuildWP records associated with this user were erased.', domain: 'wppilot')] : [],
         'done' => true,
     ];
 }

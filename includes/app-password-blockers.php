@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -71,7 +71,7 @@ function wppilot_app_passwords_blocker_from(
     string $mu_plugin_dir,
     string $theme_root,
 ): ?array {
-    $alternative = __('Or connect with OAuth or a WPPilot access token, which do not use Application Passwords.', domain: 'wppilot');
+    $alternative = __('Or connect with OAuth or a GoBuildWP access token, which do not use Application Passwords.', domain: 'wppilot');
 
     if ($wordfence_on) {
         return [

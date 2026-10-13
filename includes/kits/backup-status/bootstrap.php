@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
  * All-in-One WP Migration.
  *
  * Returned to the kit loader, which registers the ability files inside wp_abilities_api_init.
- * Skipped when none of the four is active, with the same test WPPilot Pro's backups kit is gated
+ * Skipped when none of the four is active, with the same test GoBuildWP Pro's backups kit is gated
  * on; which of them answers is decided per call (active_providers()), so one ability file serves
  * any mix.
  */

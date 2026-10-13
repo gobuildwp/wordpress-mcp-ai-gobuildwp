@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -11,7 +11,7 @@ namespace WPPilot\Elementor;
  * Which classic (v3) Elementor elements have an atomic (v4) equivalent.
  *
  * One table, two readers. The readiness audit uses it to answer "how much of
- * this site can an atomic-only tool touch"; WPPilot Pro's converter uses the
+ * this site can an atomic-only tool touch"; GoBuildWP Pro's converter uses the
  * same entries to decide what a classic element becomes. Keeping it in the free
  * plugin is the point - an audit that says a widget is mappable and a converter
  * that then cannot map it is worse than either alone.

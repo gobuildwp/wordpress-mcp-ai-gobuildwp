@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Prepend the unified skill catalog block to the WPPilot discover-abilities
+ * Prepend the unified skill catalog block to the GoBuildWP discover-abilities
  * instructions string. Skills are listed only if their `description` is
  * non-empty and `enable_agentic` is true (default for sources that do not
  * specify it).

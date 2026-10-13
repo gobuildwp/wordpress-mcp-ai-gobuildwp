@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -80,7 +80,7 @@ final class ExtensionLifecycleTest extends TestCase
     /**
      * Every mutation here can take a live site down, so none of them may be
      * annotated as an ordinary write: the annotation is half of what makes
-     * WPPilot demand a confirmation flag.
+     * GoBuildWP demand a confirmation flag.
      */
     #[DataProvider('mutatingLifecycleAbilities')]
     public function testMutationsAreAnnotatedDestructive(string $ability): void
@@ -277,7 +277,7 @@ final class ExtensionLifecycleTest extends TestCase
     // ---------------------------------------------------------- self-protection
 
     /**
-     * Deactivating WPPilot mid-call would sever the connection carrying the
+     * Deactivating GoBuildWP mid-call would sever the connection carrying the
      * call, leaving the agent with no way to undo it and, on a remote site, no
      * way back in.
      */

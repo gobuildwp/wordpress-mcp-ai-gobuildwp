@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -9,7 +9,7 @@ declare(strict_types=1);
  * The two routes the Cloud calls on this site, §4.
  *
  * Both accept exactly one credential: the access token this site gave the
- * Cloud in §3. Not another WPPilot token, not an administrator's cookie or
+ * Cloud in §3. Not another GoBuildWP token, not an administrator's cookie or
  * application password - a token for some other client must not be able to
  * read the Cloud's status or, worse, unlink it. The OAuth middleware lets a
  * token identity reach /wppilot/v1/cloud/* at all; the permission callback
@@ -56,12 +56,12 @@ function wppilot_cloud_rest_permission(): bool|WP_Error
     }
 
     if (get_current_user_id() <= 0) {
-        return new WP_Error('rest_not_logged_in', __('WPPilot Cloud authentication required.', domain: 'wppilot'), [
+        return new WP_Error('rest_not_logged_in', __('GoBuildWP Cloud authentication required.', domain: 'wppilot'), [
             'status' => 401,
         ]);
     }
 
-    return new WP_Error('wppilot_cloud_forbidden', __('Only the access token paired with WPPilot Cloud may use this route.', domain: 'wppilot'), [
+    return new WP_Error('wppilot_cloud_forbidden', __('Only the access token paired with GoBuildWP Cloud may use this route.', domain: 'wppilot'), [
         'status' => 403,
     ]);
 }
@@ -92,7 +92,7 @@ function wppilot_cloud_rest_status(): WP_REST_Response|WP_Error
 {
     $link = wppilot_cloud_link();
     if ($link === null) {
-        return new WP_Error('wppilot_cloud_forbidden', __('This site is not connected to WPPilot Cloud.', domain: 'wppilot'), [
+        return new WP_Error('wppilot_cloud_forbidden', __('This site is not connected to GoBuildWP Cloud.', domain: 'wppilot'), [
             'status' => 403,
         ]);
     }

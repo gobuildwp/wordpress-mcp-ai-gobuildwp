@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -156,7 +156,7 @@ function wppilot_change_payload_target(array $rollback): string
     };
     if ($target === '') {
         /**
-         * Name the target of a rollback payload type WPPilot does not know, so rows of that type
+         * Name the target of a rollback payload type GoBuildWP does not know, so rows of that type
          * take part in the session conflict check. Return '' to leave them out.
          *
          * @param string               $target   ''.
@@ -170,7 +170,7 @@ function wppilot_change_payload_target(array $rollback): string
 }
 
 /**
- * The before-image payload types a session can compare and redo, beyond WPPilot's built-ins.
+ * The before-image payload types a session can compare and redo, beyond GoBuildWP's built-ins.
  * Defined here, not read from their modules, so this file loads on its own.
  */
 const WPPILOT_SESSION_POST_PARTIAL_TYPE = 'kits/post-partial';
@@ -193,7 +193,7 @@ function wppilot_change_key_list(array $keys): string
 /**
  * The target's current state, in the same shape as the payload's before-image.
  *
- * Null when WPPilot cannot read this payload's target (a type only its own plugin knows). A target
+ * Null when GoBuildWP cannot read this payload's target (a type only its own plugin knows). A target
  * that no longer exists comes back as `['type' => 'absent']`, which is a state like any other: a
  * post the session created and someone then deleted does not match what the session left.
  *
@@ -273,7 +273,7 @@ function wppilot_change_current_state(array $rollback, bool $bounded = true): ?a
     }
 
     /**
-     * Read the current state of a rollback payload type WPPilot does not know, in the same shape
+     * Read the current state of a rollback payload type GoBuildWP does not know, in the same shape
      * as its before-image (an array with a `type`). Returning one lets rows of that type take part
      * in the session conflict check and be redone: the state is handed back to the type's own
      * registered restore when a redo puts it back.
@@ -491,7 +491,7 @@ function wppilot_change_redo_image(array $rollback): array
     }
     $state = wppilot_change_current_state($rollback, bounded: true);
     if ($state === null) {
-        return ['available' => false, 'reason' => 'WPPilot cannot read this change\'s target, so it kept nothing to redo it from.'];
+        return ['available' => false, 'reason' => 'GoBuildWP cannot read this change\'s target, so it kept nothing to redo it from.'];
     }
     $state_type = (string) ($state['type'] ?? '');
     if ($state_type === 'absent') {
@@ -736,7 +736,7 @@ function wppilot_session_rows(string $session): array|WP_Error
                 'redo_available' => is_array($redo) && ($redo['available'] ?? false) === true,
                 'redo_reason' => is_array($redo)
                     ? (string) ($redo['reason'] ?? '')
-                    : 'This change was undone before WPPilot kept redo images (1.16.0), so it cannot be redone.',
+                    : 'This change was undone before GoBuildWP kept redo images (1.16.0), so it cannot be redone.',
                 'redo' => is_array($redo) && is_array($redo['snapshot'] ?? null)
                     ? wppilot_change_state_digest(wppilot_string_keyed_array($redo['snapshot']))
                     : null,
@@ -796,7 +796,7 @@ function wppilot_session_plan_undo(string $session, array $rows, array $current)
         $target = (string) $row['target'];
         $after = $row['after'];
         if ($target === '' || $after === null) {
-            $plan['unchecked'][] = wppilot_session_row_brief($row, ['reason' => 'WPPilot recorded no after-state for this change, so it cannot tell whether anything changed the target since.']);
+            $plan['unchecked'][] = wppilot_session_row_brief($row, ['reason' => 'GoBuildWP recorded no after-state for this change, so it cannot tell whether anything changed the target since.']);
             continue;
         }
         if (!isset($newer[$target])) {
@@ -856,7 +856,7 @@ function wppilot_session_plan_redo(string $session, array $rows, array $current)
         $target = (string) $row['target'];
         $undone = $row['undone'];
         if ($target === '' || $undone === null) {
-            $plan['unchecked'][] = wppilot_session_row_brief($row, ['reason' => 'WPPilot recorded no state after this undo, so it cannot tell whether anything changed the target since.']);
+            $plan['unchecked'][] = wppilot_session_row_brief($row, ['reason' => 'GoBuildWP recorded no state after this undo, so it cannot tell whether anything changed the target since.']);
             continue;
         }
         if (!isset($older[$target])) {
@@ -933,7 +933,7 @@ function wppilot_session_conflict(string $session, array $row, array $expected, 
 
 /**
  * Ledger rows outside this session that wrote to the same target after a time: the edit a conflict
- * is most likely about, when it went through WPPilot. Bounded to the 500 newest rows since then.
+ * is most likely about, when it went through GoBuildWP. Bounded to the 500 newest rows since then.
  *
  * @return list<array<string, mixed>>
  */

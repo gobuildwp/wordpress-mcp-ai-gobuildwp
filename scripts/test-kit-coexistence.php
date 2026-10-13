@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * Prove an exported copy of the kits can run on the same site as WPPilot without either one
+ * Prove an exported copy of the kits can run on the same site as GoBuildWP without either one
  * touching the other.
  *
  *   php scripts/test-kit-coexistence.php [--pro-src=../wppilot-pro]
@@ -19,7 +19,7 @@ declare(strict_types=1);
  * It exports every Free kit (and Pro's, with --pro-src) as prefix `kitprobe`, namespace
  * `KitProbe\Kits`, into a temp directory. Then, in one child PHP process on recording WordPress
  * doubles (scripts/lib/coexistence-doubles.php, over tests/doubles/wordpress.php), it boots
- * WPPilot's side exactly as the plugin does — includes/kits/loader.php on its real WPPilot host,
+ * GoBuildWP's side exactly as the plugin does — includes/kits/loader.php on its real GoBuildWP host,
  * with the few wppilot_* functions that host calls stubbed — and requires the export's load.php
  * beside it, fires plugins_loaded and the Abilities API init actions, runs every read-only
  * ability each copy registered, writes a ledger row and a background job through each copy's
@@ -35,7 +35,7 @@ declare(strict_types=1);
  *
  * --installed-pro=<unpacked Pro release> checks the other coexistence: this Free tree beside a Pro
  * release that is already on people's sites and still carries its own copies of abilities Free
- * has since taken over (Pro 1.10.0 beside Free 1.16.0). WPPilot's side then loads that release's
+ * has since taken over (Pro 1.10.0 beside Free 1.16.0). GoBuildWP's side then loads that release's
  * kits the way its specialization engine does - categories and abilities at priority 10 of the
  * Abilities API init actions, ahead of Free's kit loader at 20, and the routines kit's early boot
  * on plugins_loaded 25 - in place of --pro-src, which still decides what the export carries. On
@@ -153,7 +153,7 @@ function static_names(array $files): array
     foreach ($files as $file) {
         if (basename($file) === 'kit.json') {
             // A category a kit declares is registered only when the host has not already, so at
-            // run time the second copy just skips it — and WPPilot's own unconditional
+            // run time the second copy just skips it — and GoBuildWP's own unconditional
             // registration of the same slug is what then fails. Compare the declarations.
             $manifest = json_decode((string) file_get_contents($file), true);
             foreach (array_keys(is_array($manifest['categories'] ?? null) ? $manifest['categories'] : []) as $slug) {
@@ -379,7 +379,7 @@ function load_both(string $free, string $pro, string $export, string $installed 
     // names are never compared.
     \WPPilot_Test_State::$multisite = true;
 
-    // What WPPilotHost calls; the rest of WPPilot is not loaded here.
+    // What WPPilotHost calls; the rest of GoBuildWP is not loaded here.
     $stubs = [
         'wppilot_permission_callback' => static fn(): bool => true,
         'wppilot_get_safety_profile' => static fn(): string => 'production',
@@ -451,7 +451,7 @@ function load_both(string $free, string $pro, string $export, string $installed 
         \Kit_Coexistence::$owners['wppilot-pro'] = $pro . '/includes/kits/';
     }
 
-    // WPPilot's side, as wppilot.php boots it; then the export's, as the other plugin does.
+    // GoBuildWP's side, as wppilot.php boots it; then the export's, as the other plugin does.
     require_once $free . '/includes/kits/loader.php';
     if ($installed !== '') {
         \Kit_Coexistence::$owners['wppilot-pro-installed'] = $installed . '/includes/kits/';
@@ -481,20 +481,20 @@ function load_both(string $free, string $pro, string $export, string $installed 
     }
     $wppilot_report = \WPPilot\Kits\Runtime\registry();
     $export_report = ('\\' . NS . '\\Runtime\\registry')();
-    foreach (['WPPilot' => $wppilot_report, 'the export' => $export_report] as $side => $report) {
+    foreach (['GoBuildWP' => $wppilot_report, 'the export' => $export_report] as $side => $report) {
         foreach ($report['skipped'] as $slug => $reason) {
             // Beside an installed release, a Free kit whose every ability that release carries
             // itself (scheduled-audits beside Pro 1.10.0's routines) is meant to stay off; the
             // stand-aside check below proves the release registered them instead.
-            if ($side === 'WPPilot' && $installed !== '' && installed_pro_covers($free . '/includes/kits/' . $slug, $installed)) {
-                echo "WPPilot stood aside with kit {$slug}: {$reason}\n";
+            if ($side === 'GoBuildWP' && $installed !== '' && installed_pro_covers($free . '/includes/kits/' . $slug, $installed)) {
+                echo "GoBuildWP stood aside with kit {$slug}: {$reason}\n";
                 continue;
             }
             $problems[] = "{$side} skipped kit {$slug}: {$reason}";
         }
     }
     if ($installed === '' && count($export_report['loaded']) !== count($wppilot_report['loaded'])) {
-        $problems[] = sprintf('WPPilot loaded %d kits, the export %d', count($wppilot_report['loaded']), count($export_report['loaded']));
+        $problems[] = sprintf('GoBuildWP loaded %d kits, the export %d', count($wppilot_report['loaded']), count($export_report['loaded']));
     }
 
     // Run what is safe to run: every read-only ability, as an agent would.
@@ -534,7 +534,7 @@ function load_both(string $free, string $pro, string $export, string $installed 
     $wppilot_ledger->record_items('wppilot/coexistence-probe', [['input' => ['side' => 'wppilot']]]);
     $export_ledger->record_items(PREFIX . '/coexistence-probe', [['input' => ['side' => 'export']]]);
     if (count($wppilot_ledger->all()) !== 1 || count($export_ledger->all()) !== 1) {
-        $problems[] = sprintf('ledgers share storage: WPPilot sees %d rows, the export %d', count($wppilot_ledger->all()), count($export_ledger->all()));
+        $problems[] = sprintf('ledgers share storage: GoBuildWP sees %d rows, the export %d', count($wppilot_ledger->all()), count($export_ledger->all()));
     }
 
     $step = static fn(array $payload, array $state): array => ['state' => [], 'done' => true];
@@ -550,7 +550,7 @@ function load_both(string $free, string $pro, string $export, string $installed 
     $wppilot_status = is_string($wppilot_job) ? ($wppilot_host->jobs()->get($wppilot_job)['status'] ?? 'missing') : 'not queued';
     $export_status = is_string($export_job) ? ($export_host->jobs()->get($export_job)['status'] ?? 'missing') : 'not queued';
     if ($wppilot_status !== 'done' || $export_status !== 'queued') {
-        $problems[] = "ticking WPPilot's job runner left WPPilot's job {$wppilot_status} and the export's {$export_status}; expected done and queued";
+        $problems[] = "ticking GoBuildWP's job runner left GoBuildWP's job {$wppilot_status} and the export's {$export_status}; expected done and queued";
     }
     do_action($export_runner::CRON_HOOK);
     $export_status = is_string($export_job) ? ($export_host->jobs()->get($export_job)['status'] ?? 'missing') : 'not queued';
@@ -626,7 +626,7 @@ function load_both(string $free, string $pro, string $export, string $installed 
     foreach (['ability', 'option', 'cron', 'hook'] as $kind) {
         $counts[] = sprintf('%s %d/%d', $kind, count($sides['wppilot'][$kind] ?? []), count($sides['export'][$kind] ?? []));
     }
-    echo 'Compared (WPPilot/export): ', implode(', ', $counts), "\n";
+    echo 'Compared (GoBuildWP/export): ', implode(', ', $counts), "\n";
     if ($undeclared !== []) {
         echo 'Vendor names no kit.json declares yet, allowed by the transitional list (declare them in vendor_storage): ', implode(', ', $undeclared), "\n";
     }
@@ -651,7 +651,7 @@ if (isset($options['installed-pro']) && ($installed === '' || !is_dir($installed
 if (($options['phase'] ?? '') === 'load') {
     $problems = load_both($free, $pro, str_replace('\\', '/', (string) $options['export']), $installed);
     if ($problems !== []) {
-        fwrite(STDERR, "The exported kits do not coexist with WPPilot's:\n\n  - " . implode("\n  - ", $problems) . "\n");
+        fwrite(STDERR, "The exported kits do not coexist with GoBuildWP's:\n\n  - " . implode("\n  - ", $problems) . "\n");
         exit(1);
     }
     echo "COEXIST-OK\n";
@@ -673,7 +673,7 @@ try {
         fwrite(STDERR, "Kit coexistence failed.\n");
         exit(1);
     }
-    echo "WPPilot's kits and an exported copy coexist.\n";
+    echo "GoBuildWP's kits and an exported copy coexist.\n";
 } catch (\RuntimeException $error) {
     fwrite(STDERR, $error->getMessage() . "\n");
     exit(1);

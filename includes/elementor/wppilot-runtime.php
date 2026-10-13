@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -175,9 +175,9 @@ add_filter(
 // This filter widens the e-heading `tag` enum from h1-h6 to also allow div and
 // span. It was originally added so agents could use e-heading for kicker labels,
 // decorative numerals, or icon text. That was a mistake: the widened enum exists
-// ONLY while WPPilot Pro is active, so a page authored with a div/span-tagged
+// ONLY while GoBuildWP Pro is active, so a page authored with a div/span-tagged
 // e-heading is invalid under stock Elementor's atomic schema. Exported as a
-// template and imported on a site without WPPilot Pro, Document::save runs
+// template and imported on a site without GoBuildWP Pro, Document::save runs
 // parse_atomic_settings() and throws an uncaught "tag: invalid_value" — a hard
 // PHP fatal on import. The content is silently non-portable.
 //
@@ -196,7 +196,7 @@ add_filter(
 // headings keep displaying on the front end. That means the content validates on
 // Document::save (an editor re-save, a template export) ONLY while this widening
 // is present. Removing the filter now would fatal those sites' own editor saves —
-// regressing existing users who have WPPilot Pro switched on — while the front
+// regressing existing users who have GoBuildWP Pro switched on — while the front
 // end never needed it. So it remains as a compatibility net, not a feature.
 // Candidate for removal in a future major once such legacy content has drained;
 // harmless to keep until then.

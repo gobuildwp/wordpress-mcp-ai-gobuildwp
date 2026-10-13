@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -284,7 +284,7 @@ function clean_message(string $message): string
         static fn(array $m): string => relative_path($m[0]),
         $message,
     );
-    $message = (string) preg_replace('/\b(password|passwd|pwd|secret|token|api[_-]?key|auth|key)\s*([=:])\s*[^\s,;&\'")]+/i', '$1$2[redacted]', $message);
+    $message = (string) preg_replace('/\b(password|passwd|pwd|secret|token|api[_-]?key|auth|key)\s*([=:])\s*(?:"[^"\r\n]*"|\'[^\'\r\n]*\'|[^\s,;&\'")]+)/i', '$1$2[redacted]', $message);
     $message = trim((string) preg_replace('/\s+/', ' ', $message));
     return mb_strlen($message) > MAX_MESSAGE ? mb_substr($message, 0, MAX_MESSAGE - 1) . '…' : $message;
 }

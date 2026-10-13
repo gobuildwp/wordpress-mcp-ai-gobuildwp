@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ function resource_request_allowed(string $requested, string $expected): bool
 /**
  * Scopes accepted by the authorization and token servers. `mcp` is the only scope issued.
  * The other values remain accepted as migration aliases for clients authenticated before
- * WPPilot switched to one full-access grant.
+ * GoBuildWP switched to one full-access grant.
  *
  * @return list<string>
  */
@@ -88,6 +88,11 @@ function normalize_authorization_scope(string $requested): ?string
 
 function boot(): void
 {
+    // The main bootstrap reports missing/broken bundled dependencies. Do not
+    // load OAuth repository interfaces until that dependency check succeeds.
+    if (function_exists('wppilot_get_mcp_dependency_error') && \wppilot_get_mcp_dependency_error() !== null) {
+        return;
+    }
     if (!\wppilot_is_enabled()) {
         return;
     }

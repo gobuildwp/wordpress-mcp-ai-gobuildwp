@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -34,8 +34,8 @@ require_once __DIR__ . '/abilities/skill-edit.php';
 require_once __DIR__ . '/abilities/skill-delete.php';
 
 add_action('init', __NAMESPACE__ . '\\Cpt\\register');
-// Skills is registered as a submenu under the WPPilot top-level menu;
-// run after WPPilot's main menu callback (priority 10) attaches the
+// Skills is registered as a submenu under the GoBuildWP top-level menu;
+// run after GoBuildWP's main menu callback (priority 10) attaches the
 // parent slug `wppilot-connect`.
 add_action('admin_menu', __NAMESPACE__ . '\\Admin\\register_menu', priority: 40);
 add_action('admin_init', __NAMESPACE__ . '\\Admin\\register_post_handlers');

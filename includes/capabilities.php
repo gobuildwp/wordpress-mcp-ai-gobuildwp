@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * Who is allowed to manage WPPilot.
+ * Who is allowed to manage GoBuildWP.
  *
  * One capability answer for the admin screens, the REST surface, and the
  * ability permission callbacks, so they cannot drift apart.
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Runtime permission check for privileged WPPilot administration.
+ * Runtime permission check for privileged GoBuildWP administration.
  */
 function wppilot_current_user_can_manage(): bool
 {
@@ -48,7 +48,7 @@ function wppilot_manage_capability(): string
 }
 
 /**
- * Permission callback for privileged WPPilot administration.
+ * Permission callback for privileged GoBuildWP administration.
  *
  * @return bool
  */

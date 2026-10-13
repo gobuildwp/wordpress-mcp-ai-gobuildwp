@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ function render_panel(string $context, string $method = '', bool $with_method_pi
         ],
         'no-tools' => [
             'method' => '',
-            'label' => __('The client connects but shows no WPPilot tools', domain: 'wppilot'),
+            'label' => __('The client connects but shows no GoBuildWP tools', domain: 'wppilot'),
         ],
         'password-401' => [
             'method' => 'password',
@@ -178,7 +178,7 @@ function render_panel(string $context, string $method = '', bool $with_method_pi
 
             <div class="wppilot-ts-branch" data-wppilot-ts-branch="token-401" hidden>
                 <p><?php esc_html_e(
-                    'For an access token a 401 means one of five things: the token was revoked or has expired (both are visible in the token list on the Connect page — an expired one is labelled), the account that created it can no longer manage WPPilot, the value was truncated or line-wrapped when it was copied, the header is missing its "Bearer " prefix, or the Authorization header is stripped before reaching PHP (the Connect page warns when it detects that).',
+                    'For an access token a 401 means one of five things: the token was revoked or has expired (both are visible in the token list on the Connect page — an expired one is labelled), the account that created it can no longer manage GoBuildWP, the value was truncated or line-wrapped when it was copied, the header is missing its "Bearer " prefix, or the Authorization header is stripped before reaching PHP (the Connect page warns when it detects that).',
                     domain: 'wppilot',
                 ); ?></p>
                 <p><?php esc_html_e(

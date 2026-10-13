@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
  * ability may act on, and the partial before-image a meta-backed write keeps.
  *
  * Scope is deliberately one post's title, meta description and robots. Focus keywords, canonical
- * URLs, social previews, schema and redirects are what WPPilot Pro's copies of these same
+ * URLs, social previews, schema and redirects are what GoBuildWP Pro's copies of these same
  * abilities add; on a licensed Pro site Pro registers first and this kit stands aside.
  */
 

@@ -1,185 +1,75 @@
-# WPPilot - WordPress MCP Server, Elementor MCP and WooCommerce MCP
+# GoBuildWP: WordPress MCP server and AI website builder for Claude, ChatGPT, Cursor and Codex
 
 <!-- current-releases:start -->
-Current releases: **WPPilot Free 1.18.5 / Pro 1.12.3**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.18.6 / Pro 1.12.4**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
-**Connect Claude, ChatGPT, Claude Code, Codex, Cursor or Antigravity to your WordPress site and let an AI agent build pages, Elementor layouts, block content, menus, taxonomies, media and SEO metadata through typed abilities your permissions still govern.**
+[![Version](https://img.shields.io/github/v/release/wppilot-labs/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases)
+[![Quality](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/actions/workflows/quality.yml)
+[![WordPress](https://img.shields.io/badge/WordPress-6.9%2B-6D28D9)](https://wordpress.org/)
+[![Tested up to](https://img.shields.io/badge/tested%20up%20to-WordPress%207.1-6D28D9)](https://wordpress.org/)
+[![PHP](https://img.shields.io/badge/PHP-8.0%2B-6D28D9)](https://www.php.net/)
+[![License](https://img.shields.io/badge/license-GPL--2.0--or--later-6D28D9)](LICENSE)
 
-[![Version](https://img.shields.io/github/v/release/wppilot-labs/wordpress-mcp-elementor-wppilot?color=142017&label=version)](https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot/releases)
-[![Quality](https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot/actions/workflows/quality.yml)
-[![WordPress](https://img.shields.io/badge/WordPress-6.9%2B-142017)](https://wordpress.org/)
-[![Tested up to](https://img.shields.io/badge/tested%20up%20to-WordPress%207.1-142017)](https://wordpress.org/)
-[![PHP](https://img.shields.io/badge/PHP-8.0%2B-142017)](https://www.php.net/)
-[![License](https://img.shields.io/badge/license-GPL--2.0--or--later-D9FF63)](LICENSE)
+[![Download gobuildwp.zip](https://img.shields.io/badge/Download-gobuildwp.zip-6D28D9?style=for-the-badge)](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases/latest/download/gobuildwp.zip)
 
-[![Download wppilot.zip](https://img.shields.io/badge/Download-wppilot.zip-D9FF63?style=for-the-badge&labelColor=142017)](https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot/releases/latest/download/wppilot.zip)
+**GoBuildWP turns your WordPress site into an MCP server.** Connect Claude, ChatGPT, Claude Code, Codex, Cursor or any other MCP client, and an AI agent can build and edit pages, Elementor layouts, Gutenberg blocks, menus, media and SEO metadata, check PageSpeed and security, and read your WooCommerce store, all through typed WordPress abilities that your user permissions, a safety profile and an undoable change ledger still govern. The free plugin in this repository is a complete WordPress MCP server and a free Elementor MCP server. [GoBuildWP Pro](https://gobuildwp.com/pro) adds WooCommerce writes, the other page builders, SEO suites, safe updates and backups. [GoBuildWP Cloud](https://app.gobuildwp.com) is an optional hosted link for many sites.
 
-> **New in 1.17: [WPPilot Cloud](https://app.wppilot.co).** Connect every WordPress site you run to ChatGPT, Claude, Cursor or any MCP client through **one link** - `https://app.wppilot.co/mcp`. Free for 3 sites; a WPPilot Pro licence adds more sites and bulk actions. Optional: the direct, self-hosted connection works exactly as before.
+> **GoBuildWP was previously called WPPilot.** It is the same plugin, with the same slug and settings, and existing installs keep working.
 
-Installs straight into **Plugins - Add New - Upload Plugin**. That link always resolves to the newest release, so it does not go stale. Older versions are on the [releases page](https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot/releases). GitHub's own *Source code (zip)* is **not** installable: it has no `vendor/` and uses a versioned folder name.
-
-WPPilot turns your WordPress site into an **MCP server**, built on the WordPress Abilities API and the official WordPress MCP Adapter. AI clients discover, inspect and execute *typed* WordPress abilities through a compact three-tool interface instead of loading hundreds of one-off endpoints into context.
-
-The free plugin is the **WordPress MCP server**, and since 1.10.0 it is also a working **Elementor MCP server**: 17 abilities that read an Elementor document, report the widgets and style properties your install actually offers, and add, edit, move, duplicate, reorder and delete elements in the tree. No licence, no key, no Pro install. [WPPilot Pro](https://wppilot.co/pro) then extends that same endpoint into a **WooCommerce MCP server** and a Bricks, Divi, Oxygen, Etch or WPBakery MCP server, and adds Elementor's authoring layer on top: whole-page composition, templates and theme parts, popups, forms, dynamic tags, global classes and variables.
-
-### How WPPilot compares to other WordPress MCP servers
-
-WordPress MCP servers differ most in what happens *after* an agent writes: who confirms a destructive call, whether a change can be undone, and whether the server runs on your own site or through someone else's relay. WPPilot is self-hosted with no call caps, and [WPPilot Cloud](#wppilot-cloud-every-site-in-chatgpt-and-claude-optional) is an optional hosted gateway when you want one link for many sites. It can require a person, not the model, to confirm destructive calls. It records every write in a change ledger, and its undo checks the restored state against the before-image instead of assuming it worked. The free plugin covers Elementor editing, accessibility and content audits, and search and replace with undo.
-
-Other servers lead elsewhere, and the comparisons say so. Every competitor fact is sourced and dated:
-
-[Best WordPress MCP servers in 2026](https://wppilot.co/compare/wordpress-mcp-servers) · [vs Respira](https://wppilot.co/compare/respira-vs-wppilot) · [vs Easy MCP AI](https://wppilot.co/compare/easy-mcp-ai-vs-wppilot) · [vs EMCP](https://wppilot.co/compare/emcp-vs-wppilot) · [vs Elementor's MCP](https://wppilot.co/compare/elementor-mcp-vs-wppilot) · [vs WPVibe](https://wppilot.co/compare/wpvibe-vs-wppilot) · [vs Royal MCP](https://wppilot.co/compare/royal-mcp-vs-wppilot) · [vs AI Engine](https://wppilot.co/compare/ai-engine-mcp-vs-wppilot) · [vs the WordPress MCP Adapter](https://wppilot.co/compare/wordpress-mcp-adapter-vs-wppilot) · [Undo and rollback, compared](https://wppilot.co/wordpress-mcp/undo-rollback)
-
-### Looking for an Elementor, Divi or Beaver Builder MCP server?
-
-This is it, with one server instead of one per plugin. **Elementor editing is free**, in this repository, and needs nothing else installed - see [Elementor MCP in the free plugin](#elementor-mcp). [WPPilot Pro](https://wppilot.co/pro) adds the builder-aware layer on top of the same endpoint, so an agent that connects once can work in whichever editor the site actually uses:
-
-[Elementor MCP](https://wppilot.co/mcp-for-elementor) · [Bricks MCP](https://wppilot.co/mcp-for-bricks) · [Divi MCP](https://wppilot.co/mcp-for-divi) · [Beaver Builder MCP](https://wppilot.co/mcp-for-beaver-builder) · [Oxygen MCP](https://wppilot.co/mcp-for-oxygen) · [Breakdance MCP](https://wppilot.co/mcp-for-breakdance) · [WPBakery MCP](https://wppilot.co/mcp-for-wpbakery) · [Etch MCP](https://wppilot.co/mcp-for-etch) · [Mosaic MCP](https://wppilot.co/mcp-for-mosaic)
-
-Beyond page builders, Pro also covers WooCommerce, FunnelKit, UpdraftPlus, Duplicator, BackWPup, All-in-One WP Migration, Wordfence, Solid Security, Advanced Custom Fields, Meta Box, JetEngine, Pods, ACPT, WPForms, Gravity Forms, Fluent Forms, Formidable, Contact Form 7, Ninja Forms, Forminator, WS Form, Yoast SEO, Rank Math, AIOSEO, SEOPress, The SEO Framework, Slim SEO, SmartCrawl, WPML, Polylang, Weglot, The Events Calendar, Tutor LMS, Paid Memberships Pro and BuddyPress. Full table below: [89 integrations](#wppilot-pro-plugin-aware-abilities-across-89-integrations).
-
-## WordPress MCP server and protocol support
-
-WPPilot serves both protocol revisions during the migration window:
-
-| Revision | State | How it is served |
-| --- | --- | --- |
-| `2026-07-28` | Stateless. No `initialize`, no session. Each request carries its version and client capabilities in `_meta`. | `includes/mcp/`, dispatched ahead of the adapter |
-| `2025-11-25` | Legacy. `initialize` handshake and `Mcp-Session-Id` sessions. | The bundled MCP Adapter, unchanged |
-
-A request is served under the modern revision **only** when it carries modern per-request `_meta`; everything else reaches the adapter untouched. **Existing users do not need to reconnect** unless their client requires the newer revision.
-
-`server/discover` is implemented and advertises both versions plus the capabilities actually registered on the site. **MCP Tasks shipped in Free 1.15.0 on the modern transport**. Tasks is enabled by default and advertised when tools are served; the `wppilot_mcp_tasks_enabled` filter can disable it. Clients can request a task with `tools/call`, then use `tasks/get`, `tasks/result`, `tasks/list` and `tasks/cancel`. Job-backed abilities can run in the background; other abilities return an already completed or failed task. Tasks remain scoped to the authenticated user and enforce the same permissions, safety profile and confirmation checks. Cancellation does not undo completed writes. The legacy adapter does not provide this Tasks extension.
-
-Subscriptions and logging are not advertised by the modern transport. WPPilot has no change-notification producer, so `subscriptions/listen` is not implemented. See [MCP Tasks](docs/wordpress-mcp.md#mcp-tasks) for the request and execution contract.
-
-For OAuth, **Client ID Metadata Documents are the preferred registration mechanism**; RFC 7591 Dynamic Client Registration remains available as a compatibility fallback. Application Passwords and access tokens stay independent fallbacks for clients that run no OAuth flow.
-
-Full detail: [`docs/wordpress-mcp.md`](docs/wordpress-mcp.md).
-
-It is a control layer, not an AI wrapper. **No AI model is bundled**: external MCP clients bring their own model access, and policy is enforced server-side on your install.
-
-## What an agent can actually build
-
-One prompt from you becomes hundreds of typed calls from the agent, each checked against your WordPress capabilities and the active safety profile before it runs.
-
-Free covers the core surface: posts and pages, block-editor content, **Elementor documents**, taxonomies, menus and menu locations, media with alt text, users, site settings including the front page, plus design documents, skills and a change ledger with rollback.
-
-**You do not have to phrase anything in a particular way.** A client's first call is discovery, and WPPilot answers with every ability registered on your install plus a catalogue of the skills available for them, carrying one instruction: if a skill matches the request, load its full instructions before starting the work. So "rebuild the pricing page and keep our spacing" already pulls in the right build skill, the element schemas and your existing design tokens without you naming any of it. Write your own prompts; the routing is on the site.
-
-The library is a shortcut, not a dependency. WPPilot ships a **prompt library** in wp-admin: ten complete landing-page briefs, one per industry, because "build me a bakery site" and "build me a law firm site" should not produce the same page. Each brief fixes a flat palette, a type pairing, a design signature that makes the page its own, the sections it must communicate, and the facts to use verbatim, then closes with one shared standards block: WCAG 2.1 AA, real photography in every slot, one SVG icon set, builder-native construction, and no half-built pages. Pick Elementor or the block editor on the screen and the brief is written for it. [WPPilot Pro](https://wppilot.co/pro) adds **300 more**, across 18 sectors and covering whole multi-page sites, stores, booking sites, courses and membership sites rather than single landing pages - every one with its own palette, type pairing and design signature, because three hundred briefs that share a look are one brief with three hundred names.
-
-WPPilot Pro adds plugin-aware modules, page builders, WooCommerce, forms, custom fields, SEO, themes, each with its own ability chains.
-
-- 🌐 Website: <https://wppilot.co>
-- 🧱 What it builds: <https://wppilot.co/build>
-- 📚 Documentation: <https://wppilot.co/docs>
-- 🔌 Client setup guides: <https://wppilot.co/wordpress-mcp>
-- 𝕏 Release notes and build demos: <https://x.com/WPPilotMCP>
+Website: <https://gobuildwp.com> · Docs: <https://gobuildwp.com/docs> · Client setup guides: <https://gobuildwp.com/wordpress-mcp> · Release notes and build demos on X: <https://x.com/gobuildwp>
 
 ---
 
-## Quick start
+## What GoBuildWP does
 
-1. [**Download `wppilot.zip`**](https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot/releases/latest/download/wppilot.zip) and install it as `wp-content/plugins/wppilot`, or upload it in **Plugins - Add New - Upload Plugin**.
-   *A GitHub “Source code (zip)” download is **not** installable, it lacks `vendor/` and uses the wrong folder name.*
-2. Activate WPPilot.
-3. Open **WPPilot → Configuration** and leave **Production Safe** selected.
-4. Open **WPPilot → Connect**, choose your AI client, and follow the OAuth or Application Password route.
-   *Or choose **WPPilot Cloud** on the same screen to reach this and all your other sites through one link - see [WPPilot Cloud](#wppilot-cloud-every-site-in-chatgpt-and-claude-optional).*
+GoBuildWP is a self-hosted **WordPress MCP server** built on the WordPress Abilities API and the official WordPress MCP Adapter. AI clients discover, inspect and run *typed* WordPress abilities through a compact three-tool interface instead of loading hundreds of one-off endpoints into context.
 
-Canonical MCP endpoint:
+It is a control layer, not an AI wrapper. **No AI model is bundled**: your MCP client brings its own model access, and policy is enforced on your own server. The free plugin needs no licence, key or account.
 
-```text
-https://example.com/wp-json/mcp/wppilot
-```
+What an agent can do with the free plugin alone:
 
-OAuth-authenticated clients use `/wp-json/mcp/wppilot-oauth`. Application passwords and access tokens both authenticate on the canonical route. The older `/wp-json/mcp/mcp-adapter-default-server` route still resolves as a legacy alias, but new configurations should use the canonical path above.
+- **Build and edit the site**: posts and pages, Gutenberg block content, block-theme templates, template parts, global styles and patterns, menus and menu locations, the front page, media with alt text, a site-wide header, and taxonomies.
+- **Edit Elementor pages**: read the element tree, then add, edit, move, duplicate, reorder and delete elements. This is a free Elementor MCP server, with no Pro install needed.
+- **Design to a system**: typed design tokens, saved designs, and checks that grade a built page for contrast, composition and layout.
+- **Audit and fix**: WCAG 2.2 accessibility audits, content audits for broken links, orphan pages and missing meta descriptions, search and replace with undo, and an Elementor editability score.
+- **Check site health**: Google PageSpeed Insights with no Google key needed, configuration-security checks, a log of PHP fatal errors, and status from your backup and security plugins.
+- **Read WooCommerce, SEO and form plugins**: store reads plus a single-product editor, per-post SEO title, description and robots in seven SEO plugins, and form entries with contact details redacted.
+- **Undo**: every supported write is recorded and can be undone one change at a time, as a batch, or as a whole agent session.
 
-## WPPilot Cloud: every site in ChatGPT and Claude (optional)
+**You do not have to phrase prompts in a particular way.** A client's first call is discovery. GoBuildWP answers with every ability registered on your install, plus a catalogue of the skills available for them, so "rebuild the pricing page and keep our spacing" already pulls in the right build skill, the element schemas and your design tokens.
 
-The free plugin connects one site directly. **WPPilot Cloud** is an optional hosted account at [app.wppilot.co](https://app.wppilot.co) that puts **all** your sites behind one MCP link, so ChatGPT, Claude, Cursor, VS Code, Codex, Gemini CLI or any MCP client can work across them without a connector per site.
+GoBuildWP also ships a **prompt library** in wp-admin: ten complete landing-page briefs, one per industry. Each has its own palette, type pairing, design signature and content facts, so a bakery and a law firm do not come out as the same page. Pick Elementor or the block editor and the brief is written for it. [GoBuildWP Pro](https://gobuildwp.com/pro) adds 300 more industry briefs.
 
-1. Install WPPilot **1.17 or newer** on each site.
-2. In wp-admin: **WPPilot → Connect → WPPilot Cloud**, sign in (or create a free account) and choose what Cloud may do on that site: **Read only** or **Production safe**. The site creates its own access token and sends it to Cloud server to server - it never passes through a browser.
-3. Add `https://app.wppilot.co/mcp` to your AI app once. It signs in to Cloud and you pick which sites it may reach. Cursor, VS Code, LM Studio and Goose install with one click from **Connect AI** in the Cloud panel.
+### Example: editing an Elementor page from Claude Code
 
-The AI then lists your sites, discovers each site's tools (including WPPilot Pro tools where Pro is installed), runs them, reviews changes and undoes them. **Each site stays the final authority:** its safety profile, human confirmations, change ledger and undo apply exactly as with a direct connection, and Cloud can never exceed the access the site granted. Disconnect from either side and the token is revoked.
+This is an illustration of the sequence an agent follows, not a recorded transcript. You type:
 
-| | Free | With a WPPilot Pro licence |
-|---|---|---|
-| Connected sites | 3 | 10 Sites plan: 10 · 100 Sites plan: 100 · Unlimited Sites: no limit |
-| Every single-site tool, review and undo | ✓ | ✓ |
-| Bulk actions across sites (with dry run) | - | ✓ |
-| Priority support | - | ✓ |
+> On the About page, change the hero heading to "Family law in Leeds since 1998" and point the hero button at /contact.
 
-Cloud is included with every Pro licence, linked automatically by your Freemius email. Personal access tokens are available for tools that can't sign in (scripts, CI, Cline). A WPPilot plugin for the ChatGPT directory is coming. Sign up: [app.wppilot.co](https://app.wppilot.co/register).
+The agent then makes these calls on your site:
 
-## Supported AI clients: connect Claude, ChatGPT, Cursor and more to WordPress
+| Step | Ability | What happens |
+| --- | --- | --- |
+| 1 | `wppilot/elementor-check-setup` | Confirms Elementor is active and which element model (v3 widgets or v4 atomic) the install offers. |
+| 2 | `wppilot/elementor-find-elements` | Finds the hero heading and the button on the About page by their text. |
+| 3 | `wppilot/elementor-edit-element` (twice) | Changes the heading text and the button link in place, validated against the widget schema. The rest of the page is untouched. |
+| 4 | `wppilot/elementor-clear-document-cache` | Regenerates Elementor's CSS for the page. |
 
-Claude Code · Claude Desktop · Claude on the web · ChatGPT · Codex CLI · Codex desktop app · Cursor · VS Code · GitHub Copilot · Gemini CLI · Devin Desktop (formerly Windsurf) · Factory Droid · Antigravity CLI · Antigravity IDE · Zed · Cline · Roo Code · Kilo Code · Amazon Q · OpenCode · OpenClaw · Qwen Code · Kimi Code CLI · ZCode (GLM) · Mistral Le Chat · Perplexity · Manus
+Both edits are checked against your WordPress capabilities and the active safety profile before they run. They appear on **GoBuildWP → Changes**, attributed to the agent that made them, and `wppilot/undo-session` (or **Undo session** on that screen) reverses them.
 
-Plus programmatic callers with no browser: the Claude Messages API MCP connector, the OpenAI Responses API `mcp` tool, cron jobs and `curl`, using an access token.
+### How it compares to other WordPress MCP servers
 
-Which route each client takes: [`docs/ai-client-compatibility.md`](docs/ai-client-compatibility.md). Per-client setup guides: <https://wppilot.co/wordpress-mcp>
+WordPress MCP servers differ most in what happens *after* an agent writes: who confirms a destructive call, whether a change can be undone, and whether the server runs on your own site or through someone else's relay. GoBuildWP runs on your site, can require a person rather than the model to confirm destructive calls, and verifies every undo against the recorded before-image instead of assuming it worked.
 
-## Authentication
-
-Three methods, chosen on **WPPilot → Connect**:
-
-- **OAuth 2.1 with PKCE** and dynamic client registration. Access tokens last 1 hour, refresh tokens 14 days, and every authorization is listed under **Connected Apps** in WordPress so it can be revoked individually. Recommended wherever the client can open a browser.
-- **Application Passwords** as a fallback for clients that cannot run a browser flow. Sent as HTTP Basic.
-- **Access tokens** - a long-lived `Authorization: Bearer wpp_…` credential for callers with no browser and no interactive session: the Claude Messages API MCP connector, the OpenAI Responses API `mcp` tool, cron jobs, automation platforms, `curl`. Created with an optional expiry, shown once, stored only as a SHA-256 digest, and revocable per token. It authenticates on the canonical `/wp-json/mcp/wppilot` endpoint, so the URL is the same one every other snippet uses.
-
-An access token borrows the capabilities of the user who created it, and that check is re-run on every request rather than frozen at creation - demoting or deleting the user closes the token in the same moment.
-
-None of the three is a product licence. WPPilot needs no activation key, entitlement check or subscription service to run.
-
-### Local connection over WP-CLI (stdio)
-
-A client that runs on the same machine as the site - Claude Code, Cursor, a CI job - can start WPPilot itself instead of connecting over HTTP, with no credential to create. `wp wppilot mcp serve` serves the same MCP server as `/wp-json/mcp/wppilot` over stdin/stdout, as the WordPress user named in WP-CLI's `--user`, with the same abilities, safety profile, confirmations and permission checks:
-
-```bash
-# Claude Code
-claude mcp add wppilot-local -- wp --path=/var/www/html wppilot mcp serve --user=admin
-
-# WordPress in Docker
-claude mcp add wppilot-local -- docker exec -i <container> wp --path=/var/www/html wppilot mcp serve --user=admin
-```
-
-Cursor and other clients that take a command (`.cursor/mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "wppilot-local": {
-      "command": "wp",
-      "args": ["--path=/var/www/html", "wppilot", "mcp", "serve", "--user=admin"]
-    }
-  }
-}
-```
-
-The **Connect** screen shows these with this site's path and your login filled in. Nothing is written to stdout except protocol messages, and each process is one agent session on the Changes screen.
-
-## Safety model
-
-| Profile | What it allows |
-| --- | --- |
-| **Read Only** | Discovery and inspection. Every state-changing ability is blocked. |
-| **Production Safe** | Normal content, design, SEO, forms and commerce work, plus plugin activation and updates with confirmation. Blocks raw PHP, WP-CLI, filesystem, database, plugin/theme installation and deletion, and temporary admin access. |
-| **Developer Full Access** | Every enabled ability, including privileged surfaces. Critical calls still require explicit confirmation. |
-
-On top of the profile: WordPress user capabilities still apply, individual abilities can be switched off, destructive operations require an explicit confirmation flag, writes are rate-limited per credential, and supported changes are recorded in a redacted change ledger with rollback.
-
-**Undo a whole agent session.** Every write an agent makes is filed under its session - one MCP connection, one `wp wppilot mcp serve` process, or one credential and client until it has been idle for 30 minutes. `wppilot/undo-session` (or **Undo session** on the Changes screen) takes back everything that session did, newest first, verifying each change against its before-image. It refuses without touching anything when something else changed a target after the session did, stops at the first change that fails verification and says exactly what was and was not undone, and never skips a change that cannot be undone without saying so. `wppilot/redo-session` puts an undone session back, under the same checks. `wppilot/list-sessions` shows each session and what undo and redo would do right now.
-
-Every ledger entry names the agent behind the write, not only the WordPress user. Claude Code, Cursor and Codex usually connect as the same administrator, so the user alone cannot answer which of them made a change: the OAuth client id or application-password UUID can, and it is what the ledger records, alongside the client name the agent introduced itself with. A write with no agent behind it - wp-admin, WP-CLI, cron - is recorded as `direct` rather than credited to the last agent seen. OAuth client ids are stored hashed.
+[Best WordPress MCP servers](https://gobuildwp.com/compare/wordpress-mcp-servers) · [vs Respira](https://gobuildwp.com/compare/respira-vs-gobuildwp) · [vs Easy MCP AI](https://gobuildwp.com/compare/easy-mcp-ai-vs-gobuildwp) · [vs EMCP](https://gobuildwp.com/compare/emcp-vs-gobuildwp) · [vs Elementor's MCP](https://gobuildwp.com/compare/elementor-mcp-vs-gobuildwp) · [vs WPVibe](https://gobuildwp.com/compare/wpvibe-vs-gobuildwp) · [vs Royal MCP](https://gobuildwp.com/compare/royal-mcp-vs-gobuildwp) · [vs AI Engine](https://gobuildwp.com/compare/ai-engine-mcp-vs-gobuildwp) · [vs the WordPress MCP Adapter](https://gobuildwp.com/compare/wordpress-mcp-adapter-vs-gobuildwp) · [Undo and rollback, compared](https://gobuildwp.com/wordpress-mcp/undo-rollback)
 
 ## What the free plugin can do
 
-232 registered abilities, plus one MCP prompt per skill you save. The WooCommerce, SEO, form, backup, security and Site Kit abilities register only while their plugin is active, and developer abilities only under Developer Full Access, so a fresh install with none of those plugins registers 167 on the default profile. The WordPress ones are grouped under a single **WordPress** category in the Abilities screen and can be switched off individually.
+232 registered abilities, plus one MCP prompt per skill you save. The WooCommerce, SEO, form, backup, security and Site Kit abilities register only while their plugin is active, and developer abilities only under Developer Full Access, so a fresh install with none of those plugins registers 167 on the default profile. Each ability can be switched off individually on the Abilities screen.
+
+<details>
+<summary><strong>Full table of free abilities by domain</strong></summary>
 
 | Domain | Abilities | What it covers |
 | --- | --- | --- |
@@ -191,276 +81,419 @@ Every ledger entry names the agent behind the write, not only the WordPress user
 | **Revisions** | `3` | List with autosaves distinguished, read against the live post, and restore. |
 | **Users** | `4` | Privacy-minimized reads. Login name, roles and registration date need `list_users`; the email address needs `edit_users`. |
 | **Site** | `2` | Site information and an explicit settings allowlist. |
-| **Plugins and themes** | `12` | Search the WordPress.org directory and read one extension in detail. Activate, deactivate, update and switch themes with explicit confirmation. Install and delete are Developer Full Access only: they write executable code to the server. |
+| **Plugins and themes** | `12` | Search the WordPress.org plugin directory and read one extension in detail. Activate, deactivate, update and switch themes with explicit confirmation. Install and delete are Developer Full Access only: they write executable code to the server. |
 | **Gutenberg** | `11` | Block-editor content, staged pending changes and browser finalization for native blocks. |
-| **Elementor** | `17` | Read a document, inspect the widgets and style properties this install offers, and edit the element tree: add, edit, move, duplicate, reorder and delete. Page settings included. [Detail below.](#elementor-mcp) |
+| **Elementor** | `17` | Read a document, inspect the widgets and style properties this install offers, and edit the element tree: add, edit, move, duplicate, reorder and delete. Page settings included. [Detail below.](#elementor-mcp-free-elementor-editing) |
 | **Design system** | `19` | Typed design tokens, saved designs and activation, plus the checks that grade a built page against them: contrast, composition, layout grammars and a rendered-page verification pass. |
-| **Preview** | `8` | Compute what a write would change without performing it, then apply the reviewed result. Plus a view link, so an agent with a browser can look at the page it built - including one still in draft - and a capture store that compares two screenshots of a page and reports which regions moved. |
+| **Preview** | `8` | Compute what a write would change without performing it, then apply the reviewed result. Plus a view link, so an agent with a browser can look at the page it built, including a draft, and a capture store that compares two screenshots of a page and reports which regions moved. |
 | **Skills** | `4` + prompts | Reusable skills and site-wide instructions. Each saved skill also registers one MCP prompt, so this grows with the skills you write. |
 | **Changes** | `8` | Read the redacted change ledger, attributed to the agent credential that made each write, export it as rows for a client report or an audit, roll a change back, and undo or redo everything one agent session did. |
-| **Diagnostics** | `5` | Scoped health, performance and configuration-security checks, a Connection Doctor that finds what blocks an MCP client (firewalls, a stripped Authorization header, disabled Application Passwords) and names the fix, and a site issues log: the PHP fatal errors behind "There has been a critical error", recorded with the file and plugin they came from, plus paused plugins, rolled-back updates and failed backups. |
+| **Diagnostics** | `5` | Scoped health, performance and configuration-security checks, a Connection Doctor that finds what blocks an MCP client and names the fix, and a site issues log: the PHP fatal errors behind "There has been a critical error", with the file and plugin they came from, plus paused plugins, rolled-back updates and failed backups. |
 | **Search and replace** | `4` | Preview a search-and-replace across posts and their meta (serialized and builder JSON included) as a reviewed plan, apply only posts unchanged since, 100 per call or as a background job, cancel it, and undo one post or the whole run. |
 | **Media and accessibility** | `5` | Resize, crop, rotate or flip an image as a copy or in place, with undo. Audit a served page against WCAG 2.2, find images with missing or filename alt text, show an image to the model so it can write real alt text, and set alt text in bulk with undo. |
 | **Content audit** | `2` | Broken internal links, orphan pages, thin content, missing SEO descriptions and structured-data problems across the site, as a background job. |
-| **Builder quality** | `1` | Score how editable an Elementor page is, 0-100, and list per element what to fix: layout in HTML widgets, scripts, shortcodes, inactive widgets, inline styles, custom CSS, fixed colours instead of the global palette, deep nesting and empty containers. |
-| **Block themes** | `11` | Global Styles (read, and merge or replace the user layer), templates and template parts (list, read, save, revert to the theme file), the site's own synced and unsynced patterns, and block navigation menus, all through WordPress's own REST controllers and all undoable. |
-| **Site header** | `1` | Build the site-wide header from a layout sized to the menu: logo and title, the menu in one row (a menu button on tablets and phones), a styled language dropdown, an optional button and the cart, one header per Polylang language. It checks the served header before reporting success and can be undone. Elementor Pro, or the header template part of a block theme. |
+| **Builder quality** | `1` | Score how editable an Elementor page is, 0-100, and list per element what to fix: layout in HTML widgets, scripts, shortcodes, inline styles, custom CSS, fixed colours instead of the global palette, deep nesting and empty containers. |
+| **Block themes** | `11` | Global Styles, templates and template parts (list, read, save, revert to the theme file), the site's own synced and unsynced patterns, and block navigation menus, all through WordPress's own REST controllers and all undoable. |
+| **Site header** | `1` | Build the site-wide header: logo and title, the menu (a menu button on tablets and phones), a language dropdown, an optional button and the cart, one header per Polylang language. It checks the served header before reporting success and can be undone. Needs Elementor Pro (Elementor's own paid plugin), or a block theme. |
 | **Block Notes** | `4` | Leave a note on a block for a person, reply, resolve, and read the notes they resolved. Every one can be undone. |
-| **Site tools** | `8` | WP-Cron list, run and delete (undoable), Site Health tests, transient flush, and - on Developer Full Access, audited - an options explorer and a read-only database SELECT with redaction. |
+| **Site tools** | `8` | WP-Cron list, run and delete (undoable), Site Health tests, transient flush, and, on Developer Full Access and audited, an options explorer and a read-only database SELECT with redaction. |
 | **Multisite** | `2` | List a network's sites and run an ability on one of them through that site's own safety profile and gates. Loads only on a multisite network. |
-| **WooCommerce** | `13` | Check the setup, list and read products, variations, categories, tags and store settings, read orders and customers, and edit one product's name, description, prices and stock with undo. Pro adds bulk prices and stock, order and customer writes, refunds, coupons, reports and full product editing. |
-| **SEO** | `14` | One post's SEO title, meta description and robots in Yoast SEO, Rank Math, All in One SEO, SEOPress, The SEO Framework, Slim SEO and SmartCrawl, read and set with undo. Pro adds focus keywords, canonicals, social previews, schema, redirects and bulk SEO. |
-| **Forms** | `8` | List the forms of WPForms, Contact Form 7, Gravity Forms and Forminator and read their entries with email addresses, phone numbers and sensitive fields withheld. Pro adds full values, exports and form editing. |
-| **Backups and security** | `5` | Backup status and history (UpdraftPlus, Duplicator, BackWPup, All-in-One WP Migration); security plugin status, scan findings and lockouts with IPs shown as networks (Wordfence, Solid Security). Pro starts backups, holds risky calls until a fresh backup exists, hardens settings and blocks IPs. |
-| **Page speed** | `2` | Google PageSpeed Insights for any page of the site - Lighthouse scores, lab metrics, Core Web Vitals field data and the opportunities that save the most time - with no Google key needed: Site Kit answers when it can, WPPilot Cloud otherwise, and a key of your own is optional. With Site Kit by Google active, turn on its read-only dashboard sharing for Administrators, undoably. |
+| **WooCommerce** | `13` | Check the setup, list and read products, variations, categories, tags and store settings, read orders and customers, and edit one product's name, description, prices and stock with undo. |
+| **SEO** | `14` | One post's SEO title, meta description and robots in Yoast SEO, Rank Math, All in One SEO, SEOPress, The SEO Framework, Slim SEO and SmartCrawl, read and set with undo. |
+| **Forms** | `8` | List the forms of WPForms, Contact Form 7, Gravity Forms and Forminator and read their entries with email addresses, phone numbers and sensitive fields withheld. |
+| **Backups and security** | `5` | Backup status and history (UpdraftPlus, Duplicator, BackWPup, All-in-One WP Migration); security plugin status, scan findings and lockouts with IPs shown as networks (Wordfence, Solid Security). |
+| **Page speed** | `2` | Google PageSpeed Insights for any page of the site (Lighthouse scores, lab metrics, Core Web Vitals field data and the biggest opportunities) with no Google key needed. With Site Kit by Google active, turn on its read-only dashboard sharing for Administrators, undoably. |
 | **Scheduled audits** | `5` | Routines that run the accessibility, content and alt-text audits on a schedule, store each report, compare it with the last and email what changed. |
 | **Developer** | `13` | PHP execution, WP-CLI, filesystem and temporary admin access. Blocked outside Developer Full Access, and excluded entirely from the WordPress.org build. |
 
-Content creation is draft-first: an absent, blank or malformed status resolves to `draft` before any capability check, so nothing is published by accident. Capabilities are read from each post type's and taxonomy's own capability object, so a custom type declaring its own set is enforced on its own terms.
+</details>
 
-## Elementor MCP
+Content creation is draft-first: an absent, blank or malformed status resolves to `draft` before any capability check, so nothing is published by accident.
 
-**Since 1.10.0, editing an Elementor page is free.** The Elementor abilities load automatically when Elementor 3.6 or newer is active and stay unregistered otherwise, so an agent is never offered a tool that cannot work on this site.
+## Quick setup
 
-Writing generated HTML into `post_content` does not change an Elementor page. The layout lives in postmeta as a typed element tree, and Elementor renders from that and ignores the markup. These abilities work on the tree itself.
+### 1. Install the plugin
+
+1. [**Download `gobuildwp.zip`**](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases/latest/download/gobuildwp.zip) and upload it in **Plugins → Add New → Upload Plugin**. The folder inside the archive is `wppilot/`, so the plugin installs as `wp-content/plugins/wppilot`. That is its internal id, kept so existing installs update in place.
+   *GitHub's own "Source code (zip)" download is **not** installable: it has no `vendor/` and uses a versioned folder name. Older versions are on the [releases page](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases).*
+2. Activate GoBuildWP.
+3. Open **GoBuildWP → Configuration** and leave **Production Safe** selected.
+4. Open **GoBuildWP → Connect** and choose your AI client. The screen generates the exact configuration for that client, with your site's URL and a suggested server name (`gobuildwp-<your-site>`) filled in.
+
+The MCP endpoints:
+
+```text
+https://example.com/wp-json/mcp/wppilot         # application passwords and access tokens
+https://example.com/wp-json/mcp/wppilot-oauth   # OAuth clients
+```
+
+The older `/wp-json/mcp/mcp-adapter-default-server` route still resolves as a legacy alias, but new configurations should use the paths above.
+
+### 2. Connect your AI client
+
+Replace `example.com` with your site and `gobuildwp-example` with any name you like. Hosted web apps (Claude on the web, ChatGPT and the Codex desktop app) connect from their own servers, so the site must be reachable over public HTTPS.
+
+**Claude Code** (WordPress MCP for Claude Code)
+
+```bash
+claude mcp add gobuildwp-example --transport http https://example.com/wp-json/mcp/wppilot-oauth
+```
+
+Then run `/mcp` inside Claude Code and complete the browser sign-in.
+
+**Claude on the web and Claude Desktop.** On the web, open **Customize → Connectors → Add custom connector**. In Claude Desktop, open **Settings → Connectors → Add custom connector**. Paste `https://example.com/wp-json/mcp/wppilot-oauth` and sign in. The Connect screen also offers a `.mcpb` bundle for Claude Desktop.
+
+**ChatGPT** (WordPress MCP for ChatGPT). Open **Settings → Apps → Advanced settings → Developer mode**, then **Create app**, and use the OAuth URL above. This needs ChatGPT on the web and a site on public HTTPS. To reach several sites from ChatGPT through one link, use [GoBuildWP Cloud](#gobuildwp-cloud-every-site-behind-one-mcp-link).
+
+**Codex CLI**
+
+```bash
+codex mcp add gobuildwp-example --url https://example.com/wp-json/mcp/wppilot-oauth
+codex mcp login gobuildwp-example
+```
+
+In the **Codex desktop app**, open Settings from your account menu, add the URL as a remote MCP server and approve the browser sign-in.
+
+**Cursor**: use the one-click button on the Connect screen, or add this to `~/.cursor/mcp.json` or `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "gobuildwp-example": { "url": "https://example.com/wp-json/mcp/wppilot-oauth" }
+  }
+}
+```
+
+**VS Code and GitHub Copilot**: add this to `.vscode/mcp.json` (VS Code 1.101 or later). Copilot CLI reads `mcpServers` instead, and the Connect screen generates that file too.
+
+```json
+{
+  "servers": {
+    "gobuildwp-example": { "type": "http", "url": "https://example.com/wp-json/mcp/wppilot-oauth" }
+  }
+}
+```
+
+**Everything else.** The Connect screen also writes configuration for Gemini CLI and Qwen Code (which want `httpUrl`), Antigravity and Devin Desktop, formerly Windsurf (which want `serverUrl`), Factory Droid, Zed, Cline, Roo Code, Kilo Code, Amazon Q, OpenCode, OpenClaw, Kimi Code CLI, ZCode (GLM), Mistral Le Chat, Perplexity and Manus. Which route each takes: [`docs/ai-client-compatibility.md`](docs/ai-client-compatibility.md). Per-client guides: <https://gobuildwp.com/wordpress-mcp>.
+
+**Scripts, cron and APIs.** The Claude Messages API MCP connector, the OpenAI Responses API `mcp` tool, automation platforms and `curl` use an access token, `Authorization: Bearer wpp_…`, on the canonical `/wp-json/mcp/wppilot` endpoint.
+
+**Same machine, no credential (stdio).** A client running on the same machine as the site can start the MCP server itself over WP-CLI, with the same abilities, safety profile and confirmations:
+
+```bash
+claude mcp add gobuildwp-local -- wp --path=/var/www/html wppilot mcp serve --user=admin
+```
+
+Cursor and other clients that take a command can run `wp` with the arguments `--path=/var/www/html wppilot mcp serve --user=admin`. The Connect screen shows these with your path and login filled in.
+
+### Authentication
+
+Three methods, all chosen on **GoBuildWP → Connect**. None of them is a product licence.
+
+- **OAuth 2.1 with PKCE**, recommended wherever the client can open a browser. Access tokens last 1 hour and refresh tokens 14 days, and every authorization is listed under **Connected Apps** so it can be revoked on its own. Client ID Metadata Documents are the preferred registration mechanism; RFC 7591 dynamic client registration remains as a fallback.
+- **Application Passwords**, for clients that cannot run a browser flow. Sent as HTTP Basic.
+- **Access tokens** for callers with no browser. Created with an optional expiry, shown once, stored only as a SHA-256 digest and revocable per token. A token borrows the capabilities of the user who created it, re-checked on every request, so demoting or deleting that user closes the token immediately.
+
+### MCP protocol support
+
+GoBuildWP serves both protocol revisions during the migration window: the stateless `2026-07-28` revision (no `initialize` and no session; each request carries its version and client capabilities in `_meta`) and the legacy `2025-11-25` revision through the bundled MCP Adapter. Existing clients do not need to reconnect. `server/discover` advertises both. **MCP Tasks shipped in Free 1.15.0 on the modern transport**; it is on by default and can be disabled with the `wppilot_mcp_tasks_enabled` filter; cancelling a task does not undo writes it already completed. Full detail: [`docs/wordpress-mcp.md`](docs/wordpress-mcp.md).
+
+## Free vs Pro vs Cloud
+
+**Free** is this repository. **Pro** is a separate paid plugin that runs on top of Free (Free 1.18.1 or newer, and an active licence or trial). **Cloud** is an optional hosted gateway: every tool a site offers (Free, plus Pro where it is installed) is reachable through it, so the Cloud column lists only what Cloud itself adds. A dash means that edition adds nothing for that row.
+
+| Capability | Free | Pro | Cloud |
+| --- | --- | --- | --- |
+| **Full website creation and editing** | **Free**: pages, posts, Gutenberg blocks, menus, front page, media, taxonomies, design system, block-theme templates and parts, site-wide header | **Pro**: whole-page composition in one call (Elementor), Elementor Theme Builder templates and display conditions, page builder and theme modules | **Cloud**: the same site tools for many sites through one link |
+| **Landing pages** | **Free**: 10 industry landing-page briefs, built in Elementor or the block editor | **Pro**: 300 more industry briefs; `wppilot/elementor-build-page` builds a page from one description | — |
+| **Elementor editing** | **Free**: 17 editing abilities (Elementor 3.6+; Elementor Pro not required) | **Pro**: 52 more: composition, templates, popups, forms, dynamic tags, global classes and variables. Theme Builder and form features need Elementor Pro, Elementor's own paid plugin | — |
+| **Gutenberg and blocks** | **Free**: block content, staged block batches, block themes (global styles, templates, patterns, navigation), Block Notes | **Pro**: GenerateBlocks, Kadence Blocks, Spectra and Spectra One modules (each needs that plugin) | — |
+| **Other page builders** | — (Free refuses writes that a builder would ignore, instead of reporting a false success) | **Pro**: Bricks, Divi, Oxygen, Beaver Builder, Breakdance, WPBakery, Etch, Mosaic, Flatsome UX Builder (each needs that builder) | — |
+| **WooCommerce** | **Free**: 13 abilities: catalogue, store, order and customer reads, and one product's name, description, prices and stock with undo (WooCommerce 9.0+) | **Pro**: 50 more: create and delete products, full product editing, bulk prices and stock, orders, refunds, coupons, store settings, sales reports | — |
+| **SEO** | **Free**: one post's SEO title, description and robots in 7 SEO plugins; site content audit (broken links, orphans, missing descriptions) | **Pro**: focus keywords, canonicals, social previews, schema, redirects, bulk SEO, reviewable content-fix plans | **Cloud + Pro**: SEO report from Search Console, read through each site's Site Kit |
+| **PageSpeed and performance** | **Free**: PageSpeed Insights (Lighthouse, Core Web Vitals) with no Google key; performance health checks | **Pro**: cache plugin abilities (purge, settings, warm, measure) and step-by-step PageSpeed fix plans that re-measure after each change | **Cloud**: answers the free PageSpeed check when Site Kit cannot, no account needed |
+| **Security checks** | **Free**: configuration-security checks; Wordfence and Solid Security status, scan findings and lockouts | **Pro**: hardening plan you confirm, applied with before-and-after checks and rollback; IP block and unblock; start scans | — |
+| **Updates** | **Free**: update plugins and themes with explicit confirmation (recorded, not reversible) | **Pro**: safe updates: backup check, before-and-after page checks, automatic rollback, undo for 7 days | **Cloud**: see pending updates (sites on Free 1.18.0+). **Cloud + Pro**: start updates from Cloud |
+| **Backups** | **Free**: status and history from UpdraftPlus, Duplicator, BackWPup and All-in-One WP Migration | **Pro**: start a backup (UpdraftPlus, BackWPup, All-in-One WP Migration; not Duplicator); optionally refuse risky calls until a fresh backup exists | **Cloud**: see backup status. **Cloud + Pro**: start backups from Cloud |
+| **Forms** | **Free**: list forms and read redacted entries (WPForms, Contact Form 7, Gravity Forms, Forminator) | **Pro**: build and edit forms in eight form plugins, full entry values, exports | — |
+| **Custom fields, multilingual, LMS, events** | — | **Pro**: ACF, Meta Box, JetEngine, Pods, ACPT, WPML, Polylang, Weglot, Tutor LMS, The Events Calendar and more | — |
+| **Multi-site management** | **Free**: one site per direct connection; on a WordPress multisite network, run an ability on any network site | — | **Cloud**: up to 3 sites in one MCP link. **Cloud + Pro**: more sites by plan, bulk actions across sites with a dry run |
+| **Approvals and confirmations** | **Free**: safety profiles, per-ability switches, explicit confirmation for destructive calls, optional "a person approves" mode | **Pro**: approval queue that holds an agent's write until a person approves it, with email notification | **Cloud + Pro**: safety policies pushed to sites whose owner allows it |
+| **Undo and change history** | **Free**: change ledger with agent attribution; undo one change, a batch, or a whole agent session, verified against the before-image | **Pro**: Pro writes recorded in the same ledger | **Cloud**: review and undo changes on each connected site |
+| **Agent memory** | Skills and site-wide instructions | **Pro**: persistent, approved memory across conversations | — |
+| **Licence and price** | GPL-2.0-or-later, no key, no account | Paid licence from [gobuildwp.com](https://gobuildwp.com/pricing) | Free account for up to 3 sites; more with a Pro licence |
+
+[Compare Free vs Pro](https://gobuildwp.com/free-vs-pro) · [Pricing](https://gobuildwp.com/pricing) · [All integrations](https://gobuildwp.com/integrations)
+
+## Elementor MCP: free Elementor editing
+
+**Editing an Elementor page is free.** The Elementor abilities load automatically when Elementor 3.6 or newer is active and stay unregistered otherwise, so an agent is never offered a tool that cannot work on this site. Elementor Pro is not required.
+
+Writing generated HTML into `post_content` does not change an Elementor page. The layout lives in postmeta as a typed element tree, and Elementor renders from that. These abilities work on the tree itself, and GoBuildWP refuses a `post_content` write to an Elementor page by name rather than reporting a success that changes nothing.
 
 | Ability | What it does |
 | --- | --- |
-| `wppilot/elementor-check-setup` | Elementor and Elementor Pro versions, whether the v4 atomic runtime, the style schema, global classes, variables and interactions are available on this install. The call an agent should make first. |
-| `wppilot/elementor-get-schema` | Discover widgets, or describe named ones in compact form: which controls exist, their types and their allowed values. Filterable by category, by name and by whether a widget is atomic. |
+| `wppilot/elementor-check-setup` | Elementor and Elementor Pro versions, and whether the v4 atomic runtime, the style schema, global classes, variables and interactions are available. The call an agent should make first. |
+| `wppilot/elementor-get-schema` | Discover widgets, or describe named ones compactly: which controls exist, their types and their allowed values. |
 | `wppilot/elementor-get-style-schema` | The 73 style properties Elementor's atomic engine accepts, with the value shape each one takes. |
 | `wppilot/elementor-get-widget-params` | The parameters one widget accepts, without reading its whole schema. |
 | `wppilot/elementor-get-content` | Read the element tree of a document, as structure or in full. |
-| `wppilot/elementor-find-elements` | Locate elements by type, by widget, by id or by the text they contain. |
-| `wppilot/elementor-set-content` | Replace a document's tree in one call. Invalid properties are dropped and reported rather than failing the whole page; pass `strict` to refuse instead. |
-| `wppilot/elementor-add-element` | Insert a widget, a container or a whole subtree at a position you choose, with settings and per-element styles validated against the schema first. |
-| `wppilot/elementor-edit-element` | Change one element's settings or styles in place, leaving the page around it untouched. |
-| `wppilot/elementor-move-element` | Move an element to a new parent or a new position. |
+| `wppilot/elementor-find-elements` | Locate elements by type, widget, id or the text they contain. |
+| `wppilot/elementor-set-content` | Replace a document's tree in one call. Invalid properties are dropped and reported; pass `strict` to refuse instead. |
+| `wppilot/elementor-add-element` | Insert a widget, a container or a whole subtree at a chosen position, validated against the schema first. |
+| `wppilot/elementor-edit-element` | Change one element's settings or styles in place. |
+| `wppilot/elementor-move-element` | Move an element to a new parent or position. |
 | `wppilot/elementor-duplicate-element` | Copy an element, with fresh ids throughout its subtree. |
 | `wppilot/elementor-reorder-children` | Reorder a container's children in one call. |
 | `wppilot/elementor-delete-element` | Remove an element and its subtree. |
-| `wppilot/elementor-get-page-settings` · `set-page-settings` | Read and write document-level settings: page layout, title visibility, background, and the rest. |
+| `wppilot/elementor-get-page-settings` · `set-page-settings` | Read and write document-level settings such as page layout, title visibility and background. |
 | `wppilot/elementor-clear-document-cache` | Regenerate Elementor's CSS for a document after a write. |
 
-Full detail, including the read-before-write sequence: [`docs/elementor-mcp.md`](docs/elementor-mcp.md).
+Both element models are supported: Elementor v4 atomic elements (`e-div-block`, `e-heading`, `e-paragraph`, `e-button`, `e-image` and the rest) and classic v3 widgets and containers. The free plugin also includes `wppilot/elementor-audit-atomic-readiness`, which reports how much of the site uses v4 atomic elements, and `wppilot/elementor-audit-output`, which scores how editable a page is. Full detail: [`docs/elementor-mcp.md`](docs/elementor-mcp.md).
 
-Both element models are supported: Elementor v4 atomic elements (`e-div-block`, `e-heading`, `e-paragraph`, `e-button`, `e-image` and the rest, with the atomic style schema) and classic v3 widgets and containers, with the settings keys each one actually uses.
+**What Pro adds on top.** Composition: `elementor-build-page` builds a whole page from one compact description, and `elementor-compile-spec` and `elementor-build-from-spec` turn a reproduction spec into global classes and a matching tree. Reuse: templates, theme parts and display conditions, popups, global classes, v4 variables, and v3 global colours and typography. Content: Elementor Pro forms and submissions, dynamic tags, interactions and site-wide custom code. Free can **edit** an Elementor page; Pro can **compose** one. [MCP for Elementor](https://gobuildwp.com/mcp-for-elementor)
 
-### What Pro adds on top
+## WooCommerce MCP
 
-The free abilities are the primitives, and they compose. What Pro adds is the authoring layer above them, plus everything Elementor keeps outside a single document:
+**Free:** 13 WooCommerce abilities, on WooCommerce 9.0 or newer. An agent can check the store setup, list and read products, variations, categories, tags and store settings, read orders and customers (these two also need `manage_woocommerce`), and edit one product's name, description, prices and stock. The edit saves through WooCommerce, so its lookup tables and caches follow, and it can be undone from the Changes screen.
 
-**Composition**: `elementor-build-page` builds a whole page from one compact description instead of a dozen round trips; `elementor-compile-spec` and `elementor-build-from-spec` turn a reproduction spec into global classes and a matching tree. **Reuse**: templates, theme parts and display conditions, popups, global classes, v4 variables and v3 global colours and typography. **Content**: Elementor Pro forms and submissions, dynamic tags, interactions, SVG upload, stock-image placement, and site-wide custom code.
+**Pro** adds 50 more: creating and deleting products, full product editing (SKU, categories, images, attributes), variable products, bulk prices and stock, order and customer writes, refunds, coupons, store settings, and sales and product-performance reports for a date range.
 
-The dividing line is simple: free can **edit** an Elementor page, Pro can **compose** one.
+Every call is capability-checked against the connected WordPress user, so an agent connected as a shop manager cannot do what that account could not do by hand. Order status changes and anything touching money are classed destructive, so they need explicit confirmation and are recorded in the change ledger. Full detail: [`docs/woocommerce-mcp.md`](docs/woocommerce-mcp.md) · [MCP for WooCommerce](https://gobuildwp.com/mcp-for-woocommerce)
 
-## WPPilot Pro: plugin-aware abilities across 89 integrations
+## Gutenberg MCP and block themes
 
-The free plugin in this repository is a complete WordPress MCP server: connection, authentication, safety profiles, Gutenberg workflows, **Elementor editing**, the design system, diagnostics, change evidence and **232 abilities**, including the whole WordPress core surface: content, taxonomies, media, comments, revisions, menus, user reads, allowlisted settings and the plugin/theme lifecycle. Free needs no licence, entitlement service or Pro install.
+Block editing is in the **free** plugin. An agent can read and write block-editor content, and stage changes as a pending batch. Core blocks are validated and serialised by the block editor's own JavaScript, so staged batches are finalised in a browser tab through the Block Editor Queue rather than written blind. The plugin says so instead of failing silently.
 
-[**WPPilot Pro**](https://wppilot.co/pro) adds **plugin-aware abilities across 89 integrations** (the plugins, themes and builders in the table below plus [26 caching and optimization layers](https://wppilot.co/solutions/performance)), typed operations that understand each plugin's own data model rather than writing generic content. Modules load only when their plugin is detected, and each loads in isolation, so a missing or broken plugin cannot stop the rest of the registry from registering.
+On a block theme, the free block themes abilities edit Global Styles, templates and template parts (header, footer), the site's own patterns and block navigation menus through WordPress's own REST controllers, and every change can be undone. Block Notes let an agent leave a note on a block for a person and read the ones they resolved. Pro adds modules for GenerateBlocks, Kadence Blocks, Spectra and Spectra One. [MCP for Gutenberg](https://gobuildwp.com/mcp-for-gutenberg)
 
-| Category | Integrations · `ability count` |
-| --- | --- |
-| **Page builders** | [Elementor](https://wppilot.co/integrations/elementor) `51` · [Bricks](https://wppilot.co/integrations/bricks) `49` · [Breakdance](https://wppilot.co/integrations/breakdance) `33` · [Divi](https://wppilot.co/integrations/divi) `47` · [Oxygen](https://wppilot.co/integrations/oxygen) `37` · [Beaver Builder](https://wppilot.co/integrations/beaver-builder) `21` · [WPBakery](https://wppilot.co/integrations/wpbakery) `18` · [Etch](https://wppilot.co/integrations/etch) `60` · [Mosaic](https://wppilot.co/integrations/mosaic) `41` · [Flatsome UX Builder](https://wppilot.co/integrations/flatsome) `11` |
-| **Blocks and site design** | [GenerateBlocks](https://wppilot.co/integrations/generateblocks) `3` · [Kadence Blocks](https://wppilot.co/integrations/kadenceblocks) `5` · [Spectra](https://wppilot.co/integrations/spectra) `20` · [Spectra One](https://wppilot.co/integrations/spectra-one) `22` |
-| **Themes** | [Astra](https://wppilot.co/integrations/astra) `34` · [Avada](https://wppilot.co/integrations/avada) `16` · [GeneratePress](https://wppilot.co/integrations/generatepress) `23` · [Kadence](https://wppilot.co/integrations/kadence) `5` · [OceanWP](https://wppilot.co/integrations/oceanwp) `15` · [WordPress Block Themes](https://wppilot.co/integrations/block-themes) `4` · [Blocksy](https://wppilot.co/integrations/blocksy) `4` · [Neve](https://wppilot.co/integrations/neve) `4` · [WoodMart](https://wppilot.co/integrations/woodmart) `4` |
-| **Commerce** | [WooCommerce](https://wppilot.co/integrations/woocommerce) `53` · [FunnelKit](https://wppilot.co/integrations/funnelkit) `4` |
-| **Forms** | [WPForms](https://wppilot.co/integrations/wpforms) `27` · [Gravity Forms](https://wppilot.co/integrations/gravityforms) `27` · [Fluent Forms](https://wppilot.co/integrations/fluentforms) `37` · [Formidable Forms](https://wppilot.co/integrations/formidable) `39` · [Contact Form 7](https://wppilot.co/integrations/contact-form-7) `8` · [Ninja Forms](https://wppilot.co/integrations/ninja-forms) `21` · [Forminator](https://wppilot.co/integrations/forminator) `3` · [WS Form](https://wppilot.co/integrations/ws-form) `4` |
-| **SEO suites** | [AIOSEO](https://wppilot.co/integrations/aioseo) `12` · [Rank Math](https://wppilot.co/integrations/rank-math) `8` · [SEOPress](https://wppilot.co/integrations/seopress) `16` · [Yoast SEO](https://wppilot.co/integrations/yoast) `10` · [The SEO Framework](https://wppilot.co/integrations/the-seo-framework) `3` · [Slim SEO](https://wppilot.co/integrations/slim-seo) `3` · [SmartCrawl](https://wppilot.co/integrations/smartcrawl) `3` |
-| **Custom data** | [Advanced Custom Fields](https://wppilot.co/integrations/acf) `23` · [ACPT](https://wppilot.co/integrations/acpt) `24` · [Admin and Site Enhancements](https://wppilot.co/integrations/ase) `18` · [JetEngine](https://wppilot.co/integrations/jetengine) `26` · [Meta Box](https://wppilot.co/integrations/meta-box) `32` · [Pods](https://wppilot.co/integrations/pods) `25` · [Dynamic Shortcodes](https://wppilot.co/integrations/dynamic-shortcodes) `9` |
-| **Localization** | [Weglot](https://wppilot.co/integrations/weglot) `19` · [WPML](https://wppilot.co/integrations/wpml) `8` · [Polylang](https://wppilot.co/integrations/polylang) `6` |
-| **Backups** | [UpdraftPlus](https://wppilot.co/integrations/updraftplus) `1` · [Duplicator](https://wppilot.co/integrations/duplicator) `1` · [BackWPup](https://wppilot.co/integrations/backwpup) `1` · All-in-One WP Migration `1` (start a backup, and an optional "require a fresh backup" hold on destructive calls; status and history are free) |
-| **Security** | [Wordfence](https://wppilot.co/integrations/wordfence) `5` · [Solid Security](https://wppilot.co/integrations/solid-security) `5` (a hardening plan you confirm, IP blocks and scans, all undoable; status, findings and lockouts are free) |
-| **Site maintenance** | [Safe plugin and theme updates](https://wppilot.co/wordpress-ai-safe-updates) `3` (checks pages before and after, rolls back on its own) · [Content fixes](https://wppilot.co/use-cases/fix-broken-links-with-ai) `2` |
-| **Site operations** | [The Events Calendar](https://wppilot.co/integrations/the-events-calendar) `7` · [Paid Memberships Pro](https://wppilot.co/integrations/paid-memberships-pro) `5` · [Tutor LMS](https://wppilot.co/integrations/tutor-lms) `7` · [BuddyPress](https://wppilot.co/integrations/buddypress) `8` |
-| **Developer tools** | [Code Snippets](https://wppilot.co/integrations/code-snippets) `11` · [Bricksforge](https://wppilot.co/integrations/bricksforge) `21` |
-| **WordPress platform** | [WordPress extras](https://wppilot.co/integrations/wordpress) `23` · [Brand Kit](https://wppilot.co/integrations/brand-kit) `8` · [Agent Memory](https://wppilot.co/integrations/memory) `4` · [Pro skill library](https://wppilot.co/integrations/skills) `1` (skills themselves are free) |
+## Page builder MCP servers: Bricks, Divi, Beaver Builder, Oxygen, Breakdance, WPBakery, Etch and Mosaic
 
-### Why plugin-aware matters
+One endpoint covers every builder below, and each builder registers only when it is installed. A page builder does not store a page as HTML: it stores an element tree, references to shared classes and design tokens, template rules and dynamic bindings. Writing generated markup into that store is how a layout stops opening in its own editor, so GoBuildWP gives the agent each builder's own vocabulary instead.
 
-A page builder does not store a page as HTML. It stores an element tree, references to shared classes and design tokens, template rules and dynamic bindings. Writing generated markup into that store is how a layout stops opening in its own editor.
+| Builder | Abilities | Edition | Guide |
+| --- | --- | --- | --- |
+| **Elementor** | **17 free** + 52 Pro | Free and Pro | [MCP for Elementor](https://gobuildwp.com/mcp-for-elementor) |
+| Etch | 60 | Pro | [MCP for Etch](https://gobuildwp.com/mcp-for-etch) |
+| Bricks | 49 | Pro | [MCP for Bricks](https://gobuildwp.com/mcp-for-bricks) |
+| Divi | 47 | Pro | [MCP for Divi](https://gobuildwp.com/mcp-for-divi) |
+| Mosaic | 41 | Pro | [MCP for Mosaic](https://gobuildwp.com/mcp-for-mosaic) |
+| Oxygen | 37 | Pro | [MCP for Oxygen](https://gobuildwp.com/mcp-for-oxygen) |
+| Breakdance | 33 | Pro | [MCP for Breakdance](https://gobuildwp.com/mcp-for-breakdance) |
+| Beaver Builder | 21 | Pro | [MCP for Beaver Builder](https://gobuildwp.com/mcp-for-beaver-builder) |
+| WPBakery | 18 | Pro | [MCP for WPBakery](https://gobuildwp.com/mcp-for-wpbakery) |
+| Flatsome UX Builder | 11 | Pro | [MCP for Flatsome](https://gobuildwp.com/mcp-for-flatsome) |
 
-Pro gives the agent that builder's own vocabulary: `bricks-patch-elements`, `elementor-create-atomic-widget`, `divi-apply-global-preset`, `etch-get-query-preview`, so it can read a schema before it proposes a change.
+- **Bricks MCP**: patches the Bricks element tree in place with `bricks-patch-elements`, so a change to one section does not rewrite the page around it.
+- **Divi MCP**: works with Divi modules and global presets (`divi-apply-global-preset`) rather than flattening a layout into shortcodes.
+- **Beaver Builder MCP**: Beaver Builder keeps its layout in postmeta (`_fl_builder_data`), so HTML in `post_content` changes nothing a visitor sees. Pro reads and writes that store; Free recognises the builder and refuses the write.
+- **Oxygen MCP**: Oxygen renders from a JSON element tree in postmeta and ignores `post_content`. Pro works against that tree.
+- **WPBakery MCP**: WPBakery keeps its layout in `post_content` as nested shortcodes. Pro parses and edits those shortcodes instead of replacing the markup around them.
+- **Breakdance, Etch and Mosaic MCP**: each exposes its own element model. Etch has the largest surface of any builder in Pro.
 
 Where each builder keeps its layout, and what that means for an agent: [`docs/page-builder-mcp.md`](docs/page-builder-mcp.md).
 
-### Page builder MCP servers
+## WordPress SEO with an AI agent
 
-One endpoint covers every builder below. The agent gets that builder's own
-vocabulary rather than being handed raw HTML to guess at.
+- **Free:** read and set one post's SEO title, meta description and robots in Yoast SEO, Rank Math, All in One SEO, SEOPress, The SEO Framework, Slim SEO and SmartCrawl. Each write goes through the plugin's own storage the way its editor does, and can be undone. Where a plugin cannot store something (Slim SEO has no follow flag; SEOPress has no per-post "force index"), the ability says so. The free content audit finds broken internal links, orphan pages, thin content, missing meta descriptions and structured-data problems across the site.
+- **Pro:** focus keywords, canonicals, social previews, schema, redirects and bulk SEO. `wppilot/content-fix-plan` turns audit findings into reviewable fixes (link retargets, redirects, related links for orphans, drafted meta descriptions), and `wppilot/content-fix-apply` applies only the items you choose, each as its own undoable change.
+- **Cloud with Pro:** a Search Console report per site (clicks, impressions, click rate and position for top pages and queries), read through each site's own Site Kit by Google.
 
-| Builder | Abilities | Free / Pro | Guide |
-| --- | --- | --- | --- |
-| **Elementor** | **68** | **17 free** · 51 Pro | [MCP for Elementor](https://wppilot.co/mcp-for-elementor) |
-| Etch | 60 | Pro | [MCP for Etch](https://wppilot.co/mcp-for-etch) |
-| Bricks | 49 | Pro | [MCP for Bricks](https://wppilot.co/mcp-for-bricks) |
-| Divi | 47 | Pro | [MCP for Divi](https://wppilot.co/mcp-for-divi) |
-| Mosaic | 41 | Pro | [MCP for Mosaic](https://wppilot.co/mcp-for-mosaic) |
-| Oxygen | 37 | Pro | [MCP for Oxygen](https://wppilot.co/mcp-for-oxygen) |
-| Breakdance | 33 | Pro | [MCP for Breakdance](https://wppilot.co/mcp-for-breakdance) |
-| Beaver Builder | 21 | Pro | [MCP for Beaver Builder](https://wppilot.co/mcp-for-beaver-builder) |
-| WPBakery | 18 | Pro | [MCP for WPBakery](https://wppilot.co/mcp-for-wpbakery) |
-| Flatsome UX Builder | 11 | Pro | [All integrations](https://wppilot.co/integrations) |
+[WordPress AI SEO automation](https://gobuildwp.com/wordpress-ai-seo-automation)
 
-#### Elementor MCP server
+## PageSpeed and site performance
 
-**Elementor is the one builder whose editing surface is free.** The 17 abilities
-in this repository read the document, report the widgets and the 73 style
-properties your install actually offers, and add, edit, move, duplicate, reorder
-and delete elements in the tree - v4 atomic elements and classic v3 widgets
-alike. See [Elementor MCP](#elementor-mcp) above for the full list.
+- **Free:** `wppilot/pagespeed-check` runs Google PageSpeed Insights on any page of the site, mobile, desktop or both, and returns Lighthouse scores for performance, SEO, accessibility and best practices, lab metrics, Core Web Vitals field data and the opportunities that save the most time. No Google key is needed: Site Kit by Google answers when it can, GoBuildWP Cloud's proxy otherwise, and a key of your own is optional. Diagnostics include scoped performance checks.
+- **Pro:** abilities for caching and optimization plugins (purge, read and change settings, warm and measure pages) and a PageSpeed fix loop: `wppilot/pagespeed-fix-plan` names the one cache setting that addresses the largest opportunity it can, and `wppilot/pagespeed-fix-step` applies that one setting with confirmation, purges, re-runs PageSpeed, and rolls the change back in the same call if the score dropped or something broke.
 
-Pro's 51 add the authoring layer on the same endpoint: whole-page composition
-from a description or a reproduction spec, templates and theme parts, display
-conditions, popups, forms and submissions, dynamic tags, interactions, global
-classes, v4 variables and v3 global colours and typography.
+[WordPress AI speed optimization](https://gobuildwp.com/wordpress-ai-speed-optimization)
 
-Writing generated markup into `post_content` does not change an Elementor page -
-the layout lives in postmeta, and WPPilot refuses that write by name rather than
-reporting a success that changes nothing.
+## WordPress security checks
 
-#### Bricks MCP
+- **Free:** configuration-security checks in Diagnostics, and read-only status from Wordfence and Solid Security: firewall mode, scan schedule and results, open findings by severity, and lockouts. IP addresses are reduced to their network, other people's logins are masked, and licence keys and secrets are never read. The site issues log records the PHP fatal errors behind "There has been a critical error on this website", with the plugin or theme they came from.
+- **Pro:** `wppilot/security-harden-plan` proposes a hardening profile as current → proposed changes with reasons; `wppilot/security-apply-settings` applies it with confirmation, reads each setting back, runs checks before and after, and rolls everything back if a check regresses. Pro can also block and unblock IPs and start a scan.
 
-Patches the Bricks element tree in place with `bricks-patch-elements`, so a
-change to one section does not rewrite the page around it.
+## Safe updates and backups
 
-#### Divi MCP
+- **Free:** activate, deactivate and update plugins and themes with explicit confirmation. Activation, deactivation and theme switches can be rolled back; updates are recorded as not reversible, with how to undo them manually. Backup status and history come from UpdraftPlus, Duplicator, BackWPup and All-in-One WP Migration, with no archive paths, download links or storage credentials returned.
+- **Pro:** `wppilot/safe-update` updates one plugin or theme at a time: it requires a recent successful backup (24 hours by default), zips a rollback copy, checks the site's pages before and after, and rolls back automatically when a page breaks. A safe update can be undone for 7 days. `wppilot/backup-trigger` starts a backup in UpdraftPlus, BackWPup or All-in-One WP Migration (Duplicator is read only). An optional setting refuses destructive or critical calls until a fresh backup exists.
+- **Limits:** GoBuildWP does not store backups or restore them. Starting a backup queues it in your backup plugin; it does not prove the backup completed or that it can be restored.
 
-Works with Divi modules and global presets through `divi-apply-global-preset`,
-rather than flattening a layout into shortcodes.
+[WordPress AI safe updates](https://gobuildwp.com/wordpress-ai-safe-updates)
 
-#### Beaver Builder MCP
+## GoBuildWP Cloud: every site behind one MCP link
 
-Beaver Builder keeps its layout in postmeta under `_fl_builder_data`, so writing
-HTML into `post_content` changes nothing a visitor sees. Pro reads and writes
-that store; the free plugin recognises the builder and refuses the write rather
-than reporting a success that does nothing.
+The free plugin connects one site directly. **GoBuildWP Cloud** is an optional hosted account at [app.gobuildwp.com](https://app.gobuildwp.com) that puts all your sites behind one MCP link, `https://app.gobuildwp.com/mcp`, so an AI app can list your sites, discover each site's tools (including Pro tools where Pro is installed), run them, review changes and undo them.
 
-#### Oxygen MCP
+1. Install GoBuildWP 1.17 or newer on each site.
+2. In wp-admin, open **GoBuildWP → Connect → GoBuildWP Cloud**, sign in or create a free account, and choose what Cloud may do on that site: **Read only** or **Production safe**. The site creates its own access token and sends it to Cloud server to server, so it never passes through a browser.
+3. Add `https://app.gobuildwp.com/mcp` to your AI app once. ChatGPT, Claude, Claude Code, Cursor, VS Code Copilot, Codex, Gemini CLI, Antigravity, Devin Desktop, Zed, Kiro, JetBrains Junie, LM Studio and Goose sign in with OAuth; Cline, scripts and CI jobs use a personal access token.
 
-Oxygen stores a JSON element tree in postmeta and renders from it, ignoring
-`post_content` entirely. Pro's 37 abilities work against that tree.
+**Each site stays the final authority.** Its safety profile, confirmations, change ledger and undo apply exactly as with a direct connection, and Cloud can never exceed the access the site granted. Disconnect from either side and the token is revoked.
 
-#### WPBakery MCP
+| | Free | With a GoBuildWP Pro licence |
+| --- | --- | --- |
+| Connected sites | 3 | Single Site plan: 3 · 10 Sites plan: 10 · 100 Sites plan: 100 · Unlimited Sites plan: see [pricing](https://gobuildwp.com/pricing) |
+| Single-site tools, change review and undo | Yes | Yes |
+| Pending updates and backup status (sites on Free 1.18.0+) | Yes | Yes |
+| Start updates and backups from Cloud | — | Yes |
+| Bulk actions across sites, with a dry run | — | Yes |
+| Safety policies pushed to sites | — | Yes |
+| SEO report (via each site's Site Kit) | — | Yes |
 
-WPBakery is the exception that keeps its layout in `post_content`, as nested
-shortcodes. Pro parses and edits those shortcodes instead of replacing the
-markup around them.
+Cloud is included with every Pro licence. [More about Cloud](https://gobuildwp.com/cloud) · [Sign up](https://app.gobuildwp.com/register)
 
-#### Breakdance, Etch and Mosaic MCP
+## GoBuildWP Pro integrations
 
-Breakdance (33 abilities), Etch (60) and Mosaic (41) each expose their own
-element model. Etch has the largest surface of any builder in Pro.
+[GoBuildWP Pro](https://gobuildwp.com/pro) adds plugin-aware abilities for 89 integrations: typed operations that understand each plugin's own data model rather than writing generic content. Modules load only when their plugin is detected, and each loads in isolation, so a missing or broken plugin cannot stop the rest from registering.
 
-### Gutenberg MCP
+- **Page builders**: Elementor, Bricks, Breakdance, Divi, Oxygen, Beaver Builder, WPBakery, Etch, Mosaic, Flatsome UX Builder
+- **Blocks and themes**: GenerateBlocks, Kadence Blocks, Spectra, Spectra One, Astra, Avada, GeneratePress, Kadence, OceanWP, Blocksy, Neve, WoodMart, WordPress block themes
+- **Commerce**: WooCommerce, FunnelKit
+- **Forms**: WPForms, Gravity Forms, Fluent Forms, Formidable Forms, Contact Form 7, Ninja Forms, Forminator, WS Form
+- **SEO**: Yoast SEO, Rank Math, AIOSEO, SEOPress, The SEO Framework, Slim SEO, SmartCrawl, Redirection, Site Kit by Google
+- **Custom data**: Advanced Custom Fields, ACPT, Admin and Site Enhancements, JetEngine, Meta Box, Pods, Dynamic Shortcodes
+- **Multilingual**: WPML, Polylang, Weglot, TranslatePress
+- **Backups and security**: UpdraftPlus, Duplicator, BackWPup, All-in-One WP Migration, Wordfence, Solid Security
+- **Site operations**: The Events Calendar, Paid Memberships Pro, Tutor LMS, BuddyPress, Code Snippets, Bricksforge
+- **Performance**: caching and optimization plugins
 
-Block editing is in the **free** plugin, not Pro: parse, insert, move and
-replace blocks in the core block tree, with reusable blocks and patterns.
+Pro also adds persistent agent memory, the human approval queue, a brand kit, integration health reporting (which modules loaded, which were skipped, and why) and plugin-aware skill packs.
 
-### WooCommerce MCP
+> GoBuildWP Pro is a commercial plugin and is not distributed from this repository.
 
-Products, variations, orders, coupons and stock as typed abilities rather than
-raw REST calls. An agent can query the catalogue, create a variable product with
-its attributes and variations, adjust stock, read orders and add order notes -
-each one capability-checked against the connected WordPress user, so an agent
-connected as a shop manager cannot do what that account could not do by hand.
+## Safety: permissions, safety profiles, approvals and undo
 
-Order status changes and anything touching money are classed destructive, so
-they require explicit confirmation and are recorded in the change ledger with
-rollback, the same as every other write.
+### Permissions
 
-Full detail: [`docs/woocommerce-mcp.md`](docs/woocommerce-mcp.md).
+Every call runs as a WordPress user and is checked against that user's capabilities, read from each post type's and taxonomy's own capability object. On top of that, individual abilities can be switched off, any ability can be set to always require confirmation or a minimum safety profile, and writes are rate-limited per credential.
 
-### Beyond integrations
+### Safety profiles
 
-- **Persistent agent memory**, approved context that carries between sessions, so an agent does not relearn your stack every conversation.
-- **Human approval queue**, holds an agent write until a person approves it, with email notification. The agent receives a structured “pending” response, not a false success.
-- **Integration health reporting**: see which modules loaded, which were skipped, and why.
-- **Plugin-aware skill packs**, guided sequences that encode the read-before-write workflow for the plugins you run.
+| Profile | What it allows |
+| --- | --- |
+| **Read Only** | Discovery and inspection. Every state-changing ability is blocked. |
+| **Production Safe** (default) | Normal content, design, SEO, forms and commerce work, plus plugin activation and updates with confirmation. Blocks raw PHP, WP-CLI, filesystem, database, plugin and theme installation and deletion, and temporary admin access. |
+| **Developer Full Access** | Every enabled ability, including privileged surfaces. Critical calls still require explicit confirmation. Intended for development and staging sites. |
 
-[Compare Free vs Pro](https://wppilot.co/free-vs-pro) · [Pricing](https://wppilot.co/pricing) · [All integrations](https://wppilot.co/integrations)
+### Confirmation and approval modes
 
-> WPPilot Pro is a commercial plugin and is not distributed from this repository.
+Destructive and critical calls need explicit confirmation. **Settings → Confirmation → Confirmation mode** decides what counts:
+
+- **Agent flag** (default): the model sends `confirm: true`.
+- **A person approves**: `confirm` from the model is not enough. The person approves the exact call in their MCP client (form elicitation on the `2026-07-28` revision) or on a one-time wp-admin link that shows the ability, the account and the exact input. Each change records how it was confirmed.
+
+Writes made through other plugins' MCP abilities (Elementor's and WooCommerce's own MCP servers among them) are recorded in GoBuildWP's change log too, and an optional setting asks for approval before they run. Pro adds an **approval queue** that holds an agent's write until a person approves it, with email notification; the agent receives a structured "pending" response, not a false success.
+
+### Change ledger and undo
+
+Every supported write is recorded in a redacted change ledger, attributed to the agent behind it (the OAuth client or application-password credential, plus the client name), not only to the WordPress user. A write made in wp-admin, WP-CLI or cron is recorded as `direct`.
+
+**GoBuildWP → Changes** lists every change, filters by ability, agent, date and status, and undoes one change, one batch, or everything a filter shows. `wppilot/undo-session` takes back everything one agent session did, newest first, verifying each change against its before-image; `wppilot/redo-session` puts it back under the same checks, and `wppilot/list-sessions` shows what undo and redo would do now.
+
+### What undo cannot do
+
+- Only operations with a registered restore strategy can be undone. Others, such as plugin installs, updates and deletions, permanently deleted comments and started backups, are recorded as irreversible, and say why.
+- Session undo refuses, without touching anything, when something else changed a target after the agent did, and names the conflict.
+- Session undo stops at the first change that fails verification and reports what was undone, what failed and what was not attempted. A change that cannot be undone is listed, never silently skipped.
+- Before-images stop after 1 MB per call; later items in that call say plainly that none was kept.
+- Cancelling an MCP task does not undo writes it already completed. A Pro safe update can be undone for 7 days.
+
+More: [`docs/SAFETY.md`](docs/SAFETY.md).
 
 ## FAQ
 
-**What is a WordPress MCP server, and is this one a server or a client?**
-A server. Your site exposes typed WordPress abilities over MCP at `https://example.com/wp-json/mcp/wppilot`, and the AI client you already use connects to it. No model is bundled and no key is stored here; the client brings its own model access.
+**What is a WordPress MCP server, and is this a server or a client?**
+A server. Your site exposes typed WordPress abilities over MCP at `https://example.com/wp-json/mcp/wppilot`, and the AI client you already use connects to it. No model is bundled and no AI key is stored; the client brings its own model access.
 
-**Is there an Elementor MCP server?**
-Yes, and editing is free. The plugin in this repository registers 17 Elementor abilities as soon as Elementor 3.6 or newer is active: read the document, inspect the widget and style schemas, and add, edit, move, duplicate, reorder and delete elements in the tree, plus page settings. No licence and no Pro install. [WPPilot Pro](https://wppilot.co/pro) adds 51 more for the authoring layer - whole-page composition, templates and theme parts, popups, forms, dynamic tags, global classes and variables. Free can edit an Elementor page; Pro can compose one.
+**Do I need an OpenAI or Anthropic API key?**
+No. Claude, ChatGPT, Cursor and the other clients use their own model access. Only the optional in-admin GoBuildWP Chat uses an AI provider configured on your WordPress site.
+
+**Is there a free Elementor MCP server?**
+Yes. This plugin registers 17 Elementor editing abilities as soon as Elementor 3.6 or newer is active, with no licence and no Pro install. Pro adds whole-page composition, templates and theme parts, popups, forms, dynamic tags, global classes and variables.
+
+**Can an agent build a whole Elementor page with the free plugin?**
+Yes, one element at a time with `elementor-add-element`, `elementor-edit-element` and `elementor-set-content`, against the palette, type scale and spacing from the free design system. The single-call page builders, `elementor-build-page` and `elementor-build-from-spec`, are Pro.
 
 **What about Bricks, Divi, Beaver Builder, Oxygen, Breakdance, WPBakery, Etch, Mosaic and Flatsome?**
-Those are [WPPilot Pro](https://wppilot.co/pro), which registers builder-aware abilities on the same endpoint. A page builder stores an element tree, shared classes, design tokens and dynamic bindings rather than HTML, so Pro gives the agent that builder's own vocabulary instead of writing markup into a store that will not open in its editor.
+Those are GoBuildWP Pro, on the same endpoint. The builder must be installed on the site.
 
 **Is there a WooCommerce MCP server?**
-Yes, in [WPPilot Pro](https://wppilot.co/pro). Products, variations, orders, coupons and stock become typed abilities on the same endpoint, capability-checked against the connected WordPress user - an agent connected as a shop manager cannot do what that account could not do by hand. Anything touching money is classed destructive, so it needs explicit confirmation and lands in the change ledger with rollback.
-
-**Do I need Pro to use this?**
-No. The free plugin in this repository is a complete WordPress MCP server with 232 abilities - including Elementor editing and the design system - and it needs no licence, activation key or entitlement service. Pro is additive.
-
-**Can an agent build an Elementor page with the free plugin?**
-It can build one element at a time, which is what `elementor-add-element`, `elementor-edit-element` and `elementor-set-content` are for, and the design system in free gives it the palette, the type and spacing ladders and the compositions to build against. The single-call whole-page builders, `elementor-build-page` and `elementor-build-from-spec`, are Pro.
-
-**How does it relate to the WordPress Abilities API and the official MCP Adapter?**
-It is built on both. The Abilities API is where abilities are registered, and the MCP Adapter is bundled to serve the legacy protocol revision. WPPilot adds the parts an adapter does not: authentication, safety profiles, confirmation gates, rate limiting, a change ledger with rollback, and the abilities themselves.
-
-**How do I connect WordPress to Claude, Cursor or Codex?**
-Claude Code, Claude Desktop, Claude on the web, Codex CLI and desktop, Cursor, VS Code, GitHub Copilot, Devin Desktop, Factory Droid, Antigravity CLI and IDE, Zed, Cline, Roo Code, Kilo Code, Amazon Q, OpenCode, OpenClaw and Manus. Setup guides: <https://wppilot.co/wordpress-mcp>.
+Yes. Free reads the catalogue, store settings, orders and customers and edits one product's basics with undo. Pro adds product creation, orders, refunds, coupons, bulk changes and reports.
 
 **Is it safe to point an agent at a production site?**
-That is what the safety model is for. Read Only blocks every write, Production Safe blocks raw PHP, WP-CLI, filesystem, database and extension installation, destructive calls require an explicit confirmation flag, WordPress capabilities still apply on top, and supported changes are recorded in a ledger you can roll back. Start on Read Only and verify one call before enabling any write.
+That is what the safety model is for. Start on Read Only and verify one call before allowing writes. Production Safe blocks raw PHP, WP-CLI, filesystem, database and extension installation; destructive calls need confirmation, optionally from a person; WordPress capabilities still apply; and supported changes can be undone.
 
-**Is there a Gutenberg MCP server - can an agent write native blocks?**
-Partly, and the plugin says so rather than failing silently. Core blocks are validated and serialised by the block editor's own JavaScript, so writes are staged as a pending batch and finalised through a browser session.
+**Do I need Pro or Cloud?**
+No. The free plugin is a complete WordPress MCP server with 232 abilities and needs no licence, activation key or account. Pro and Cloud are optional.
+
+**How does it relate to the WordPress Abilities API and the MCP Adapter?**
+It is built on both. Abilities are registered through the Abilities API, and the MCP Adapter is bundled to serve the legacy protocol revision. GoBuildWP adds authentication, safety profiles, confirmation gates, rate limiting, the change ledger with undo, and the abilities themselves.
 
 **Is it on WordPress.org?**
-No. Distribution is GitHub releases for the free plugin and wppilot.co for Pro. Install `wppilot.zip` from [Releases](https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot/releases); the GitHub "Source code" archive is not installable.
+Not currently. Install `gobuildwp.zip` from [Releases](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases). GoBuildWP Pro is sold at gobuildwp.com.
+
+**Why do the CLI, endpoints and ability names still say `wppilot`?**
+They are the plugin's internal identifiers (`wppilot/*` abilities, `wp wppilot`, `/wp-json/mcp/wppilot`) and were kept on purpose, so existing client configurations, scripts and installs keep working after the rename.
 
 ## Requirements
 
 - WordPress 6.9 or newer, tested up to WordPress 7.1
 - PHP 8.0 or newer
-- HTTPS for any remotely reachable connection
-- The Elementor abilities require Elementor 3.6 or newer, and register only when it is active. Elementor 4.0 or newer additionally unlocks the atomic style schema and global classes. Elementor Pro is not required for anything in the free plugin.
-- WPPilot Chat additionally requires WordPress 7.0 and an AI provider configured through the WordPress AI Client
+- HTTPS for any remotely reachable connection; hosted web clients cannot reach `localhost`
+- Elementor abilities: Elementor 3.6 or newer, registered only while it is active. Elementor 4.0 or newer also unlocks the atomic style schema and global classes. Elementor Pro is not required for the free Elementor abilities.
+- WooCommerce abilities: WooCommerce 9.0 or newer
+- GoBuildWP Pro: GoBuildWP Free 1.18.1 or newer and an active Pro licence or trial
+- GoBuildWP Cloud: GoBuildWP 1.17 or newer on each site (1.18.0 or newer for update and backup reporting)
+- GoBuildWP Chat (optional): WordPress 7.0 and an AI provider configured through the WordPress AI Client
 
 ## Privacy
 
-The MCP endpoint is self-hosted; a direct connection has no WPPilot relay. **WPPilot Cloud is optional:** only if you connect a site to it, the site shares its URL, versions and status with app.wppilot.co and Cloud stores that site's access token encrypted, and the AI calls you make through Cloud pass through it (Cloud logs the tool name, site, outcome and time, not page content). See the plugin's *External services* section in `readme.txt`. When WPPilot Chat is used, WordPress sends conversation history, selected attachments, site instructions, tool definitions and relevant tool results to the AI provider you configured. Suggested policy text is available in **Settings → Privacy → Policy Guide**.
+The MCP endpoint is self-hosted, and a direct connection has no GoBuildWP relay. **GoBuildWP Cloud is optional.** Only if you connect a site does it share its URL, name, versions and status with app.gobuildwp.com; Cloud stores that site's access token encrypted, and AI calls made through Cloud pass through it (Cloud logs the tool name, site, outcome and time, not page content). A site connected by an older version keeps reporting to the service's former domain until it reconnects, as described in `readme.txt`.
+
+The PageSpeed check sends the tested page address and this site's address to GoBuildWP Cloud (or straight to Google PageSpeed Insights) when Site Kit cannot answer, even if the site is not connected to Cloud. The design preview loads chosen fonts from Google Fonts. Update checks go to gobuildwp.com and send only the plugin version. When GoBuildWP Chat is used, WordPress sends the conversation, selected attachments, site instructions, tool definitions and relevant tool results to the AI provider you configured. Every external service is listed in the *External services* section of [`readme.txt`](readme.txt). Suggested policy text is in **Settings → Privacy → Policy Guide**.
 
 ## Documentation
 
 | Guide | |
 | --- | --- |
-| Getting started | <https://wppilot.co/docs/getting-started> |
-| Connect an AI client | <https://wppilot.co/docs/connect-ai-client> |
-| OAuth 2.1 setup | <https://wppilot.co/docs/oauth-setup> |
-| Application Passwords | <https://wppilot.co/docs/application-passwords> |
-| Safety profiles | <https://wppilot.co/docs/safety-profiles> |
-| Page builder workflows | <https://wppilot.co/docs/page-builder-workflows> |
-| Change ledger and rollback | <https://wppilot.co/docs/change-ledger-and-rollback> |
-| Troubleshooting | <https://wppilot.co/docs/troubleshooting> |
+| Getting started | <https://gobuildwp.com/docs/getting-started> |
+| Connect an AI client | <https://gobuildwp.com/docs/connect-ai-client> |
+| OAuth 2.1 setup | <https://gobuildwp.com/docs/oauth-setup> |
+| Application Passwords | <https://gobuildwp.com/docs/application-passwords> |
+| Safety profiles | <https://gobuildwp.com/docs/safety-profiles> |
+| Page builder workflows | <https://gobuildwp.com/docs/page-builder-workflows> |
+| Change ledger and rollback | <https://gobuildwp.com/docs/change-ledger-and-rollback> |
+| Troubleshooting | <https://gobuildwp.com/docs/troubleshooting> |
 
-### In this repository
+In this repository:
 
 | Document | What it covers |
 | --- | --- |
-| [`docs/wordpress-mcp.md`](docs/wordpress-mcp.md) | The WordPress MCP server itself: endpoints, protocol revisions, discovery, the three-tool interface. |
-| [`docs/elementor-mcp.md`](docs/elementor-mcp.md) | The free Elementor MCP surface: the 17 abilities, the v3 and v4 element models, a read-before-write sequence. |
-| [`docs/page-builder-mcp.md`](docs/page-builder-mcp.md) | Where each builder stores a layout, and why an MCP server has to speak that store: Bricks, Divi, Oxygen, Beaver Builder, Breakdance, Etch, WPBakery, Mosaic. |
+| [`docs/wordpress-mcp.md`](docs/wordpress-mcp.md) | The WordPress MCP server: endpoints, protocol revisions, discovery, MCP Tasks. |
+| [`docs/elementor-mcp.md`](docs/elementor-mcp.md) | The free Elementor MCP surface, the v3 and v4 element models, a read-before-write sequence. |
+| [`docs/page-builder-mcp.md`](docs/page-builder-mcp.md) | Where each page builder stores a layout, and why an MCP server has to speak that store. |
 | [`docs/woocommerce-mcp.md`](docs/woocommerce-mcp.md) | WooCommerce over MCP: capability checks, destructive classification, order and money handling. |
-| [`docs/ai-client-compatibility.md`](docs/ai-client-compatibility.md) | Which AI clients connect how - OAuth, application password or access token - and what each one needs. |
+| [`docs/ai-client-compatibility.md`](docs/ai-client-compatibility.md) | Which AI clients connect how, and what each one needs. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Request lifecycle, ability registration, where the code lives. |
 | [`docs/SAFETY.md`](docs/SAFETY.md) | Safety profiles, confirmation gates, rate limits, the change ledger. |
-| [`SECURITY.md`](SECURITY.md) | Reporting a vulnerability, and hardening guidance. |
 
 Index: [`docs/README.md`](docs/README.md)
 
+## Support
+
+- Connection problems: **GoBuildWP → Diagnostics** runs the checks a client runs and usually names the fix. See [troubleshooting](https://gobuildwp.com/docs/troubleshooting).
+- Bugs, client connection reports and integration requests: [GitHub issues](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/issues).
+- Help and Pro or Cloud questions: <https://gobuildwp.com/support>.
+- Releases and build demos: [@gobuildwp on X](https://x.com/gobuildwp).
+
+## Contributing
+
+Pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first: it covers what to check before opening an issue, what is likely to be accepted, and how to run the tests.
+
 ## Security
 
-Report suspected vulnerabilities privately, see [SECURITY.md](SECURITY.md). Do not open a public issue for a vulnerability, and never include production credentials or customer data.
+Report suspected vulnerabilities privately; see [SECURITY.md](SECURITY.md). Do not open a public issue for a vulnerability, and never include production credentials or customer data.
 
 ## Licence
 

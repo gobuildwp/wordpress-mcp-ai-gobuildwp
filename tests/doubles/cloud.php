@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * Doubles for the WPPilot Cloud pairing tests.
+ * Doubles for the GoBuildWP Cloud pairing tests.
  *
  * Loaded only by those tests, and every one is guarded, so a general double
  * added to wordpress.php later simply wins.

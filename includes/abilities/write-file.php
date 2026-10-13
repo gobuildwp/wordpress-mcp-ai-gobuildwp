@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('wppilot/write-file', [
     'label' => __('Write File', domain: 'wppilot'),
     'description' => __(
-        'Writes small UTF-8 text content to a file on the server filesystem. PHP files (*.php) and PHP execution control files can ONLY be written to the sandbox directory (wp-content/wppilot-sandbox/). Other non-PHP files can intentionally go anywhere under ABSPATH. The sandbox is for loading and crash recovery of generated PHP, not security isolation for all filesystem writes. Does not accept base64 or binary uploads; use wppilot/create-upload-link for ZIPs, plugins, themes, media, binary files, or other large uploads. Automatically creates parent directories when needed.',
+        'Writes small UTF-8 text content to a file on the server filesystem. PHP files (*.php, and *.phtml, *.phar, *.php7 or any other extension a server may run as PHP) and PHP execution control files can ONLY be written to the sandbox directory (wp-content/wppilot-sandbox/). Other non-PHP files can intentionally go anywhere under ABSPATH. The sandbox is for loading and crash recovery of generated PHP, not security isolation for all filesystem writes. Does not accept base64 or binary uploads; use wppilot/create-upload-link for ZIPs, plugins, themes, media, binary files, or other large uploads. Automatically creates parent directories when needed.',
         domain: 'wppilot',
     ),
     'category' => 'filesystem',
@@ -78,7 +78,7 @@ wp_register_ability('wppilot/write-file', [
         'annotations' => [
             'instructions' => implode("\n", [
                 'PHP FILE SANDBOX:',
-                '- PHP files (*.php) and PHP execution control files can ONLY be written to: wp-content/wppilot-sandbox/',
+                '- PHP files (*.php, and *.phtml, *.phar, *.php7 or any other extension a server may run as PHP) and PHP execution control files can ONLY be written to: wp-content/wppilot-sandbox/',
                 '- Use a path like "wp-content/wppilot-sandbox/my-feature.php"',
                 '- Other non-PHP files can intentionally be written anywhere under ABSPATH.',
                 '- Use this ability only for small UTF-8 text files. Do NOT use base64 here.',

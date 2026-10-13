@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 364 64" fill="none" role="img" aria-label="WPPilot">
-  <g stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="1.25" y="1.25" width="61.5" height="61.5" rx="18" stroke-opacity=".34" stroke-width="2.5"/>
-    <path d="M14 22 21.6 44h6.9l3.6-10.5L35.7 44h6.9L50 22" stroke-width="4.35"/>
-    <path d="m23.5 22 5.9 15.5M40.5 22l-5.9 15.5" stroke-opacity=".64" stroke-width="4.35"/>
-    <path d="M44 14.3c6.5-4.3 12.1 1 8.3 7.5" stroke-opacity=".72" stroke-width="1.9"/>
-    <circle cx="51.5" cy="20.1" r="5.8" stroke-width="2.2"/>
-    <circle cx="51.5" cy="20.1" r="1.7" fill="#fff" stroke="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="364" height="64" viewBox="0 0 364 64">
+
+
+    <g transform="translate(0 0) scale(1.3333333333333333)">
+    <rect width="48" height="48" rx="12" fill="#F7F4ED"/>
+    <path d="M28 14H22C15.4 14 11 18.5 11 25S15.4 36 22 36H35V25H25" fill="none" stroke="#10253F" stroke-width="6" stroke-linecap="square" stroke-linejoin="round"/>
+    <rect x="32" y="9" width="8" height="8" rx="1.5" fill="#3268F5"/>
   </g>
-  <text x="80" y="43" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="900" letter-spacing="-1.35">WP</text>
-  <text x="124" y="43" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="500" letter-spacing="-1.35">Pilot</text>
-</svg>
+    <text x="79.36" y="42.88" fill="#F7F4ED" font-family="Arial, Helvetica, sans-serif" font-size="29.44" font-weight="900" letter-spacing="-1.3248">GoBuildWP</text>
+
+  </svg>

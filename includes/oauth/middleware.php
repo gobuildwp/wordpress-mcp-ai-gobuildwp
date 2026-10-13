@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 
 function register(): void
 {
-    // WordPress cookie and Application Password authenticators run first. WPPilot only establishes
+    // WordPress cookie and Application Password authenticators run first. GoBuildWP only establishes
     // an identity when they did not, and does so before REST authentication/hardening callbacks.
     add_filter('determine_current_user', __NAMESPACE__ . '\\resolve_bearer_identity', priority: 30);
     add_filter('rest_authentication_errors', __NAMESPACE__ . '\\reject_invalid_bearer', priority: 5);
@@ -50,10 +50,10 @@ function register(): void
  * Establish a WordPress identity without making any route authorization decision.
  *
  * Two kinds of credential arrive as `Authorization: Bearer`: an OAuth access
- * token, and a WPPilot access token. They are told apart by the token's fixed
+ * token, and a GoBuildWP access token. They are told apart by the token's fixed
  * prefix before either validator runs, never by trying one and falling back to
  * the other — a failed OAuth validation records an authentication error, which
- * denies the request outright, so a WPPilot token would never get a second look.
+ * denies the request outright, so a GoBuildWP token would never get a second look.
  *
  * @param mixed $user Existing identity established by WordPress.
  * @return mixed The existing identity, or the subject ID after successful validation.
@@ -129,7 +129,7 @@ function is_rest_request(): bool
 }
 
 /**
- * Establish an identity from a WPPilot access token.
+ * Establish an identity from a GoBuildWP access token.
  *
  * Mirrors resolve_bearer_identity_using() rather than reusing it: the OAuth path
  * reports its failures as OAuth failures, and a user debugging a static token
@@ -148,7 +148,7 @@ function resolve_token_identity(mixed $user, string $auth): mixed
     $identity = \wppilot_token_authenticate(bearer_secret($auth));
     if ($identity === null) {
         $reason = function_exists('wppilot_token_refusal') ? \wppilot_token_refusal() : '';
-        record_authentication_error($reason !== '' ? $reason : 'Invalid, expired, or revoked WPPilot access token.');
+        record_authentication_error($reason !== '' ? $reason : 'Invalid, expired, or revoked GoBuildWP access token.');
         return $user;
     }
 
@@ -205,7 +205,7 @@ function resolve_bearer_identity_using(mixed $user, string $auth, \Closure $vali
 /**
  * Validate signature, validity window, revocation, audience, subject, and granted scopes.
  *
- * The optional server exists for focused tests; production always builds the server from WPPilot's
+ * The optional server exists for focused tests; production always builds the server from GoBuildWP's
  * own key and access-token repository.
  *
  * @return array{user_id: int, scopes: list<string>, client_id?: string}
@@ -317,7 +317,7 @@ function authorize_routed_request(mixed $result, mixed $handler, WP_REST_Request
     }
 
     if (!current_user_can_access_mcp()) {
-        return new WP_Error('rest_oauth_error', 'User is no longer allowed to manage WPPilot.', [
+        return new WP_Error('rest_oauth_error', 'User is no longer allowed to manage GoBuildWP.', [
             'status' => 403,
         ]);
     }
@@ -356,7 +356,7 @@ function http_rest_route(): string
 }
 
 /**
- * Routes whose handlers run abilities through WPPilot's gate (wppilot_gate_ability_call(), or the
+ * Routes whose handlers run abilities through GoBuildWP's gate (wppilot_gate_ability_call(), or the
  * foreign gate for other MCP servers' abilities): the MCP endpoints and the REST shim's run route.
  */
 function route_runs_gated_abilities(string $route, string $method): bool
@@ -389,7 +389,7 @@ function note_admitted_http_request(string $route, string $method): void
  * HTTP. It was also applied to rest_do_request() calls an ability makes for itself — the block
  * theme kit reading global styles, a backup plugin's export endpoint — which broke every such
  * ability for OAuth and access-token connections while Application Passwords worked. Such a call
- * is part of an ability that has already passed WPPilot's gate: the safety profile (which is what
+ * is part of an ability that has already passed GoBuildWP's gate: the safety profile (which is what
  * a read-only token's limits are), the confirmation contract and the rate limit. The route it
  * dispatches is chosen by the ability's code, not by the client, and the route's own
  * permission_callback still runs as the token's user. The scope and manage-capability checks after
@@ -551,7 +551,7 @@ function is_any_mcp_route(string $route): bool
 }
 
 /**
- * Exact REST routes on which a WPPilot-established identity may survive post-routing checks.
+ * Exact REST routes on which a GoBuildWP-established identity may survive post-routing checks.
  */
 function oauth_identity_may_use_route(string $route, string $method): bool
 {
@@ -568,7 +568,7 @@ function oauth_identity_may_use_route(string $route, string $method): bool
     if (request_identity_via() === 'token' && is_any_mcp_route($route)) {
         return true;
     }
-    // WPPilot Cloud's status and unlink routes. Any token identity gets past
+    // GoBuildWP Cloud's status and unlink routes. Any token identity gets past
     // this boundary; the routes' own permission callback then admits only the
     // token that was paired with the Cloud. See includes/cloud/rest.php.
     // @mago-expect lint:no-insecure-comparison -- credential kind, not a secret.

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,11 +8,11 @@ declare(strict_types=1);
 /**
  * One entry in the WordPress sidebar, not fifteen.
  *
- * WPPilot has thirteen screens of its own and gains more from Pro. Listed
+ * GoBuildWP has thirteen screens of its own and gains more from Pro. Listed
  * individually in the admin sidebar they pushed every other plugin — and half
  * of WordPress' own menu — below the fold, and they did it on every screen of
- * the site, not just WPPilot's. A plugin does not get to own the sidebar
- * because it happens to have a lot of pages. Navigation between WPPilot screens
+ * the site, not just GoBuildWP's. A plugin does not get to own the sidebar
+ * because it happens to have a lot of pages. Navigation between GoBuildWP screens
  * belongs on the grouped tab rail inside the plugin, which is easier to read
  * than a flat list of fifteen anyway.
  *
@@ -37,7 +37,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * The top-level menu slug WPPilot registers everything under.
+ * The top-level menu slug GoBuildWP registers everything under.
  */
 const WPPILOT_SIDEBAR_PARENT = 'wppilot-connect';
 
@@ -54,12 +54,12 @@ function wppilot_sidebar_is_collapsed(): bool
 }
 
 /**
- * Hide WPPilot's submenu in the admin sidebar.
+ * Hide GoBuildWP's submenu in the admin sidebar.
  *
- * Scoped to WPPilot's own top-level item, so no other plugin's menu is
+ * Scoped to GoBuildWP's own top-level item, so no other plugin's menu is
  * affected, and applied with `display: none` on the container rather than on
  * individual items — WordPress renders that list both as the hover flyout and
- * as the expanded tree on WPPilot screens, and both should go.
+ * as the expanded tree on GoBuildWP screens, and both should go.
  *
  * `aria-hidden` is not used and `display: none` is: the items are removed from
  * the accessibility tree along with the visual one, which is correct here
@@ -99,14 +99,14 @@ function wppilot_sidebar_hide_submenu(): void
 }
 
 /**
- * WPPilot screens that stay listed in the admin sidebar while the rest collapse into the tab rail.
+ * GoBuildWP screens that stay listed in the admin sidebar while the rest collapse into the tab rail.
  *
  * @return list<string> Page slugs.
  */
 function wppilot_sidebar_visible_pages(): array
 {
     /** @var mixed $slugs */
-    $slugs = apply_filters('wppilot_sidebar_visible_pages', ['wppilot-connect', 'wppilot-prompts']);
+    $slugs = apply_filters('wppilot_sidebar_visible_pages', ['wppilot-connect', 'wppilot-setup', 'wppilot-prompts', 'wppilot-design', 'wppilot-changes', 'wppilot-settings']);
     if (!is_array($slugs)) {
         return [];
     }
@@ -120,3 +120,16 @@ function wppilot_sidebar_visible_pages(): array
 }
 
 add_action('admin_head', callback: 'wppilot_sidebar_hide_submenu');
+
+/** Keep common destinations in task order without removing registered pages. */
+function wppilot_sidebar_order_pages(): void
+{
+    global $submenu;
+    if (!isset($submenu[WPPILOT_SIDEBAR_PARENT]) || !wppilot_sidebar_is_collapsed()) {
+        return;
+    }
+    $order = array_flip(wppilot_sidebar_visible_pages());
+    usort($submenu[WPPILOT_SIDEBAR_PARENT], static fn(array $a, array $b): int =>
+        ($order[$a[2] ?? ''] ?? 1000) <=> ($order[$b[2] ?? ''] ?? 1000));
+}
+add_action('admin_menu', callback: 'wppilot_sidebar_order_pages', priority: 9999);

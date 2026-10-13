@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -84,7 +84,7 @@ function wppilot_create_admin_access_token(
 function wppilot_handle_admin_access_exchange(WP_REST_Request $request)
 {
     if (!wppilot_is_enabled()) {
-        return new WP_Error('wppilot_disabled', 'WPPilot abilities are disabled.', ['status' => 403]);
+        return new WP_Error('wppilot_disabled', 'GoBuildWP abilities are disabled.', ['status' => 403]);
     }
 
     $token = wppilot_get_admin_access_token_from_request($request);
@@ -156,7 +156,7 @@ function wppilot_handle_admin_access_exchange(WP_REST_Request $request)
 function wppilot_handle_admin_access_login(WP_REST_Request $request)
 {
     if (!wppilot_is_enabled()) {
-        return new WP_Error('wppilot_disabled', 'WPPilot abilities are disabled.', ['status' => 403]);
+        return new WP_Error('wppilot_disabled', 'GoBuildWP abilities are disabled.', ['status' => 403]);
     }
 
     $params = $request->get_url_params();

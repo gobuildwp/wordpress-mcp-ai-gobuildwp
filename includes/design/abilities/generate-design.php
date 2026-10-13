@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ function register(): void
     wp_register_ability('wppilot/generate-design', [
         'label' => __('Generate Design', domain: 'wppilot'),
         'description' => __(
-            'Resolve a brief into a complete design, derived from this site rather than chosen. Every AI-built site resembles every other one for a reason that is not a shortage of options: an aligned model regresses to the most familiar answer, so asked for a typeface it says Inter and asked for a layout it says three equal cards, however many alternatives it was given. This does not ask. A mood names a hue window, and the hue, the ground, the type pairing, the scale ratio, the corner family, the spacing and the permitted compositions are all derived from the site address and the design name. Two sites with the same brief get different designs; one site re-run gets the same design, because nothing here is random. Colour is solved rather than sampled: ink is pushed until it clears 12:1 on the ground and the accent until it carries ink at 7:1, and a brief that cannot be solved is refused rather than shipped unreadable. Anything the brief states outright is used verbatim, because deriving is for the decisions nobody has made. Returns the tokens and a ready DESIGN.md to review and save.',
+            'Resolve a brief into a complete design, derived from this site rather than chosen. Asked to pick, a language model tends toward the most familiar answer (Inter, three equal cards), so this does not ask the model to choose. A mood names a hue window, and the hue, the ground, the type pairing, the scale ratio, the corner family, the spacing and the permitted compositions are all derived from the site address and the design name. Two sites with the same brief get different designs; one site re-run gets the same design, because nothing here is random. Colour is solved rather than sampled: ink is pushed until it clears 12:1 on the ground and the accent until it carries ink at 7:1, and a brief that cannot be solved is refused rather than shipped unreadable. Anything the brief states outright is used verbatim, because deriving is for the decisions nobody has made. Returns the tokens and a ready DESIGN.md to review and save.',
             domain: 'wppilot',
         ),
         'category' => Abilities\CATEGORY,

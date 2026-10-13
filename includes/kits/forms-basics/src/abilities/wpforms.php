@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit();
 }
 
-// WPPilot Pro 1.10.0 registers both names itself, earlier in the same hook; its copies then answer.
+// GoBuildWP Pro 1.10.0 registers both names itself, earlier in the same hook; its copies then answer.
 if (Runtime\unclaimed('wppilot/wpforms-list-forms')) {
     wp_register_ability('wppilot/wpforms-list-forms', [
         'label' => __('List WPForms Forms', domain: 'wppilot'),
@@ -79,7 +79,7 @@ if (Runtime\unclaimed('wppilot/wpforms-list-entries')) {
     wp_register_ability('wppilot/wpforms-list-entries', [
         'label' => __('List WPForms Entries', domain: 'wppilot'),
         'description' => __(
-            'List one WPForms form\'s submissions, newest first, with their answers: entry_id, status, type, viewed, starred, date, date_modified, user_id and answers (field_id, label, type, value). WPForms Pro only: WPForms Lite stores no entries and this returns wpforms_pro_required. Filters: status (publish | spam | trash | partial | any), date_after / date_before (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, inclusive), starred, viewed. limit defaults to 20 (max 100), offset pages. Personal data is withheld: email and phone answers, passwords, card and payment data, file uploads, signatures and the submitter\'s IP come back as "[REDACTED]" with a redacted reason, and email addresses or phone numbers typed into any other answer are cut out of it (redacted: "contact_in_text"). There is no option to return them here; the full values need the Pro edition (with the person\'s explicit approval) or the WPForms Entries screen.',
+            'List one WPForms form\'s submissions, newest first, with their answers: entry_id, status, type, viewed, starred, date, date_modified, user_id and answers (field_id, label, type, value). WPForms Pro only: WPForms Lite stores no entries and this returns wpforms_pro_required. Filters: status (publish | spam | trash | partial | any), date_after / date_before (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, inclusive), starred, viewed. limit defaults to 20 (max 100), offset pages. Contact details and sensitive fields are withheld (names and other answers are not): email and phone answers, passwords, card and payment data, file uploads, signatures and the submitter\'s IP come back as "[REDACTED]" with a redacted reason, and email addresses or phone numbers typed into any other answer are cut out of it (redacted: "contact_in_text"). There is no option to return them here; the full values need the Pro edition (with the person\'s explicit approval) or the WPForms Entries screen.',
             domain: 'wppilot',
         ),
         'category' => 'forms',

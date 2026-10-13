@@ -5,7 +5,7 @@ description: Look at a page you built or changed, at real viewport widths, and c
 
 # Seeing the page
 
-Every other check in WPPilot reads the page. None of them can see it, and the
+Every other check in GoBuildWP reads the page. None of them can see it, and the
 failures that matter most to whoever owns the site are visual: a headline that
 is illegible over the photograph behind it, a card that wrapped onto its own row
 at 1024px, an element that rendered and is invisible, a section whose spacing

@@ -1,11 +1,11 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.NonceVerification.Recommended -- The return leg (§2) is a GET redirect from app.wppilot.co and cannot carry a WordPress nonce. It is bound instead to a 256-bit state held in a transient for the current user, and it only reads; the state-changing Confirm is a nonce-checked POST.
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- The return leg (§2) is a GET redirect from app.gobuildwp.com and cannot carry a WordPress nonce. It is bound instead to a 256-bit state held in a transient for the current user, and it only reads; the state-changing Confirm is a nonce-checked POST.
 
 /**
  * Pairing, §1-§3 of the protocol, plus the link record and the HTTP client
@@ -36,9 +36,9 @@ function wppilot_cloud_url(): string
     $url = defined('WPPILOT_CLOUD_URL') ? (string) constant('WPPILOT_CLOUD_URL') : WPPILOT_CLOUD_DEFAULT_URL;
 
     /**
-     * Filter the WPPilot Cloud base URL.
+     * Filter the GoBuildWP Cloud base URL.
      *
-     * @param string $url Base URL without a trailing slash, e.g. https://app.wppilot.co.
+     * @param string $url Base URL without a trailing slash, e.g. https://app.gobuildwp.com.
      */
     /** @var mixed $filtered */
     $filtered = apply_filters('wppilot_cloud_url', $url);
@@ -170,7 +170,7 @@ function wppilot_cloud_post(string $base, string $path, string $raw_body, array 
         'sslverify' => true,
         'headers' => array_merge(['Content-Type' => 'application/json', 'Accept' => 'application/json'], $headers),
         'body' => $raw_body,
-        'user-agent' => 'WPPilot/' . WPPILOT_VERSION . '; ' . home_url(),
+        'user-agent' => 'GoBuildWP/' . WPPILOT_VERSION . '; ' . home_url(),
     ]);
 
     if (is_wp_error($response)) {
@@ -316,17 +316,17 @@ function wppilot_cloud_parse_policy(array $body): array|WP_Error
     $hint = $body['account_hint'] ?? null;
     $ceiling = $body['ceiling'] ?? null;
     if (!is_string($hint) || trim($hint) === '' || !is_string($ceiling)) {
-        return new WP_Error('invalid_response', __('WPPilot Cloud sent an incomplete answer.', domain: 'wppilot'));
+        return new WP_Error('invalid_response', __('GoBuildWP Cloud sent an incomplete answer.', domain: 'wppilot'));
     }
     if (!in_array($ceiling, wppilot_token_ceiling_ids(), strict: true)) {
-        return new WP_Error('invalid_response', __('WPPilot Cloud asked for an access level this site does not know.', domain: 'wppilot'));
+        return new WP_Error('invalid_response', __('GoBuildWP Cloud asked for an access level this site does not know.', domain: 'wppilot'));
     }
 
     /** @var mixed $scope */
     $scope = $body['scope'] ?? null;
     if ($scope !== null) {
         if (!is_array($scope)) {
-            return new WP_Error('invalid_response', __('WPPilot Cloud sent an unreadable ability scope.', domain: 'wppilot'));
+            return new WP_Error('invalid_response', __('GoBuildWP Cloud sent an unreadable ability scope.', domain: 'wppilot'));
         }
         // array_is_list() is PHP 8.1; this plugin still runs on 8.0.
         if ($scope === [] || array_keys($scope) === range(0, count($scope) - 1)) {
@@ -334,7 +334,7 @@ function wppilot_cloud_parse_policy(array $body): array|WP_Error
         }
         $scope = wppilot_token_normalize_scope($scope);
         if ($scope === null || ($scope['abilities'] === [] && $scope['categories'] === [])) {
-            return new WP_Error('invalid_response', __('WPPilot Cloud sent an ability scope that allows nothing.', domain: 'wppilot'));
+            return new WP_Error('invalid_response', __('GoBuildWP Cloud sent an ability scope that allows nothing.', domain: 'wppilot'));
         }
     }
 
@@ -411,12 +411,12 @@ function wppilot_cloud_forget_pending(string $state): void
 function wppilot_cloud_begin(int $user_id): array|WP_Error
 {
     if (wppilot_cloud_link() !== null) {
-        return new WP_Error('already_connected', __('This site is already connected to WPPilot Cloud. Disconnect it first.', domain: 'wppilot'));
+        return new WP_Error('already_connected', __('This site is already connected to GoBuildWP Cloud. Disconnect it first.', domain: 'wppilot'));
     }
 
     $base = wppilot_cloud_url();
     if ($base === '') {
-        return new WP_Error('unavailable', __('The WPPilot Cloud address configured on this site is not usable. It must be HTTPS outside a local or development environment.', domain: 'wppilot'));
+        return new WP_Error('unavailable', __('The GoBuildWP Cloud address configured on this site is not usable. It must be HTTPS outside a local or development environment.', domain: 'wppilot'));
     }
 
     $state = wppilot_cloud_b64url(random_bytes(32));
@@ -446,7 +446,7 @@ function wppilot_cloud_receive(string $state, string $code, int $user_id): bool|
     }
     if (!wppilot_cloud_is_code($code)) {
         wppilot_cloud_forget_pending($state);
-        return new WP_Error('invalid_response', __('WPPilot Cloud returned without a usable pairing code.', domain: 'wppilot'));
+        return new WP_Error('invalid_response', __('GoBuildWP Cloud returned without a usable pairing code.', domain: 'wppilot'));
     }
 
     $response = wppilot_cloud_post($pending['cloud_url'], '/api/pair/policy', wppilot_cloud_json([
@@ -457,13 +457,13 @@ function wppilot_cloud_receive(string $state, string $code, int $user_id): bool|
 
     if (is_wp_error($response)) {
         wppilot_cloud_forget_pending($state);
-        return new WP_Error('network', __('This site could not reach WPPilot Cloud.', domain: 'wppilot'), [
+        return new WP_Error('network', __('This site could not reach GoBuildWP Cloud.', domain: 'wppilot'), [
             'detail' => $response->get_error_message(),
         ]);
     }
     if ($response['status'] !== 200) {
         wppilot_cloud_forget_pending($state);
-        return new WP_Error('policy', __('WPPilot Cloud did not accept this connection request.', domain: 'wppilot'), [
+        return new WP_Error('policy', __('GoBuildWP Cloud did not accept this connection request.', domain: 'wppilot'), [
             'detail' => wppilot_cloud_error_detail($response['body']),
         ]);
     }
@@ -505,7 +505,7 @@ function wppilot_cloud_complete(string $state, int $user_id): array|WP_Error
     wppilot_cloud_forget_pending($state);
 
     if (wppilot_cloud_link() !== null) {
-        return new WP_Error('already_connected', __('This site is already connected to WPPilot Cloud. Disconnect it first.', domain: 'wppilot'));
+        return new WP_Error('already_connected', __('This site is already connected to GoBuildWP Cloud. Disconnect it first.', domain: 'wppilot'));
     }
 
     $keys = wppilot_cloud_keys();
@@ -533,23 +533,23 @@ function wppilot_cloud_complete(string $state, int $user_id): array|WP_Error
     $site_id = null;
     $error = null;
     if (is_wp_error($response)) {
-        $error = new WP_Error('network', __('This site could not reach WPPilot Cloud.', domain: 'wppilot'), [
+        $error = new WP_Error('network', __('This site could not reach GoBuildWP Cloud.', domain: 'wppilot'), [
             'detail' => $response->get_error_message(),
         ]);
     } elseif ($response['status'] !== 200) {
-        $error = new WP_Error('complete', __('WPPilot Cloud could not finish connecting this site.', domain: 'wppilot'), [
+        $error = new WP_Error('complete', __('GoBuildWP Cloud could not finish connecting this site.', domain: 'wppilot'), [
             'detail' => wppilot_cloud_error_detail($response['body']),
         ]);
     } else {
         $site_id = wppilot_cloud_site_id($response['body']['site_id'] ?? null);
         if ($site_id === null) {
-            $error = new WP_Error('invalid_response', __('WPPilot Cloud sent an incomplete answer.', domain: 'wppilot'));
+            $error = new WP_Error('invalid_response', __('GoBuildWP Cloud sent an incomplete answer.', domain: 'wppilot'));
         }
     }
 
     if ($error !== null || $site_id === null) {
         wppilot_token_revoke($token['id'], $user_id);
-        return $error ?? new WP_Error('invalid_response', __('WPPilot Cloud sent an incomplete answer.', domain: 'wppilot'));
+        return $error ?? new WP_Error('invalid_response', __('GoBuildWP Cloud sent an incomplete answer.', domain: 'wppilot'));
     }
 
     $link = [
@@ -650,12 +650,12 @@ function wppilot_cloud_redirect_error(WP_Error $error): void
 }
 
 /**
- * Refuse a request from someone who may not manage WPPilot.
+ * Refuse a request from someone who may not manage GoBuildWP.
  */
 function wppilot_cloud_require_manager(): void
 {
     if (!wppilot_current_user_can_manage()) {
-        wp_die(esc_html__('You do not have permission to connect this site to WPPilot Cloud.', domain: 'wppilot'), '', ['response' => 403]);
+        wp_die(esc_html__('You do not have permission to connect this site to GoBuildWP Cloud.', domain: 'wppilot'), '', ['response' => 403]);
     }
 }
 

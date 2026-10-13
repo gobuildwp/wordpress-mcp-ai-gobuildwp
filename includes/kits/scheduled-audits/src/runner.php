@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
  * to STEP_BUDGET seconds and saves where it got to, so nothing blocks a request: the content
  * audit is a background job of free's own, and the step that started it only asks its status on
  * each later tick until it is done. Every audit is called through Runtime\run_ability(), which
- * inside WPPilot is the gate pipeline — safety profile, Abilities Hub switches and every
+ * inside GoBuildWP is the gate pipeline — safety profile, Abilities Hub switches and every
  * wppilot_pre_ability_execute control — and then the ability's own permission check, all for the
  * user the routine runs as, because WP-Cron itself runs as nobody.
  */

@@ -29,6 +29,6 @@ Needs `upload_files` plus `edit_post` on the attachment.
 <!-- kit-export:omit -->
 ## Tests
 
-`tests/Unit/Kits/MediaEdit/` in the WPPilot repository (not shipped), with
+`tests/Unit/Kits/MediaEdit/` in the GoBuildWP repository (not shipped), with
 `tests/Unit/Kits/media-doubles.php`.
 <!-- /kit-export:omit -->

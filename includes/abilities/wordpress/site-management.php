@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -239,7 +239,7 @@ register_core_ability('wppilot/upsert-menu-item', [
 register_core_ability('wppilot/delete-menu-item', [
     'label' => __('Delete Menu Item', domain: 'wppilot'),
     'description' => __(
-        'Permanently deletes a classic navigation menu item. Requires explicit confirmation through WPPilot safety enforcement.',
+        'Permanently deletes a classic navigation menu item. Requires explicit confirmation through GoBuildWP safety enforcement.',
         domain: 'wppilot',
     ),
     'category' => 'wordpress',

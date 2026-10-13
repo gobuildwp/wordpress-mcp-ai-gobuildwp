@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,7 +8,7 @@ declare(strict_types=1);
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Chat sessions live in a custom table (see schema in storage.php); there is no WP API for it. Identifiers are prefix-built constants, values are prepared.
 
 /**
- * WPPilot Chat: the $wpdb layer behind chat sessions.
+ * GoBuildWP Chat: the $wpdb layer behind chat sessions.
  *
  * Every SQL statement touching the chat sessions table lives here, along with
  * the row-size budget and the pruning that keeps a session inside it.
@@ -91,7 +91,7 @@ function wppilot_chat_log_storage_failure(string $session_id): void
     // as a defect for exactly that reason.
     if (wppilot_debug_logging_enabled()) {
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log(sprintf('WPPilot Chat: failed to persist session %s. %s', $session_id, $wpdb->last_error));
+        error_log(sprintf('GoBuildWP Chat: failed to persist session %s. %s', $session_id, $wpdb->last_error));
     }
 }
 

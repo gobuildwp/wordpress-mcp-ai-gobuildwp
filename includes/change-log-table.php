@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -1029,7 +1029,7 @@ function wppilot_change_legacy_bridge(?bool $set = null): bool
  * and returns it. It is the supported way to annotate a row as it is stored.
  *
  * Before the table, the only way to do that was `pre_update_option_wppilot_change_log`, which saw
- * the whole log with the new rows last and the stored log as its second argument; WPPilot Pro's
+ * the whole log with the new rows last and the stored log as its second argument; GoBuildWP Pro's
  * ledger annotates rows that way. In table storage nothing writes that option any more, so the
  * filter is applied to the new rows with an empty stored log — the same answer a listener that
  * only looks at rows not already stored would have given.
@@ -1078,7 +1078,7 @@ function wppilot_change_rows_or(mixed $value, array $fallback): array
 /**
  * Take rows written straight to the old option into the table, and keep the option unwritten.
  *
- * Code written for the option (WPPilot Pro's WooCommerce bulk ledger, for one) reads
+ * Code written for the option (GoBuildWP Pro's WooCommerce bulk ledger, for one) reads
  * wppilot_get_change_log(), appends its rows and saves the option. In table storage that save is
  * intercepted here, last, after every other listener has had its say: rows whose ids the table
  * does not have are inserted, and the option write is cancelled by handing back the old value.

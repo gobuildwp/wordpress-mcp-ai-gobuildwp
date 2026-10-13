@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -11,7 +11,7 @@ namespace WPPilot\Mcp;
  * `server/discover` — the modern revision's required capability advertisement.
  *
  * The result must describe what this installation actually serves right now,
- * not what the plugin is capable of in principle. A WPPilot site with every
+ * not what the plugin is capable of in principle. A GoBuildWP site with every
  * ability switched off, or running the Read Only safety profile, exposes a
  * different surface from the same plugin on another site, and a client that
  * trusts an over-broad advertisement will call methods that then fail.
@@ -29,12 +29,12 @@ if (!defined('ABSPATH')) {
  * Capabilities are omitted rather than declared empty when nothing backs them.
  * Two are deliberately never advertised:
  *
- * - `subscriptions`: WPPilot has no change-notification producer. Nothing in
+ * - `subscriptions`: GoBuildWP has no change-notification producer. Nothing in
  *   the plugin emits a tools/prompts/resources list-changed event, so opening a
  *   `subscriptions/listen` stream would hold a connection open forever and
  *   deliver nothing. The spec is explicit that a server must not advertise
  *   subscription support merely to satisfy a checklist.
- * - `logging`: deprecated in this revision, and WPPilot emits no
+ * - `logging`: deprecated in this revision, and GoBuildWP emits no
  *   `notifications/message`.
  *
  * Tasks are declared by extensions.php, not here, and only while the extension is enabled.
@@ -54,7 +54,7 @@ function build_capabilities(int $tool_count, int $prompt_count, int $resource_co
     $capabilities = [];
 
     if ($tool_count > 0) {
-        // No `listChanged`: WPPilot does not emit tools/list_changed, and
+        // No `listChanged`: GoBuildWP does not emit tools/list_changed, and
         // declaring it would promise a notification that never arrives.
         $capabilities['tools'] = new \stdClass();
     }

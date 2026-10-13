@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -25,7 +25,7 @@ function register(): void
     wp_register_ability('wppilot/verify-rendered-page', [
         'label' => __('Verify Rendered Page', domain: 'wppilot'),
         'description' => __(
-            'Fetches a page as a visitor gets it and reports what is actually there: the heading outline, images with no alt text or no source, containers that rendered empty, PHP errors or unrendered shortcodes reaching the visitor, the colours and fonts the served HTML carries, and the document weight. The empty-container and skipped-level checks read only the page\'s own content (`summary.scope` says how it was found), outline entries carry `source: content|theme`, and every finding carries `source` so theme, sidebar and footer output is not mistaken for the page. Call this after building or editing a page — every other check in WPPilot reads what you wrote, and this reads what the site served, which is a different thing once a theme, a plugin and a cache have had their turn. Pass `post_id` for a page on this site or `url` for any address the site can reach. An unpublished page works too: its preview is fetched with your own session, so a draft can be checked before anyone sees it. No JavaScript is executed, so anything a script paints is not seen; `not_checked` lists that and the other limits with every result.',
+            'Fetches a page as a visitor gets it and reports what is actually there: the heading outline, images with no alt text or no source, containers that rendered empty, PHP errors or unrendered shortcodes reaching the visitor, the colours and fonts the served HTML carries, and the document weight. The empty-container and skipped-level checks read only the page\'s own content (`summary.scope` says how it was found), outline entries carry `source: content|theme`, and every finding carries `source` so theme, sidebar and footer output is not mistaken for the page. Call this after building or editing a page — every other check in GoBuildWP reads what you wrote, and this reads what the site served, which is a different thing once a theme, a plugin and a cache have had their turn. Pass `post_id` for a page on this site or `url` for any address the site can reach. An unpublished page works too: its preview is fetched with your own session, so a draft can be checked before anyone sees it. No JavaScript is executed, so anything a script paints is not seen; `not_checked` lists that and the other limits with every result.',
             domain: 'wppilot',
         ),
         'category' => Abilities\CATEGORY,

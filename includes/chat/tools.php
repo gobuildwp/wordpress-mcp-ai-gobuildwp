@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: exposing abilities to the model as callable tools.
+ * GoBuildWP Chat: exposing abilities to the model as callable tools.
  *
  * Covers discovery, the risk classification that decides what needs
  * approval, and the ability-name <-> function-name mapping the provider
@@ -76,10 +76,10 @@ function wppilot_chat_tool_description(WP_Ability $ability): string
     return trim(
         $description . ' '
             . implode(' ', [
-                'WPPilot Chat embeds the Gutenberg finalizer runtime on this page.',
+                'GoBuildWP Chat embeds the Gutenberg finalizer runtime on this page.',
                 'Do not ask the user to open or keep a separate Block Editor Queue/finalization page while this dashboard is open.',
                 'After enabling a batch, use Gutenberg pending-batch status tools until the batch is finalized, failed, or conflicted.',
-                'If finalizer_runtime.online is false, ask the user to reload WPPilot Chat.',
+                'If finalizer_runtime.online is false, ask the user to reload GoBuildWP Chat.',
             ]),
     );
 }

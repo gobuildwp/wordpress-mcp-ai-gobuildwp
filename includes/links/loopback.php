@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,7 +8,7 @@ declare(strict_types=1);
 /**
  * A short-lived signed-in session for the site's own loopback requests.
  *
- * WPPilot checks a page by fetching it the way a visitor gets it. That is the
+ * GoBuildWP checks a page by fetching it the way a visitor gets it. That is the
  * right test for a published page and useless for a draft: an anonymous request
  * is answered with the 404, which reads as a broken page when the real answer is
  * "not published yet". The moment an agent most wants to look at a page is
@@ -68,7 +68,7 @@ function wppilot_loopback_session_start(): ?array
  *
  * The session would expire on its own within the minute; destroying it keeps the
  * user's session list honest, so a person reading "log out everywhere else" is
- * not counting sessions WPPilot opened for one HTTP request.
+ * not counting sessions GoBuildWP opened for one HTTP request.
  *
  * @param array{cookies: array<string, string>, token: string, user_id: int}|null $session
  */

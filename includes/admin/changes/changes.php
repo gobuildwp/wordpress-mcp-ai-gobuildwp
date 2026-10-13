@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -506,7 +506,7 @@ function agent_filter_options(): array
             $label = is_string($connection['label'] ?? null) ? $connection['label'] : '';
             $client = is_string($connection['client_name'] ?? null) ? $connection['client_name'] : '';
             if ($key !== '' && !isset($options[$key])) {
-                $options[$key] = $client !== '' && $client !== $label ? $label . ' (' . $client . ')' : $label;
+                $options[$key] = \wppilot_client_display($label, $client);
             }
         }
     }

@@ -57,11 +57,11 @@ same name keeps it.
 `Runtime\can_run()` plus `manage_options`, and `Runtime\unclaimed()` (runtime 1.2).
 
 <!-- kit-export:omit -->
-Inside WPPilot this kit carries the two reads WPPilot Pro 1.10.0's `backups` kit registered;
+Inside GoBuildWP this kit carries the two reads GoBuildWP Pro 1.10.0's `backups` kit registered;
 Pro keeps `wppilot/backup-trigger` and its fresh-backup gate. The output is kept identical to
 Pro's, which still registers both names first on a site running Pro 1.10.0.
 
 ## Tests
 
-`tests/Unit/Kits/BackupStatus/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/BackupStatus/` in the GoBuildWP repository (not shipped).
 <!-- /kit-export:omit -->

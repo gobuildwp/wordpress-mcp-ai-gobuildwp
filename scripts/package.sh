@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
+printf "%s\n" "Disabled in isolated GoBuildWP workspace; use reviewed local fixtures." >&2
+exit 1
 #
-# Build the distributable WPPilot ZIP.
+# Build the distributable GoBuildWP ZIP.
 #
 # One archive, one name: `wppilot.zip`, attached to every GitHub release.
 #
 # The file name deliberately carries no version. GitHub only resolves
 # /releases/latest/download/<asset> for an asset whose name never changes, and
-# that URL — behind wppilot.co/download/latest — is what the website, the
-# purchase emails and WPPilot Pro's dependency notice all point at. A pinned
+# that URL — behind gobuildwp.com/download/latest — is what the website, the
+# purchase emails and GoBuildWP Pro's dependency notice all point at. A pinned
 # download is still available per release, because every release keeps its own
 # copy at /releases/download/<tag>/wppilot.zip, which is what the update
 # endpoint hands to WordPress.
 #
-# There is no WordPress.org variant. WPPilot is not listed in the directory and
+# There is no WordPress.org variant. GoBuildWP is not listed in the directory and
 # is not going to be, so the second archive this script used to build — updater
 # stripped, telemetry deleted, `Update URI` removed — existed only to satisfy
 # rules that do not apply. It was also a hazard on a public release page: two
@@ -38,7 +40,7 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-echo "Packaging WPPilot $VERSION"
+echo "Packaging GoBuildWP $VERSION"
 
 # The MCP Registry entry carries the version too; a release must not leave it describing the last one.
 php "$ROOT/scripts/generate-registry-server-json.php" --check

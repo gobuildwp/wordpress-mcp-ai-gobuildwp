@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -154,7 +154,7 @@ final class CloudEventsTest extends TestCase
 
         self::assertCount(1, WPPilot_Test_State::$http_posts);
         $post = WPPilot_Test_State::$http_posts[0];
-        self::assertSame('https://app.wppilot.co/api/sites/heartbeat', $post['url']);
+        self::assertSame('https://app.gobuildwp.com/api/sites/heartbeat', $post['url']);
         $body = (string) $post['body'];
         $sent = (array) json_decode($body, associative: true);
         self::assertSame('update_finished', $sent['event']);

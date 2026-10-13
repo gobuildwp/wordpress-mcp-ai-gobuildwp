@@ -39,9 +39,9 @@ naming the site and change IDs, through the `kits/network-run` strategy whose bu
 that.
 
 <!-- kit-export:omit -->
-## Inside WPPilot
+## Inside GoBuildWP
 
-WPPilot's host answers `extension('ability-runner')` with `WPPilotHost::run_ability()`: the
+GoBuildWP's host answers `extension('ability-runner')` with `WPPilotHost::run_ability()`: the
 target site's Abilities Hub switch for that ability, then
 `wppilot_gate_ability_call($ability, $input, transport: 'nested')`, then `execute()`. It all runs
 after the switch, so the target site's Hub rules and safety profile, the inner ability's
@@ -68,6 +68,6 @@ read across the network and still say nothing about the call inside it.
 <!-- kit-export:omit -->
 ## Tests
 
-`tests/Unit/Kits/Multisite/` in the WPPilot repository (not shipped), plus
-`tests/Unit/Kits/AbilityRunnerTest.php` for the runtime helper and WPPilot's runner.
+`tests/Unit/Kits/Multisite/` in the GoBuildWP repository (not shipped), plus
+`tests/Unit/Kits/AbilityRunnerTest.php` for the runtime helper and GoBuildWP's runner.
 <!-- /kit-export:omit -->

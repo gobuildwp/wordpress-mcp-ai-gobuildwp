@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -73,7 +73,7 @@ function render_section(): void
     <section class="wppilot-panel" id="<?php echo esc_attr(ANCHOR); ?>" style="margin-top:24px;">
         <h2><?php esc_html_e('Connection Doctor', domain: 'wppilot'); ?></h2>
         <p class="description" style="max-width:70ch;"><?php esc_html_e(
-            'Finds what sits between an AI client and WPPilot: a CDN or firewall answering instead of WordPress, a web server that drops the Authorization header, an OAuth challenge that never arrives, a server clock that spoils sign-in. Each finding comes with the exact change to make. It sends a few requests from this site to itself and changes nothing.',
+            'Finds what sits between an AI client and GoBuildWP: a CDN or firewall answering instead of WordPress, a web server that drops the Authorization header, an OAuth challenge that never arrives, a server clock that spoils sign-in. Each finding comes with the exact change to make. It sends a few requests from this site to itself and changes nothing.',
             domain: 'wppilot',
         ); ?></p>
         <p><a class="button" href="<?php echo esc_url(run_url()); ?>"><?php esc_html_e('Run Connection Doctor', domain: 'wppilot'); ?></a></p>

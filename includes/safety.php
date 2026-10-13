@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -267,7 +267,7 @@ function wppilot_ability_name_is_destructive(string $name): bool
 /**
  * The ability's own safety policy, `meta.safety`.
  *
- * Neutral on purpose: the key is not WPPilot-branded, so a portable kit exported into another
+ * Neutral on purpose: the key is not GoBuildWP-branded, so a portable kit exported into another
  * plugin keeps the same policy without the exporter having to rewrite it.
  *
  * - `min_profile`: the least permissive profile the ability may run under. A read that is still
@@ -348,7 +348,7 @@ function wppilot_safety_profile_allows_ability(WP_Ability $ability): bool
 /**
  * Refuse an ability the safety profile or the Abilities Hub does not allow, whoever is asking.
  *
- * Until WordPress 7.1 the profile could only be enforced where WPPilot owned the call path: its
+ * Until WordPress 7.1 the profile could only be enforced where GoBuildWP owned the call path: its
  * own MCP transports check it before dispatch, and the ability policy unregisters what the
  * profile refuses so nothing else can reach it either. Unregistration is a blunt instrument
  * with one real gap — the Abilities Hub screen has to see disabled abilities to list them, so
@@ -358,7 +358,7 @@ function wppilot_safety_profile_allows_ability(WP_Ability $ability): bool
  *
  * `wp_ability_permission_result` closes both. It runs inside `WP_Ability::execute()` and during
  * the standalone permission checks the REST API and WP-CLI perform, so core REST, WP-CLI, the AI
- * Client, another MCP adapter and WPPilot's own Chat all get the same answer.
+ * Client, another MCP adapter and GoBuildWP's own Chat all get the same answer.
  *
  * This filter only ever denies. A profile is a ceiling, not a grant: when something upstream has
  * already refused the call, that refusal is what gets returned.
@@ -388,7 +388,7 @@ function wppilot_safety_filter_ability_permission(
             'wppilot_ability_disabled',
             sprintf(
                 /* translators: %s: ability name */
-                __('The ability "%s" is switched off in the WPPilot Abilities screen.', domain: 'wppilot'),
+                __('The ability "%s" is switched off in the GoBuildWP Abilities screen.', domain: 'wppilot'),
                 $ability_name,
             ),
             ['status' => 403],
@@ -405,7 +405,7 @@ function wppilot_safety_filter_ability_permission(
             'wppilot_safety_profile_blocked',
             sprintf(
                 /* translators: 1: ability name, 2: active safety profile */
-                __('The ability "%1$s" is not allowed by the active WPPilot safety profile (%2$s).', domain: 'wppilot'),
+                __('The ability "%1$s" is not allowed by the active GoBuildWP safety profile (%2$s).', domain: 'wppilot'),
                 $ability_name,
                 wppilot_effective_safety_profile(),
             ),
@@ -516,7 +516,7 @@ function wppilot_safety_check_ability(WP_Ability $ability): bool|WP_Error
         sprintf(
             /* translators: 1: ability name, 2: safety profile label */
             __(
-                'Ability "%1$s" is blocked by the %2$s safety profile. Change the profile in WPPilot Configuration only if this access is intentional.',
+                'Ability "%1$s" is blocked by the %2$s safety profile. Change the profile in GoBuildWP Configuration only if this access is intentional.',
                 domain: 'wppilot',
             ),
             $ability->get_name(),

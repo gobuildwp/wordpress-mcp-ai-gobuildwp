@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -10,7 +10,7 @@ declare(strict_types=1);
 /**
  * Shared admin chrome.
  *
- * The header every WPPilot screen renders, and the date/time format
+ * The header every GoBuildWP screen renders, and the date/time format
  * helper those screens format timestamps with.
  */
 
@@ -62,12 +62,12 @@ function wppilot_get_datetime_format($fallback = 'Y-m-d H:i:s')
 }
 
 /**
- * Render the WPPilot header: the brand bar and the section navigation under it.
+ * Render the GoBuildWP header: the brand bar and the section navigation under it.
  *
- * Styling lives in includes/assets/admin.css, which every WPPilot screen loads.
+ * Styling lives in includes/assets/admin.css, which every GoBuildWP screen loads.
  *
  * The right-hand readout is whether agents can currently act on this site. It
- * is the single most consequential fact about WPPilot's state, so it is on every
+ * is the single most consequential fact about GoBuildWP's state, so it is on every
  * screen, and it links to the switch that changes it.
  *
  * @param string $legend Kept for callers that still pass a section name; the
@@ -92,14 +92,24 @@ function wppilot_render_admin_header(string $legend = ''): void
         default => __('Agents off', domain: 'wppilot'),
     };
     $pro_active = function_exists('wppilot_pro_is_active') && wppilot_pro_is_active();
+    // The optional Cloud pointer belongs where connections are chosen, not on every
+    // screen: WordPress.org asks plugins to keep promotional notices limited in scope.
+    $current_page = isset($_GET['page']) && is_string($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $show_cloud_banner = in_array($current_page, ['wppilot-connect', 'wppilot-setup'], true);
     ?>
     <div class="wppilot-masthead">
+        <?php if ($show_cloud_banner) : ?>
+        <div class="wppilot-cloud-banner">
+            <span><strong><?php esc_html_e('GoBuildWP Cloud', domain: 'wppilot'); ?></strong> — <?php esc_html_e('Optional: connect your sites through one workspace.', domain: 'wppilot'); ?></span>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=wppilot-setup&wppilot_method=cloud')); ?>"><?php esc_html_e('View Cloud connection', domain: 'wppilot'); ?> →</a>
+        </div>
+        <?php endif; ?>
         <div class="wppilot-masthead__inner">
         <div class="wppilot-masthead__mark">
             <a class="wppilot-masthead__brand" href="<?php echo esc_url(admin_url('admin.php?page=wppilot-connect')); ?>">
                 <img
                     src="<?php echo esc_url((string) WPPILOT_PLUGIN_URL . 'assets/wppilot_logo-ink.svg'); ?>"
-                    alt="<?php esc_attr_e('WPPilot dashboard', domain: 'wppilot'); ?>"
+                    alt="<?php esc_attr_e('GoBuildWP dashboard', domain: 'wppilot'); ?>"
                     width="93"
                     height="30"
                 >
@@ -118,7 +128,7 @@ function wppilot_render_admin_header(string $legend = ''): void
                 <span class="wppilot-masthead__lamp" aria-hidden="true"></span>
                 <span><?php echo esc_html($state_text); ?></span>
             </a>
-            <a class="wppilot-masthead__link" href="https://wppilot.co/docs/" target="_blank" rel="noopener noreferrer"><?php
+            <a class="wppilot-masthead__link" href="https://gobuildwp.com/docs/" target="_blank" rel="noopener noreferrer"><?php
                 esc_html_e('Docs', domain: 'wppilot');
             ?></a>
             <?php if (!$pro_active && defined('WPPILOT_PRO_URL')): ?>
@@ -135,7 +145,7 @@ function wppilot_render_admin_header(string $legend = ''): void
 }
 
 /**
- * Product navigation for the WPPilot screens: one row of sections, and under the
+ * Product navigation for the GoBuildWP screens: one row of sections, and under the
  * page title a short row of the screens inside the current section.
  *
  * Built from the registered submenu rather than a hardcoded list, so it cannot
@@ -151,7 +161,7 @@ function wppilot_render_admin_tabs(): void
 
     $current = wppilot_admin_current_section();
     ?>
-    <nav class="wppilot-tabs" aria-label="<?php esc_attr_e('WPPilot sections', domain: 'wppilot'); ?>">
+    <nav class="wppilot-tabs" aria-label="<?php esc_attr_e('GoBuildWP sections', domain: 'wppilot'); ?>">
         <div class="wppilot-tabs__row">
         <?php foreach ($sections as $key => $section) {
             $is_current = $key === $current;
@@ -312,7 +322,7 @@ function wppilot_admin_sections(): array
 }
 
 /**
- * The WPPilot sections the current user may open, in menu order.
+ * The GoBuildWP sections the current user may open, in menu order.
  *
  * @return list<array{slug: string, label: string}>
  */
@@ -378,7 +388,7 @@ function wppilot_admin_tab_label(string $title, string $fallback): string
 }
 
 /**
- * Give WPPilot's link-only screens (approval, OAuth consent, Block Editor Queue, visual runtime,
+ * Give GoBuildWP's link-only screens (approval, OAuth consent, Block Editor Queue, visual runtime,
  * connected apps) their title.
  *
  * They are registered with no parent so they stay out of the menu, and get_admin_page_title()

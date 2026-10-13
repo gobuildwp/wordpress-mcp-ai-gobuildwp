@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -48,14 +48,14 @@ function register(): void
 
 /**
  * Runs on load-{hook}, before any admin output. admin.php has already enforced login
- * (auth_redirect) and the WPPilot management capability, so the current user is
+ * (auth_redirect) and the GoBuildWP management capability, so the current user is
  * authenticated and authorized here.
  */
 function handle(): void
 {
     if (!\wppilot_current_user_can_manage()) {
         wp_die(
-            esc_html__('You are not allowed to authorize WPPilot applications.', domain: 'wppilot'),
+            esc_html__('You are not allowed to authorize GoBuildWP applications.', domain: 'wppilot'),
             title: '',
             args: [
                 'response' => 403,

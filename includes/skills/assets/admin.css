@@ -1,7 +1,7 @@
 /*
  * Skills admin styles. Visual vocabulary mirrors the Configuration page
  * (card-based sections, white background, 1px #c3c4c7 border, 6px radius,
- * subtle drop shadow) so the WPPilot admin feels cohesive across pages.
+ * subtle drop shadow) so the GoBuildWP admin feels cohesive across pages.
  */
 
 .wppilot-skills .wrap-title {
@@ -116,7 +116,7 @@
 }
 
 .wppilot-skills-table .slug-link {
-    color: #2271b1;
+    color: #4b3cf0;
     text-decoration: none;
     font-weight: 500;
 }
@@ -255,8 +255,8 @@
 
 .wppilot-skills-search:focus {
     outline: none;
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: #4b3cf0;
+    box-shadow: 0 0 0 1px #4b3cf0;
 }
 
 .wppilot-skills-pagination {
@@ -287,8 +287,8 @@
 }
 
 .wppilot-skills-pagination .page-numbers.current {
-    background: #2271b1;
-    border-color: #2271b1;
+    background: #4b3cf0;
+    border-color: #4b3cf0;
     color: #fff;
 }
 
@@ -320,7 +320,7 @@
     animation: wppilot-skills-import-flash 3s ease-out;
 }
 
-/* External-source sections (e.g. WPPilot Pro): read-only, no toggle,
+/* External-source sections (e.g. GoBuildWP Pro): read-only, no toggle,
    no hover actions, subtle grey wash to differentiate from the user's
    own skills above. */
 .wppilot-skills-d-section--external .wppilot-skills-d-list {
@@ -378,7 +378,7 @@
 }
 
 .wppilot-skills-d-source-blurb a {
-    color: #2271b1;
+    color: #4b3cf0;
     text-decoration: none;
 }
 
@@ -418,7 +418,7 @@
 
 .wppilot-skills-d-check:focus { outline: none; box-shadow: none; }
 .wppilot-skills-d-check:focus-visible {
-    outline: 2px solid #2271b1;
+    outline: 2px solid #4b3cf0;
     outline-offset: 2px;
 }
 
@@ -454,7 +454,7 @@
 }
 
 .wppilot-skills-d-main:hover .slug {
-    color: #2271b1;
+    color: #4b3cf0;
 }
 
 /* Suppress the browser's default focus ring on click; keep it only for
@@ -464,7 +464,7 @@
 }
 
 .wppilot-skills-d-main:focus-visible {
-    outline: 2px solid #2271b1;
+    outline: 2px solid #4b3cf0;
     outline-offset: -2px;
     border-radius: 4px;
 }
@@ -528,7 +528,7 @@
 
 .wppilot-skills-d-pills .pill.auto {
     background: #eff6ff;
-    color: #1d4ed8;
+    color: #3a2ccc;
 }
 
 .wppilot-skills-d-pills .pill.cmd {
@@ -582,7 +582,7 @@
 
 .wppilot-skills-d-actions .action-btn:focus { outline: none; box-shadow: none; }
 .wppilot-skills-d-actions .action-btn:focus-visible {
-    outline: 2px solid #2271b1;
+    outline: 2px solid #4b3cf0;
     outline-offset: 1px;
 }
 
@@ -841,7 +841,7 @@ label.page-title-action {
 }
 
 .wppilot-skills-save-row .button-link:hover {
-    color: #2271b1;
+    color: #4b3cf0;
 }
 
 .wppilot-skills-edit-main .description {
@@ -897,7 +897,7 @@ label.page-title-action {
 
 .wppilot-skills-edit-main input[type="text"].wppilot-skills-title-input:focus {
     background: #fafafa;
-    border-bottom-color: #2271b1;
+    border-bottom-color: #4b3cf0;
     outline: 0;
     box-shadow: none;
 }

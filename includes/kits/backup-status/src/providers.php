@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
  * download URL, a storage credential or a job secret: an agent that can read those can fetch the
  * whole database.
  *
- * WPPilot Pro 1.10.0 registered these two abilities from its own copy of these readers, and still
+ * GoBuildWP Pro 1.10.0 registered these two abilities from its own copy of these readers, and still
  * does until its next release; the output here is kept identical, so an agent, or a Pro skill,
  * reads either copy the same way. The `trigger` field each provider carries says whether Pro's
  * wppilot/backup-trigger could start a backup for it; without Pro that ability does not exist.

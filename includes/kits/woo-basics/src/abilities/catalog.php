@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 /*
- * The catalog and store reads. Each registers only while its name is free: WPPilot Pro 1.10.0
+ * The catalog and store reads. Each registers only while its name is free: GoBuildWP Pro 1.10.0
  * registers the same abilities itself, ahead of the kits, and the first registration wins.
  */
 

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -70,11 +70,11 @@ final class ServerCardTest extends TestCase
     {
         $card = build_card(self::context());
 
-        self::assertSame('co.wppilot/wppilot', $card['name']);
-        self::assertSame('WPPilot', $card['title']);
+        self::assertSame('com.gobuildwp/gobuildwp', $card['name']);
+        self::assertSame('GoBuildWP', $card['title']);
         self::assertSame('1.14.0', $card['version']);
         self::assertLessThanOrEqual(100, strlen($card['description']));
-        self::assertSame('https://wppilot.co', $card['websiteUrl']);
+        self::assertSame('https://gobuildwp.com', $card['websiteUrl']);
         self::assertSame('github', $card['repository']['source']);
     }
 

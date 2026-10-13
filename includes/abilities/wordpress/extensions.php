@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -108,7 +108,7 @@ register_core_ability('wppilot/activate-plugin', [
 register_core_ability('wppilot/deactivate-plugin', [
     'label' => __('Deactivate Plugin', domain: 'wppilot'),
     'description' => __(
-        'Deactivates an active plugin by its plugin file. Deactivation removes whatever the plugin provides — shortcodes stop rendering, blocks disappear from saved content, integrations go dark — so it requires explicit confirmation. WPPilot and WPPilot Pro cannot be deactivated through this ability: doing so would sever the connection carrying the call. The change is recorded in the change ledger and can be rolled back.',
+        'Deactivates an active plugin by its plugin file. Deactivation removes whatever the plugin provides — shortcodes stop rendering, blocks disappear from saved content, integrations go dark — so it requires explicit confirmation. GoBuildWP and GoBuildWP Pro cannot be deactivated through this ability: doing so would sever the connection carrying the call. The change is recorded in the change ledger and can be rolled back.',
         domain: 'wppilot',
     ),
     'category' => 'wordpress',
@@ -911,7 +911,7 @@ function wordpress_plugin_file(string $value): string|WP_Error
 /**
  * Refuse operations that would sever the connection carrying the call.
  *
- * Deactivating or deleting WPPilot mid-request leaves the agent with no way to
+ * Deactivating or deleting GoBuildWP mid-request leaves the agent with no way to
  * undo what it just did, and on a remote site no way back in at all.
  */
 function wordpress_extension_self_error(string $file, bool $deleting = false): ?WP_Error
@@ -931,11 +931,11 @@ function wordpress_extension_self_error(string $file, bool $deleting = false): ?
         'wppilot_cannot_target_self',
         $deleting
             ? __(
-                'WPPilot cannot delete itself: the request is being served by this plugin. Remove it from the Plugins screen in wp-admin instead.',
+                'GoBuildWP cannot delete itself: the request is being served by this plugin. Remove it from the Plugins screen in wp-admin instead.',
                 domain: 'wppilot',
             )
             : __(
-                'WPPilot cannot deactivate itself: doing so would sever the connection carrying this call. Deactivate it from the Plugins screen in wp-admin instead.',
+                'GoBuildWP cannot deactivate itself: doing so would sever the connection carrying this call. Deactivate it from the Plugins screen in wp-admin instead.',
                 domain: 'wppilot',
             ),
         ['status' => 409],
@@ -995,7 +995,7 @@ function wordpress_file_mod_error(string $context): ?WP_Error
 /**
  * Require a filesystem WordPress can write to without asking a human.
  *
- * WPPilot runs headless: `request_filesystem_credentials()` has no screen to
+ * GoBuildWP runs headless: `request_filesystem_credentials()` has no screen to
  * render an FTP form on, so anything other than the direct method has to fail
  * with an explanation instead of stalling or half-writing.
  */

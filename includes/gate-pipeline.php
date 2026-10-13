@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -75,7 +75,7 @@ function wppilot_gate_ability_call(WP_Ability $ability, mixed $input, string $tr
     /**
      * Give transport-neutral execution controls one final chance to refuse or transform the call.
      *
-     * Runs on every WPPilot execution path — the REST shim, WordPress core's run endpoint, the
+     * Runs on every GoBuildWP execution path — the REST shim, WordPress core's run endpoint, the
      * modern MCP transport, Chat and Pro's approval replay — after the safety profile and the
      * confirmation contract. The legacy MCP adapter keeps its own `mcp_adapter_pre_tool_call`,
      * because it receives an adapter envelope rather than ability input.
@@ -97,7 +97,7 @@ function wppilot_gate_ability_call(WP_Ability $ability, mixed $input, string $tr
 }
 
 /**
- * Record that WPPilot's gate passed a call to this ability, so its execute() is not gated again by
+ * Record that GoBuildWP's gate passed a call to this ability, so its execute() is not gated again by
  * the gate for other MCP servers (includes/foreign-gate.php).
  *
  * A count per name, not a flag: one request can run the same ability twice (a bulk replay), and

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -265,7 +265,7 @@ function update_alts(array $input): array|WP_Error
 /**
  * A downscaled copy of an attachment's image, for the model to look at.
  *
- * Returned under the `_mcp_content` convention (see includes/mcp/transport.php in WPPilot), so
+ * Returned under the `_mcp_content` convention (see includes/mcp/transport.php in GoBuildWP), so
  * an MCP client shows it to the model as an image; over REST it is plain JSON with base64.
  * Written to a temporary file only because the image editors save to a path; every file this
  * creates is deleted before returning, whatever happens.

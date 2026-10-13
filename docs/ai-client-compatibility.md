@@ -1,9 +1,9 @@
 # AI client compatibility
 
-WPPilot is a remote MCP server over HTTP. Any client that can reach a URL and
+GoBuildWP is a remote MCP server over HTTP. Any client that can reach a URL and
 send an `Authorization` header can connect. The lists below are generated from
 the client registry the plugin itself ships (`includes/clients.php`), which is
-the same list the **WPPilot → Connect** screen offers, so they cannot drift
+the same list the **GoBuildWP → Connect** screen offers, so they cannot drift
 apart from what the software actually does.
 
 A client is listed as running OAuth natively only where that has been verified.
@@ -12,7 +12,7 @@ works: being wrong in that direction costs a few seconds of `npx` startup, being
 wrong in the other costs a failed connection with no explanation.
 
 Per-client setup guides with copyable configuration:
-<https://wppilot.co/wordpress-mcp>
+<https://gobuildwp.com/wordpress-mcp>
 
 ## Runs the OAuth browser flow natively
 
@@ -106,7 +106,7 @@ legacy alias. New configurations should use the canonical path.
 
 ## If a client will not connect
 
-1. **WPPilot → Diagnostics** in wp-admin runs the same checks a client does and
+1. **GoBuildWP → Diagnostics** in wp-admin runs the same checks a client does and
    usually names the problem outright.
 2. HTTPS is required for anything remotely reachable, and a hosted web client
    cannot reach `localhost` at all.
@@ -121,4 +121,4 @@ legacy alias. New configurations should use the canonical path.
 
 - [WordPress MCP server](wordpress-mcp.md)
 - [Safety](SAFETY.md)
-- [Troubleshooting](https://wppilot.co/docs/troubleshooting)
+- [Troubleshooting](https://gobuildwp.com/docs/troubleshooting)

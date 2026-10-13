@@ -28,7 +28,7 @@ while an agent that receives `200 OK` cannot tell that the page did not change.
 
 ## What Pro adds
 
-[WPPilot Pro](https://wppilot.co/pro) registers builder-aware abilities on the
+[GoBuildWP Pro](https://gobuildwp.com/pro) registers builder-aware abilities on the
 same endpoint, so an agent that connected once works in whichever editor the site
 actually uses.
 
@@ -66,4 +66,4 @@ says so rather than pretending a server-side write is equivalent.
 
 - [Elementor MCP](elementor-mcp.md)
 - [WooCommerce MCP](woocommerce-mcp.md)
-- [All integrations](https://wppilot.co/integrations)
+- [All integrations](https://gobuildwp.com/integrations)

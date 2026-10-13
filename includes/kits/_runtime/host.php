@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -16,15 +16,15 @@ if (!defined('ABSPATH')) {
 /**
  * What a kit may ask of the plugin it is running inside.
  *
- * A kit is a feature folder that has to work in two places: inside WPPilot, where the gate
+ * A kit is a feature folder that has to work in two places: inside GoBuildWP, where the gate
  * pipeline, the change ledger and the Changes screen already exist, and exported into another
  * plugin that has none of them. Everything a kit needs from its surroundings goes through this
- * interface, so the kit's own code never names a WPPilot function. hosts/wppilot.php implements
- * it with WPPilot's machinery; hosts/standalone.php implements it from nothing.
+ * interface, so the kit's own code never names a GoBuildWP function. hosts/wppilot.php implements
+ * it with GoBuildWP's machinery; hosts/standalone.php implements it from nothing.
  */
 interface Host
 {
-    /** `wppilot` inside WPPilot; the export prefix elsewhere. */
+    /** `wppilot` inside GoBuildWP; the export prefix elsewhere. */
     public function id(): string;
 
     /** Whether the current user may run this host's abilities at all. */
@@ -59,7 +59,7 @@ interface Host
     /**
      * Refuse a destructive call that was not confirmed.
      *
-     * Inside WPPilot the gate pipeline already did this before execute() ran, and removed the
+     * Inside GoBuildWP the gate pipeline already did this before execute() ran, and removed the
      * flag, so the answer is always true. Standalone there is no pipeline, so the kit's own
      * ability checks `confirm` here; its schema declares the property for that reason.
      *
@@ -141,7 +141,7 @@ interface Ledger
  * A ledger that counts and pages in its own storage.
  *
  * Optional, and separate from Ledger so implementations written before it keep compiling: a kit
- * checks `instanceof PagedLedger` and otherwise pages what query() returns. WPPilot's ledger is a
+ * checks `instanceof PagedLedger` and otherwise pages what query() returns. GoBuildWP's ledger is a
  * table of up to ten thousand rows with their before-images, which query() would load whole.
  */
 interface PagedLedger

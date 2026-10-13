@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,11 +12,14 @@ if (!defined('ABSPATH')) {
 wp_register_ability('wppilot/agent-context', [
     'label' => __('Agent Context', domain: 'wppilot'),
     'description' => __(
-        'Return transport-neutral WPPilot site guidance, environment, and skill summaries.',
+        'Return transport-neutral GoBuildWP site guidance, environment, and skill summaries.',
         domain: 'wppilot',
     ),
     'input_schema' => WPPILOT_NO_INPUT_SCHEMA,
-    'category' => 'code-execution',
+    // A read-only guidance ability, the transport-neutral sibling of discover-abilities. It was
+    // filed under code-execution, which the WordPress.org edition never registers, so it failed to
+    // register there; mcp-adapter is registered on every edition (abilities/bootstrap.php).
+    'category' => 'mcp-adapter',
     'output_schema' => [
         'type' => 'object',
         'properties' => [

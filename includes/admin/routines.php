@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,10 +15,10 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * WPPilot's side of the scheduled-audits kit: who owns routines on this site, and the Routines
+ * GoBuildWP's side of the scheduled-audits kit: who owns routines on this site, and the Routines
  * screen.
  *
- * Scheduled audits came from WPPilot Pro 1.10.0's routines kit, which keeps running its own copy
+ * Scheduled audits came from GoBuildWP Pro 1.10.0's routines kit, which keeps running its own copy
  * over the same options and cron hooks until Pro's next release. That release boots its copy
  * early, from a `plugins_loaded` 25 hook it adds while its own file loads, so by the time the kit
  * loader boots kits (`plugins_loaded` 20) the hook tells us Pro will run routines on this request.
@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
  * show two Routines screens, so the kit stands aside while that hook is there and this file
  * registers nothing else.
  *
- * The screen lives here rather than in the kit because it joins WPPilot's admin shell (its
+ * The screen lives here rather than in the kit because it joins GoBuildWP's admin shell (its
  * header, its navigation map), which a kit may not name.
  */
 
@@ -50,7 +50,7 @@ function routines_elsewhere(mixed $value, mixed $point): mixed
         return $value;
     }
     if (has_action('plugins_loaded', 'WPPilot\\Pro\\Kits\\register_routines') !== false) {
-        return 'WPPilot Pro runs this site\'s routines with its own routines kit; the scheduled audits here take over once Pro no longer carries it.';
+        return 'GoBuildWP Pro runs this site\'s routines with its own routines kit; the scheduled audits here take over once Pro no longer carries it.';
     }
     return $value;
 }
@@ -132,7 +132,7 @@ function redirect_legacy_page(): void
 function handle_run_now(): void
 {
     if (!\wppilot_current_user_can_manage()) {
-        wp_die(esc_html__('You are not allowed to run WPPilot routines.', domain: 'wppilot'), '', ['response' => 403]);
+        wp_die(esc_html__('You are not allowed to run GoBuildWP routines.', domain: 'wppilot'), '', ['response' => 403]);
     }
     $id = sanitize_key((string) wp_unslash($_POST['routine'] ?? ''));
     check_admin_referer(RUN_NOW_ACTION . '_' . $id);
@@ -165,7 +165,7 @@ function error_message(string $code): string
 function render(): void
 {
     if (!\wppilot_current_user_can_manage()) {
-        wp_die(esc_html__('You are not allowed to view WPPilot routines.', domain: 'wppilot'));
+        wp_die(esc_html__('You are not allowed to view GoBuildWP routines.', domain: 'wppilot'));
     }
     $routines = ScheduledAudits\all_routines();
     $selected = sanitize_key((string) wp_unslash($_GET['routine'] ?? ''));

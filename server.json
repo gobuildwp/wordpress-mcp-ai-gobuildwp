@@ -1,12 +1,12 @@
 {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-    "name": "co.wppilot/wppilot",
-    "title": "WPPilot",
+    "name": "com.gobuildwp/gobuildwp",
+    "title": "GoBuildWP",
     "description": "WordPress MCP server: typed abilities with safety profiles, change evidence and undo.",
     "version": "1.18.5",
-    "websiteUrl": "https://wppilot.co",
+    "websiteUrl": "https://gobuildwp.com",
     "repository": {
-        "url": "https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot",
+        "url": "https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp",
         "source": "github"
     },
     "remotes": [
@@ -22,7 +22,7 @@
             "headers": [
                 {
                     "name": "Authorization",
-                    "description": "Basic credentials with a WordPress Application Password, or a WPPilot access token as a Bearer token. Create either under WPPilot > Connect.",
+                    "description": "Basic credentials with a WordPress Application Password, or a GoBuildWP access token as a Bearer token. Create either under GoBuildWP > Connect.",
                     "isRequired": true,
                     "isSecret": true
                 }
@@ -46,7 +46,7 @@
                 "2026-07-28",
                 "2025-11-25"
             ],
-            "documentation": "https://wppilot.co/docs"
+            "documentation": "https://gobuildwp.com/docs"
         }
     }
 }

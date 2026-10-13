@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * Safety settings pushed from WPPilot Cloud, §7.
+ * Safety settings pushed from GoBuildWP Cloud, §7.
  *
  * A Cloud workspace can keep one safety policy for many sites: the safety
  * profile, the approval mode, and which abilities are switched off or need a
@@ -263,7 +263,7 @@ function wppilot_cloud_apply_policy(array $body, bool $dry_run = false): array|W
     if (!$manage['tighten']) {
         return new WP_Error(
             'wppilot_cloud_policy_not_allowed',
-            __('The site owner has not let WPPilot Cloud manage safety settings. It is switched on in wp-admin: WPPilot → Connect → WPPilot Cloud.', domain: 'wppilot'),
+            __('The site owner has not let GoBuildWP Cloud manage safety settings. It is switched on in wp-admin: GoBuildWP → Connect → GoBuildWP Cloud.', domain: 'wppilot'),
             ['status' => 403],
         );
     }
@@ -281,7 +281,7 @@ function wppilot_cloud_apply_policy(array $body, bool $dry_run = false): array|W
     if ($loosening !== [] && !$manage['loosen']) {
         return new WP_Error(
             'wppilot_cloud_policy_loosen_refused',
-            __('This policy would loosen safety settings, and the site owner only lets WPPilot Cloud tighten them. Nothing was changed.', domain: 'wppilot'),
+            __('This policy would loosen safety settings, and the site owner only lets GoBuildWP Cloud tighten them. Nothing was changed.', domain: 'wppilot'),
             ['status' => 403, 'loosening' => $loosening],
         );
     }
@@ -362,7 +362,7 @@ function wppilot_cloud_policy_status(): array
 function wppilot_cloud_rest_policy(WP_REST_Request $request): WP_REST_Response|WP_Error
 {
     if (wppilot_cloud_link() === null) {
-        return new WP_Error('wppilot_cloud_forbidden', __('This site is not connected to WPPilot Cloud.', domain: 'wppilot'), ['status' => 403]);
+        return new WP_Error('wppilot_cloud_forbidden', __('This site is not connected to GoBuildWP Cloud.', domain: 'wppilot'), ['status' => 403]);
     }
     $body = $request->get_json_params();
     if (!is_array($body)) {

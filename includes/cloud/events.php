@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -59,7 +59,7 @@ function wppilot_cloud_register_event_hooks(): void
         add_action($hook, callback: 'wppilot_cloud_on_extension_changed', priority: 10, accepted_args: 0);
     }
 
-    // WPPilot Pro's safe update, fired once per run whatever its outcome.
+    // GoBuildWP Pro's safe update, fired once per run whatever its outcome.
     add_action('wppilot_kit_safe_updates_finished', callback: 'wppilot_cloud_on_update_finished', priority: 10, accepted_args: 0);
 
     // UpdraftPlus: save_last_backup() filters the run's verdict (success 1/0) just before storing it.

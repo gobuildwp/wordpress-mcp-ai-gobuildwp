@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -44,10 +44,15 @@ const DISPATCH_PRIORITY = 25;
 
 /**
  * Whether a REST route is one of the MCP endpoints.
+ *
+ * `/mcp/wppilot-oauth` is the OAuth mirror of the same server, and its protected-resource
+ * metadata advertises the modern revision. Leaving it out sent every modern OAuth client to the
+ * adapter, which answered "Missing Mcp-Session-Id". caller_may_use_mcp() applies the OAuth route
+ * and scope boundary before anything is answered there.
  */
 function is_mcp_route(string $route): bool
 {
-    foreach (['/mcp/wppilot', '/mcp/mcp-adapter-default-server'] as $base) {
+    foreach (['/mcp/wppilot', '/mcp/wppilot-oauth', '/mcp/mcp-adapter-default-server'] as $base) {
         if ($route === $base || str_starts_with($route, $base . '/')) {
             return true;
         }
@@ -57,18 +62,40 @@ function is_mcp_route(string $route): bool
 }
 
 /**
+ * Whether this site actually serves an MCP route right now.
+ *
+ * The OAuth server is registered only where the OAuth transport is allowed (HTTPS, or a local
+ * site). rest_pre_dispatch runs before route matching, so without this a modern request would be
+ * answered on an endpoint that legacy clients, correctly, get a 404 from.
+ */
+function route_is_served(string $route): bool
+{
+    if ($route === '/mcp/wppilot-oauth' || str_starts_with($route, '/mcp/wppilot-oauth/')) {
+        return function_exists('wppilot_oauth_transport_allowed') && \wppilot_oauth_transport_allowed();
+    }
+    // The adapter's default server is GoBuildWP's only when GoBuildWP's adapter copy is the one
+    // loaded. When another plugin's copy (Elementor 4.3+) is, that route is its server: answering
+    // there would hijack its clients with GoBuildWP's tools.
+    if ($route === '/mcp/mcp-adapter-default-server' || str_starts_with($route, '/mcp/mcp-adapter-default-server/')) {
+        return function_exists('wppilot_owns_mcp_adapter') && \wppilot_owns_mcp_adapter();
+    }
+
+    return true;
+}
+
+/**
  * Answer a modern request, or hand the request back for legacy handling.
  *
  * @return mixed A WP_REST_Response for modern traffic, or the untouched $result.
  */
 function pre_dispatch(mixed $result, WP_REST_Server $server, WP_REST_Request $request): mixed
 {
-    if ($result !== null || !is_mcp_route($request->get_route())) {
+    if ($result !== null || !is_mcp_route($request->get_route()) || !route_is_served($request->get_route())) {
         return $result;
     }
 
     // GET and DELETE are deliberately NOT answered with 405 here. The modern
-    // revision drops the GET stream and the session lifecycle, but WPPilot is
+    // revision drops the GET stream and the session lifecycle, but GoBuildWP is
     // dual-era: legacy clients still open the adapter's GET stream, and
     // refusing it would break every connection already in the field.
     if ($request->get_method() !== 'POST') {
@@ -94,7 +121,7 @@ function pre_dispatch(mixed $result, WP_REST_Server $server, WP_REST_Request $re
 
 /**
  * Whether the current caller passes the checks the legacy route applies:
- * the AI abilities master switch, WPPilot's manage capability, and - for an
+ * the AI abilities master switch, GoBuildWP's manage capability, and - for an
  * OAuth credential - the route and scope boundary.
  */
 function caller_may_use_mcp(WP_REST_Request $request): bool
@@ -215,7 +242,7 @@ function success(array $result, mixed $id, string $method): array
 
 function server_name(): string
 {
-    return 'WPPilot';
+    return 'GoBuildWP';
 }
 
 function server_version(): string
@@ -280,7 +307,7 @@ function list_tools(): array
 /**
  * Return the prompt-type abilities this connection may reach.
  *
- * WPPilot's prompts are its skills. They take no arguments, so `arguments` is
+ * GoBuildWP's prompts are its skills. They take no arguments, so `arguments` is
  * always an empty list rather than omitted — a client that treats a missing
  * key as "unknown" would otherwise prompt the user for input that does not
  * exist.
@@ -416,8 +443,8 @@ function ability_for_tool(string $tool): ?WP_Ability
  * schema is passed through as authored. Only the outer shape is guaranteed,
  * because a tool whose schema is not an object breaks client-side validation.
  *
- * WPPilot's own abilities author client-ready schemas, but the surface is not
- * only WPPilot's: every ability on the site is advertised, and a schema written
+ * GoBuildWP's own abilities author client-ready schemas, but the surface is not
+ * only GoBuildWP's: every ability on the site is advertised, and a schema written
  * for WordPress rather than for a client carries things no JSON Schema
  * validator understands — a property-level `'required' => true` instead of the
  * parent's `required` array, and the PHP-only `sanitize_callback`,
@@ -492,7 +519,7 @@ function advertise_confirmation(WP_Ability $ability, array $schema): array
     $properties = is_array($schema['properties'] ?? null) ? $schema['properties'] : [];
     $properties['confirm'] = [
         'type' => 'boolean',
-        'description' => 'Must be true. This operation is destructive or critical, and WPPilot refuses it '
+        'description' => 'Must be true. This operation is destructive or critical, and GoBuildWP refuses it '
             . 'without an explicit confirmation that the user approved this specific call.',
     ];
     $schema['properties'] = $properties;
@@ -731,7 +758,7 @@ function legacy_image_result(mixed $result): mixed
  * Two incompatible contracts meet here. An ability that declares no input
  * schema at all rejects any input, including `[]`, so it has to be called with
  * null. An ability that declares WPPILOT_NO_INPUT_SCHEMA — an object schema
- * with no properties, which is what every no-input WPPilot ability declares —
+ * with no properties, which is what every no-input GoBuildWP ability declares —
  * validates its input with rest_is_object(), and `rest_is_object(null)` is
  * false, so null comes back as:
  *
@@ -850,7 +877,7 @@ function register_modern_transport(): void
     add_filter('rest_pre_dispatch', __NAMESPACE__ . '\\pre_dispatch', DISPATCH_PRIORITY, 3);
     // Priority 30 so the connection recorder at 20 still sees the response it expects.
     add_filter('rest_post_dispatch', __NAMESPACE__ . '\\repair_legacy_tool_schemas', 30, 3);
-    // After WPPilot's other result filters (wppilot.php, at 10), which read the `success` /
+    // After GoBuildWP's other result filters (wppilot.php, at 10), which read the `success` /
     // `data` shape this replaces.
     add_filter('mcp_adapter_tool_call_result', __NAMESPACE__ . '\\legacy_image_result', 30, 1);
 }

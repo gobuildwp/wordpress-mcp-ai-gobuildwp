@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -23,7 +23,7 @@ function register_categories(): void
 
     wp_register_ability_category('skill', [
         'label' => __('Skills', domain: 'wppilot'),
-        'description' => __('Manage and load WPPilot skills.', domain: 'wppilot'),
+        'description' => __('Manage and load GoBuildWP skills.', domain: 'wppilot'),
     ]);
 }
 
@@ -65,7 +65,7 @@ function register(): void
     wp_register_ability('wppilot/skill-get', [
         'label' => __('Get Skill', domain: 'wppilot'),
         'description' => __(
-            'Load a WPPilot skill by slug. Returns the full SKILL.md content plus metadata.',
+            'Load a GoBuildWP skill by slug. Returns the full SKILL.md content plus metadata.',
             domain: 'wppilot',
         ),
         'category' => 'skill',

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -18,8 +18,8 @@ namespace WPPilot\Tests\Unit {
     use WPPilot\Admin\Routines;
 
     /**
-     * Who runs this site's routines: WPPilot Pro 1.10.0 while its own routines kit is hooked, so
-     * the scheduled-audits kit stands aside and one copy answers each tick; otherwise WPPilot.
+     * Who runs this site's routines: GoBuildWP Pro 1.10.0 while its own routines kit is hooked, so
+     * the scheduled-audits kit stands aside and one copy answers each tick; otherwise GoBuildWP.
      */
     final class RoutinesOwnerTest extends TestCase
     {
@@ -43,7 +43,7 @@ namespace WPPilot\Tests\Unit {
             $answer = Routines\routines_elsewhere(null, 'routines-elsewhere');
 
             self::assertIsString($answer);
-            self::assertStringContainsString('WPPilot Pro', $answer);
+            self::assertStringContainsString('GoBuildWP Pro', $answer);
         }
 
         public function testWithoutProsHookWPPilotRunsThem(): void

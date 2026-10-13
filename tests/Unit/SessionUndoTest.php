@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -135,7 +135,7 @@ final class SessionUndoTest extends TestCase
     {
         $this->write('title', 'Agent');
         $this->write('color', 'red');
-        // Someone else writes the title afterwards, through WPPilot, in another session.
+        // Someone else writes the title afterwards, through GoBuildWP, in another session.
         $this->inSession('stdio-session-b');
         $this->write('title', 'Person');
 

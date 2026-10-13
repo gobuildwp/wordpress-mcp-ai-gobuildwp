@@ -1,8 +1,8 @@
-# Contributing to WPPilot
+# Contributing to GoBuildWP
 
-WPPilot is the free WordPress MCP server in this repository, and that includes
+GoBuildWP is the free WordPress MCP server in this repository, and that includes
 the Elementor MCP surface: the 16 abilities that read and edit an Elementor
-document are developed here, not in Pro. WPPilot Pro, which adds WooCommerce MCP
+document are developed here, not in Pro. GoBuildWP Pro, which adds WooCommerce MCP
 and the builder-aware layers for Bricks, Divi, Oxygen, Beaver Builder,
 Breakdance, Etch, WPBakery and Mosaic - plus Elementor authoring on top of the
 free editing abilities - is a commercial plugin and is not developed here. Bug
@@ -11,7 +11,7 @@ seam between them is where most real problems live.
 
 ## Before opening an issue
 
-Run the built-in diagnostics first: **WPPilot → Diagnostics** in wp-admin runs
+Run the built-in diagnostics first: **GoBuildWP → Diagnostics** in wp-admin runs
 the same checks an AI client does and usually names the problem outright.
 
 Include the plugin, WordPress and PHP versions, the safety profile, the AI
@@ -26,7 +26,7 @@ remove it from the history.
 ## Security
 
 Do not open a public issue for a vulnerability. Email
-<security@wppilot.co>, which reaches the same people through a channel meant for
+<security@gobuildwp.com>, which reaches the same people through a channel meant for
 disclosure. See [SECURITY.md](SECURITY.md).
 
 ## Pull requests

@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: Gutenberg-specific tool result handling.
+ * GoBuildWP Chat: Gutenberg-specific tool result handling.
  *
  * Block editing is finalized in the browser, not server-side, so these
  * results carry the extra instructions that tell the user (and the model)
@@ -62,7 +62,7 @@ function wppilot_chat_gutenberg_user_instruction(array $result, array $runtime):
 
     if (!$online) {
         return sprintf(
-            'The WPPilot Chat page embeds the Gutenberg finalizer runtime, but it is currently offline. Ask the user to reload %s before treating queued Gutenberg changes as live. %s',
+            'The GoBuildWP Chat page embeds the Gutenberg finalizer runtime, but it is currently offline. Ask the user to reload %s before treating queued Gutenberg changes as live. %s',
             wppilot_chat_url(),
             $watch,
         );
@@ -70,14 +70,14 @@ function wppilot_chat_gutenberg_user_instruction(array $result, array $runtime):
 
     if ($batch_id <= 0) {
         return sprintf(
-            'The WPPilot Chat page embeds the Gutenberg finalizer runtime and it is online. Use the Gutenberg queue tools normally; after enabling a batch, check the batch status until finalization completes. %s',
+            'The GoBuildWP Chat page embeds the Gutenberg finalizer runtime and it is online. Use the Gutenberg queue tools normally; after enabling a batch, check the batch status until finalization completes. %s',
             $watch,
         );
     }
 
     if (!$can_finalize) {
         return sprintf(
-            'The WPPilot Chat page is online, but the current browser user may not be able to finalize Gutenberg batch #%d%s. Ask the user to reload WPPilot Chat as a user who can edit every target. Do not treat queued Gutenberg changes as live until finalization completes. %s',
+            'The GoBuildWP Chat page is online, but the current browser user may not be able to finalize Gutenberg batch #%d%s. Ask the user to reload GoBuildWP Chat as a user who can edit every target. Do not treat queued Gutenberg changes as live until finalization completes. %s',
             $batch_id,
             $batch_label !== '' ? ': ' . $batch_label : '',
             $watch,
@@ -85,7 +85,7 @@ function wppilot_chat_gutenberg_user_instruction(array $result, array $runtime):
     }
 
     return sprintf(
-        'The WPPilot Chat page embeds the Gutenberg finalizer runtime and should automatically finalize Gutenberg batch #%d%s. Do not ask the user to open a separate Block Editor Queue page unless the embedded runtime goes offline. Do not treat queued Gutenberg changes as live until the batch reports finalized. %s',
+        'The GoBuildWP Chat page embeds the Gutenberg finalizer runtime and should automatically finalize Gutenberg batch #%d%s. Do not ask the user to open a separate Block Editor Queue page unless the embedded runtime goes offline. Do not treat queued Gutenberg changes as live until the batch reports finalized. %s',
         $batch_id,
         $batch_label !== '' ? ': ' . $batch_label : '',
         $watch,
@@ -140,7 +140,7 @@ function wppilot_chat_gutenberg_tool_description(string $description): string
             'reports the Block Editor Queue runtime with curl SSE/poll URLs',
             'curl SSE/poll URLs',
             'This also reports the Block Editor Queue runtime plus curl SSE/poll URLs so agents can ask the user to open the queue page before queueing static/native block changes.',
-            'Reports whether the WPPilot Block Editor Queue admin page is open and heartbeating, including token-gated SSE and poll URLs that agents can watch with curl.',
+            'Reports whether the GoBuildWP Block Editor Queue admin page is open and heartbeating, including token-gated SSE and poll URLs that agents can watch with curl.',
             'Returns compact status, target summaries, validation errors, Block Editor Queue runtime status, and curl SSE/poll URLs for one pending batch.',
             'current Block Editor Queue runtime status and curl SSE/poll URLs',
             'generic Block Editor Queue admin page URL',
@@ -148,18 +148,18 @@ function wppilot_chat_gutenberg_tool_description(string $description): string
             'send the finalization link to the user',
         ],
         [
-            'the embedded WPPilot Chat finalizer runtime completes it',
-            'If the embedded WPPilot Chat finalizer runtime is online, it can pick up the batch automatically.',
-            'WPPilot Chat verifies completion with Gutenberg pending-batch status tools.',
+            'the embedded GoBuildWP Chat finalizer runtime completes it',
+            'If the embedded GoBuildWP Chat finalizer runtime is online, it can pick up the batch automatically.',
+            'GoBuildWP Chat verifies completion with Gutenberg pending-batch status tools.',
             'reports the Gutenberg finalizer runtime status',
             'Gutenberg finalizer runtime status',
             'This also reports the Gutenberg finalizer runtime status before queueing static/native block changes.',
-            'Reports whether the WPPilot Gutenberg finalizer runtime is open and heartbeating.',
+            'Reports whether the GoBuildWP Gutenberg finalizer runtime is open and heartbeating.',
             'Returns compact status, target summaries, validation errors, and Gutenberg finalizer runtime status for one pending batch.',
             'current Gutenberg finalizer runtime status',
-            'WPPilot Chat admin page URL',
-            'WPPilot Chat admin page URL',
-            'let the embedded WPPilot Chat finalizer runtime complete the queued batch',
+            'GoBuildWP Chat admin page URL',
+            'GoBuildWP Chat admin page URL',
+            'let the embedded GoBuildWP Chat finalizer runtime complete the queued batch',
         ],
         $description,
     );

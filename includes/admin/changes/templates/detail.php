@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -67,7 +67,7 @@ $pretty = static fn(mixed $value): string => (string) wp_json_encode(
                             /* translators: %d: WordPress user id */
                             ? sprintf(__('A person, on the wp-admin approval link (user #%d)', domain: 'wppilot'), $approver)
                             : __('A person, on the wp-admin approval link', domain: 'wppilot'),
-                        'chat' => __('A person, in WPPilot Chat', domain: 'wppilot'),
+                        'chat' => __('A person, in GoBuildWP Chat', domain: 'wppilot'),
                         'approval-queue' => __('A person, in the approval queue', domain: 'wppilot'),
                         default => $confirmed_via,
                     }); ?></td>

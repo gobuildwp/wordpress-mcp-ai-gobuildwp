@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -170,7 +170,7 @@ function store_reports(string $id, array $runs): void
 
 /**
  * Whether a user may run routines and receive their results: an administrator of this site
- * (a super admin on a network, where only they may run WPPilot abilities).
+ * (a super admin on a network, where only they may run GoBuildWP abilities).
  */
 function is_admin_user(int $user_id): bool
 {
@@ -364,7 +364,7 @@ function reserved_hint(string $kind): string
     return match ($kind) {
         'accessibility' => 'name pages with urls, front_page or top_pages',
         'content' => 'a routine always audits the whole site in the background',
-        default => 'a routine pages through the whole library and keeps only images that need work',
+        default => 'a routine reads up to 10 pages of the most recently uploaded images and keeps only images that need work',
     };
 }
 

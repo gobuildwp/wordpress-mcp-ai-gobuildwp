@@ -5,7 +5,7 @@ A kit is one feature in a folder that can be copied into another plugin with
 `README.md`. `_runtime/` is the only code a kit may lean on besides WordPress;
 see the header of `_runtime/runtime.php`. The rules a kit is held to are in the
 header of `scripts/check-kit-boundaries.php`, and the proof that an exported
-copy can run beside WPPilot's own is `scripts/test-kit-coexistence.php`.
+copy can run beside GoBuildWP's own is `scripts/test-kit-coexistence.php`.
 
 ## kit.json
 
@@ -28,7 +28,7 @@ copy can run beside WPPilot's own is `scripts/test-kit-coexistence.php`.
 
 ### vendor_storage
 
-The coexistence gate fails when WPPilot's copy of a kit and an exported copy
+The coexistence gate fails when GoBuildWP's copy of a kit and an exported copy
 name the same option, meta key, transient or cron hook, because the exporter
 should have renamed it and did not. A name that belongs to another plugin is
 the exception: Elementor's `_elementor_data`, Slim SEO's `slim_seo` array or
@@ -44,6 +44,6 @@ such names here and the gate accepts them:
 ```
 
 Only another plugin's names belong here; `check-kit-boundaries.php` refuses one
-naming WPPilot, since those are the kit's own and have to be renamed. WordPress's
+naming GoBuildWP, since those are the kit's own and have to be renamed. WordPress's
 own options (`blogname`, `gmt_offset` and the like) are not declared: the gate
 knows them.

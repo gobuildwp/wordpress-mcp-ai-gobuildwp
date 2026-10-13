@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -217,7 +217,7 @@ final class AgentIdentityTest extends TestCase
         self::assertNull(wppilot_token_authenticate('wpp_never-issued'));
         self::assertSame('', wppilot_token_refusal());
         resolve_token_identity(0, 'Bearer wpp_never-issued');
-        self::assertSame('Invalid, expired, or revoked WPPilot access token.', request_authentication_error()?->get_error_message());
+        self::assertSame('Invalid, expired, or revoked GoBuildWP access token.', request_authentication_error()?->get_error_message());
     }
 
     /**

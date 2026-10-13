@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -232,6 +232,8 @@ function active_headers(): array
         'fields' => 'ids',
         'meta_key' => '_elementor_template_type',
         'meta_value' => 'header',
+        // Replacement must account for every active header, including other languages.
+        // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFilters_suppress_filters -- Filtering by the current language would miss headers being replaced.
         'suppress_filters' => true,
         'lang' => '',
     ]);

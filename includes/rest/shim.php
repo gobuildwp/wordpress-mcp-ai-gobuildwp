@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -40,12 +40,12 @@ function wppilot_register_ability_run_rest_shim(): void
 }
 
 /**
- * Enforce WPPilot's enabled state and manage permission at the REST route boundary.
+ * Enforce GoBuildWP's enabled state and manage permission at the REST route boundary.
  */
 function wppilot_rest_run_ability_permission(): bool|WP_Error
 {
     if (!wppilot_is_enabled()) {
-        return new WP_Error('wppilot_disabled', __('WPPilot AI Abilities are disabled.', domain: 'wppilot'), [
+        return new WP_Error('wppilot_disabled', __('GoBuildWP AI Abilities are disabled.', domain: 'wppilot'), [
             'status' => 403,
         ]);
     }
@@ -53,7 +53,7 @@ function wppilot_rest_run_ability_permission(): bool|WP_Error
     if (!wppilot_current_user_can_manage()) {
         return new WP_Error(
             'wppilot_forbidden',
-            __('You are not allowed to manage WPPilot settings.', domain: 'wppilot'),
+            __('You are not allowed to manage GoBuildWP settings.', domain: 'wppilot'),
             ['status' => 403],
         );
     }
@@ -128,8 +128,8 @@ function wppilot_rest_run_ability(WP_REST_Request $request): mixed
  * ability_missing_input_schema with HTTP 400, while omitting `input` entirely
  * succeeded. The two mean the same thing to a caller.
  *
- * WPPilot's own abilities declare WPPILOT_NO_INPUT_SCHEMA instead of omitting
- * the schema, which fixes them on every transport. This covers the ones WPPilot
+ * GoBuildWP's own abilities declare WPPILOT_NO_INPUT_SCHEMA instead of omitting
+ * the schema, which fixes them on every transport. This covers the ones GoBuildWP
  * does not own — WordPress core's own abilities and the bundled MCP Adapter's —
  * where the declaration cannot be changed from here.
  *

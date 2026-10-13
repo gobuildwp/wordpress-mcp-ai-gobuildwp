@@ -2,7 +2,7 @@
 
 ## Protocol eras
 
-WPPilot is a dual-era MCP server.
+GoBuildWP is a dual-era MCP server.
 
 - **Legacy (`2025-11-25`)** is served by the bundled MCP Adapter: `initialize`, `notifications/initialized`, and `Mcp-Session-Id` sessions, unchanged.
 - **Modern (`2026-07-28`)** is served by `includes/mcp/`. It is stateless - no handshake, no session - and every request carries its protocol version and client capabilities in `_meta`.
@@ -17,14 +17,14 @@ An ability that wants the model to see an image returns it under the result key 
 
 `server/discover` advertises only what is actually registered. MCP Tasks shipped in Free 1.15.0 on the modern transport and is advertised when enabled and tools are served. `includes/mcp/tasks.php` implements user-owned polling, results, listing and cancellation. Job-backed abilities execute in the background; other abilities return a completed or failed synchronous task. Tasks use the ordinary execution safety checks, and cancellation does not undo completed writes. The legacy adapter does not provide this extension. See [the Tasks contract](wordpress-mcp.md#mcp-tasks).
 
-Subscriptions and logging are not advertised by the modern transport - WPPilot has no change-notification producer, so `subscriptions/listen` is not implemented. Cacheable results carry `cacheScope: "private"`, because the ability list is filtered per user, per safety profile, and per site.
+Subscriptions and logging are not advertised by the modern transport - GoBuildWP has no change-notification producer, so `subscriptions/listen` is not implemented. Cacheable results carry `cacheScope: "private"`, because the ability list is filtered per user, per safety profile, and per site.
 
 ## Request path
 
 1. WordPress registers typed abilities through `wp_register_ability()`.
 2. The official MCP Adapter exposes the default HTTP server at `/wp-json/mcp/mcp-adapter-default-server`.
 3. An authenticated client discovers public abilities, reads one ability's schema, and executes it through the adapter's compact meta-tool.
-4. WPPilot applies the manual ability policy and active safety profile before execution.
+4. GoBuildWP applies the manual ability policy and active safety profile before execution.
 5. The target ability performs its WordPress capability check and validates its schema.
 6. The change ledger records a redacted before/after fingerprint for supported state changes, attributed to the agent credential the request arrived on.
 
@@ -48,7 +48,7 @@ The compact adapter surface keeps client context small while retaining typed sch
 
 ## Pro boundaries
 
-WPPilot Pro registers specializations only when their third-party dependency is available. Every manifest gate, bootstrap, category registration, and loader is isolated with per-integration health reporting. An error in one integration must not prevent unrelated abilities from registering.
+GoBuildWP Pro registers specializations only when their third-party dependency is available. Every manifest gate, bootstrap, category registration, and loader is isolated with per-integration health reporting. An error in one integration must not prevent unrelated abilities from registering.
 
 Typed WordPress and WooCommerce operations use public platform APIs. WooCommerce order reads use `wc_get_orders()` for HPOS compatibility. Refund payment and inventory restocking are opt-in and destructive dispatch requires explicit confirmation.
 

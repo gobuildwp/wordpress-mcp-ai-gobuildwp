@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
  * GFAPI::get_forms() does not page, so the list is filtered, sorted and cut here, and the entry
  * counts come from one GROUP BY over GF's entry table. An entry keeps each answer under the
  * field's id, or under "<field id>.<input id>" for a field of several inputs (name, address,
- * checkboxes). The form list is the same answer WPPilot Pro 1.10.0's gravityforms-list-forms gives.
+ * checkboxes). The form list is the same answer GoBuildWP Pro 1.10.0's gravityforms-list-forms gives.
  */
 
 const GF_MIN_VERSION = '2.7';
@@ -235,7 +235,7 @@ function gf_prop(mixed $field, string $prop): mixed
 }
 
 /**
- * One entry: WPPilot Pro's compact row with the IP withheld, and each answer, redacted.
+ * One entry: GoBuildWP Pro's compact row with the IP withheld, and each answer, redacted.
  *
  * @param array<array-key, mixed> $entry
  * @param array<array-key, mixed> $fields

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ require_once __DIR__ . '/send.php';
 /**
  * Wire up anonymous usage reporting.
  *
- * Opt-in: nothing is sent until an administrator switches it on under WPPilot >
+ * Opt-in: nothing is sent until an administrator switches it on under GoBuildWP >
  * Settings. There is deliberately no first-run notice — a plugin that reports
  * only when asked has nothing to disclose on activation, and the settings row
  * and the privacy policy text carry the full description of what is sent.

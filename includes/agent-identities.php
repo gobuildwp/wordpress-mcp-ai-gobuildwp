@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -145,7 +145,7 @@ function wppilot_agent_scope_error(WP_Ability $ability): ?WP_Error
     if (($policy['missing'] ?? false) === true) {
         return new WP_Error(
             'wppilot_token_revoked',
-            __('The access token behind this request has been revoked. Create a new one on the WPPilot Configuration screen.', domain: 'wppilot'),
+            __('The access token behind this request has been revoked. Create a new one on the GoBuildWP Configuration screen.', domain: 'wppilot'),
             ['status' => 403, 'ability' => $name],
         );
     }
@@ -159,7 +159,7 @@ function wppilot_agent_scope_error(WP_Ability $ability): ?WP_Error
         sprintf(
             /* translators: 1: access token name, 2: ability name */
             __(
-                'The access token "%1$s" is not allowed to use "%2$s". This is a limit the site owner set on the token, not a fault: do not retry. Ask them to widen the token\'s scope on the WPPilot Configuration screen if the task needs it.',
+                'The access token "%1$s" is not allowed to use "%2$s". This is a limit the site owner set on the token, not a fault: do not retry. Ask them to widen the token\'s scope on the GoBuildWP Configuration screen if the task needs it.',
                 domain: 'wppilot',
             ),
             $policy['name'],

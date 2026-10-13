@@ -54,12 +54,12 @@ values to a person who explicitly approves, and each form plugin's admin screen 
 `Runtime\can_run()`, and `Runtime\unclaimed()` (runtime 1.2).
 
 <!-- kit-export:omit -->
-Inside WPPilot this kit carries the list-forms abilities WPPilot Pro 1.10.0 registered, with the
+Inside GoBuildWP this kit carries the list-forms abilities GoBuildWP Pro 1.10.0 registered, with the
 same input and output, and basic, redacted list-entries abilities. Pro keeps its own list-entries
 (compact rows, the `include_sensitive` opt-in and scoped search), which register first and answer
 on a site running Pro.
 
 ## Tests
 
-`tests/Unit/Kits/FormsBasics/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/FormsBasics/` in the GoBuildWP repository (not shipped).
 <!-- /kit-export:omit -->

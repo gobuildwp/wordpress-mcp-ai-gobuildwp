@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -181,7 +181,7 @@ function wppilot_handle_revoke_token(): void
 
     check_admin_referer('wppilot_revoke_token_' . $token_id);
 
-    // The WPPilot Cloud token is revoked by disconnecting, which also drops the
+    // The GoBuildWP Cloud token is revoked by disconnecting, which also drops the
     // link and tells the Cloud. Revoking the row alone would leave the site
     // reporting itself connected with a token that no longer exists.
     $cloud_link = function_exists('wppilot_cloud_link') ? wppilot_cloud_link() : null;
@@ -214,7 +214,7 @@ function wppilot_handle_update_token(): void
 
     check_admin_referer('wppilot_update_token_' . $token_id);
 
-    // The WPPilot Cloud token's limits were chosen when the site was connected
+    // The GoBuildWP Cloud token's limits were chosen when the site was connected
     // and the Cloud relies on them; change them by reconnecting.
     $cloud_link = function_exists('wppilot_cloud_link') ? wppilot_cloud_link() : null;
     if ($cloud_link !== null && $cloud_link['token_id'] === $token_id) {
@@ -796,7 +796,7 @@ function wppilot_render_token_row(array $token, string $dt_format): void
         <td>
             <strong><?php echo esc_html($token['name']); ?></strong>
             <?php if ($cloud_managed): ?>
-                <br /><span class="wppilot-recommended-badge"><?php esc_html_e('Managed by WPPilot Cloud', domain: 'wppilot'); ?></span>
+                <br /><span class="wppilot-recommended-badge"><?php esc_html_e('Managed by GoBuildWP Cloud', domain: 'wppilot'); ?></span>
             <?php endif; ?>
         </td>
         <td class="wppilot-mono">…<?php echo esc_html($token['last_four']); ?></td>
@@ -814,7 +814,7 @@ function wppilot_render_token_row(array $token, string $dt_format): void
             <?php /* Its scope and ceiling were agreed with the Cloud at pairing; changing
              * them here would leave the Cloud describing access it does not have. */ ?>
             <a href="#wppilot-cloud-method" onclick="var c = document.querySelector('.wppilot-method-card[data-method=&quot;cloud&quot;]'); if (c) { c.click(); c.scrollIntoView({ block: 'center' }); } return false;"><?php esc_html_e(
-                'Disconnect under WPPilot Cloud',
+                'Disconnect under GoBuildWP Cloud',
                 domain: 'wppilot',
             ); ?></a>
         </td>

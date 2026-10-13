@@ -28,7 +28,7 @@ Only these, each with an optional `input` checked against that ability's own sch
   `post_types`, `thin_words`, `external_limit`, `internal_http_limit`, `schema_sample`. For an SEO
   routine use `checks: ["seo_meta", "schema"]`; there is no separate SEO audit. `external_links`
   makes outbound HEAD requests; include it only if the user asks for external links checked.
-- `wppilot/audit-media-alt` — the media library, up to 500 images per run. `input` may set
+- `wppilot/audit-media-alt` — the most recently uploaded images, 10 pages of `per_page` per run (500 at the default of 50, at most 1000); a larger library is only partly covered. `input` may set
   `per_page`.
 
 Anything else is refused. Routines never write, so they are never held for approval, draft-first

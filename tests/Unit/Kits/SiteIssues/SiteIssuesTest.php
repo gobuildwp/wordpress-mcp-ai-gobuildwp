@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -94,6 +94,15 @@ final class SiteIssuesTest extends TestCase
         self::assertSame('core', S\source_of('wp-includes/plugin.php'));
         self::assertSame('core', S\source_of('wp-settings.php'));
         self::assertSame('', S\source_of('…/x.php'));
+    }
+
+    public function testQuotedCredentialValuesAreMaskedBeforeStorage(): void
+    {
+        $message = S\clean_message('token="private value" password=\'another secret\' api_key=unquotedSECRET');
+        foreach (['private value', 'another secret', 'unquotedSECRET'] as $secret) {
+            self::assertStringNotContainsString($secret, $message);
+        }
+        self::assertSame(3, substr_count($message, '[redacted]'));
     }
 
     public function testRunningOutOfMemoryBlamesNoPlugin(): void

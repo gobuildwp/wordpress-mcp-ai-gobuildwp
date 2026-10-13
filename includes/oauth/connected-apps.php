@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -54,7 +54,7 @@ function render(): void
         return;
     }
     if (!\wppilot_current_user_can_manage()) {
-        wp_die('You are not allowed to manage WPPilot connected apps.', title: '', args: ['response' => 403]);
+        wp_die('You are not allowed to manage GoBuildWP connected apps.', title: '', args: ['response' => 403]);
         return;
     }
 
@@ -161,7 +161,7 @@ function render_page(int $user_id): void
     echo
         '<p>'
             . esc_html__(
-                'These applications have been granted access to your WordPress account via WPPilot. The connection renews automatically while in use; the expiry shown is when it lapses if the app stops connecting.',
+                'These applications have been granted access to your WordPress account via GoBuildWP. The connection renews automatically while in use; the expiry shown is when it lapses if the app stops connecting.',
                 domain: 'wppilot',
             )
             . '</p>'

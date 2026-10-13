@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * The one place WPPilot's screens are named and ordered.
+ * The one place GoBuildWP's screens are named and ordered.
  *
  * Thirteen screens used to name themselves at their own registration site, which
  * produced two problems this file exists to fix.
@@ -46,9 +46,10 @@ function wppilot_nav_groups(): array
     $groups = [
         'dashboard' => __('Dashboard', domain: 'wppilot'),
         'connect' => __('Connect', domain: 'wppilot'),
+        'prompts' => __('Prompts', domain: 'wppilot'),
         'activity' => __('Activity', domain: 'wppilot'),
-        'agent' => __('Agent', domain: 'wppilot'),
-        'studio' => __('Studio', domain: 'wppilot'),
+        'agent' => __('Agent tools', domain: 'wppilot'),
+        'studio' => __('Design & chat', domain: 'wppilot'),
         'settings' => __('Settings', domain: 'wppilot'),
     ];
 
@@ -100,7 +101,7 @@ function wppilot_nav_placement(): array
         'wppilot-pro-memory' => 'agent',
 
         'wppilot-design' => 'studio',
-        'wppilot-prompts' => 'studio',
+        'wppilot-prompts' => 'prompts',
         'wppilot-chat' => 'studio',
 
         'wppilot-settings' => 'settings',
@@ -125,7 +126,7 @@ function wppilot_nav_legacy_group(string $group): string
 }
 
 /**
- * Every WPPilot screen: its label and the group it belongs to.
+ * Every GoBuildWP screen: its label and the group it belongs to.
  *
  * An add-on registering a screen adds itself here through the filter; anything
  * absent still appears on the rail, in the group named by the fallback below.
@@ -136,7 +137,7 @@ function wppilot_nav_map(): array
 {
     $map = [
         // The home screen. The slug stays `wppilot-connect` because it is the parent
-        // every other WPPilot screen registers under, and renaming it would break
+        // every other GoBuildWP screen registers under, and renaming it would break
         // every one of those registrations along with any saved link.
         'wppilot-connect' => ['label' => __('Dashboard', domain: 'wppilot'), 'group' => 'dashboard'],
 
@@ -167,7 +168,7 @@ function wppilot_nav_map(): array
     ];
 
     /**
-     * Filter the WPPilot screen registry.
+     * Filter the GoBuildWP screen registry.
      *
      * @param array<string, array<string, mixed>> $map Page slug to label and group.
      */

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -43,9 +43,9 @@ const WPPILOT_TOKENS_SCHEMA_VERSION = 2;
 const WPPILOT_TOKENS_SCHEMA_OPTION = 'wppilot_tokens_schema_version';
 
 /**
- * The prefix every WPPilot access token carries.
+ * The prefix every GoBuildWP access token carries.
  *
- * It is what lets the Bearer path tell a WPPilot token from an OAuth JWT without
+ * It is what lets the Bearer path tell a GoBuildWP token from an OAuth JWT without
  * trying, and failing, to validate one as the other — an OAuth validation failure
  * is recorded as an authentication error and would deny the request before the
  * token was ever considered. Secret scanners key on prefixes like this too, which
@@ -108,7 +108,7 @@ function wppilot_tokens_schema_install(): void
 }
 
 /**
- * Whether a presented credential is shaped like a WPPilot access token.
+ * Whether a presented credential is shaped like a GoBuildWP access token.
  *
  * Shape only — this decides which validator runs, never whether the credential
  * is good.
@@ -152,7 +152,7 @@ function wppilot_token_create(
 
     if ($user_id <= 0 || !wppilot_user_can_manage($user_id)) {
         return new WP_Error('wppilot_token_user', __(
-            'Only a user who can manage WPPilot can hold an access token.',
+            'Only a user who can manage GoBuildWP can hold an access token.',
             domain: 'wppilot',
         ));
     }
@@ -467,7 +467,7 @@ function wppilot_token_authenticate(string $secret): ?array
         // could use — and a generic 401 on a token that worked yesterday sends
         // people debugging proxies and firewalls instead of minting a new one.
         wppilot_token_refusal(sprintf(
-            'This WPPilot access token expired on %s UTC. Create a new token on the WPPilot Configuration screen and update the client.',
+            'This GoBuildWP access token expired on %s UTC. Create a new token on the GoBuildWP Configuration screen and update the client.',
             $expires,
         ));
         return null;
@@ -599,7 +599,7 @@ function wppilot_token_name(int $token_id): string
  * The user a token belongs to, or 0 when there is no such token.
  *
  * For the one caller that revokes a token on the site's behalf rather than the
- * owner's: WPPilot Cloud's Disconnect may be pressed by a different
+ * owner's: GoBuildWP Cloud's Disconnect may be pressed by a different
  * administrator from the one who paired, and wppilot_token_revoke() is scoped
  * to the owner.
  */

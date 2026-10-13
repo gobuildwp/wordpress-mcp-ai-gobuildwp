@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,7 +12,7 @@ use WP_Error;
 /**
  * Screenshots of a page, and the comparison between two of them.
  *
- * Every other check in WPPilot reads the page. None of them can see it, and the
+ * Every other check in GoBuildWP reads the page. None of them can see it, and the
  * failures that matter most to whoever owns the site are visual: a headline
  * that is illegible over the photograph behind it, a card that wrapped onto its
  * own row at 1024px, an element that rendered but is invisible. `not_checked`
@@ -21,7 +21,7 @@ use WP_Error;
  *
  * Two decisions shape the whole module.
  *
- * WPPilot does not bundle a renderer. A screenshot is taken by a browser - the
+ * GoBuildWP does not bundle a renderer. A screenshot is taken by a browser - the
  * agent's own, or a logged-in wp-admin tab rasterising the page it loaded - and
  * this module stores what comes back and compares it. Bundling headless Chrome
  * in a WordPress plugin is not something a shared host would survive.
@@ -46,7 +46,7 @@ const CAPTURE_META = '_wppilot_capture';
 const CAPTURE_POST_META = '_wppilot_capture_post';
 
 /**
- * Set only on files WPPilot created itself. Pruning deletes those; an existing
+ * Set only on files GoBuildWP created itself. Pruning deletes those; an existing
  * media item somebody registered as a capture is unmarked, never deleted - it
  * may be the site's logo.
  */

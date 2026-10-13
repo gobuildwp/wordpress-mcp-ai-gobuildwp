@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -62,7 +62,7 @@ wp_register_ability('wppilot/build-site-header', [
     ],
     'output_schema' => ['type' => 'object'],
     'execute_callback' => static function (array $input = []): array|WP_Error {
-        // Inside WPPilot the gate pipeline enforces confirm; an exported copy has no
+        // Inside GoBuildWP the gate pipeline enforces confirm; an exported copy has no
         // pipeline, so the kit checks it itself. A dry run and a check write nothing.
         if (empty($input['dry_run']) && empty($input['check_only'])) {
             $guard = Runtime\confirm_guard('wppilot/build-site-header', $input);

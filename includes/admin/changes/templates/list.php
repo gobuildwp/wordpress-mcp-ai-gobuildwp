@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ $active_session = (string) ($filters['session'] ?? '');
 <?php \wppilot_render_admin_header(); ?>
 <div class="wrap wppilot-wrap wppilot-changes">
     <h1><?php echo esc_html(\wppilot_nav_label(PAGE_SLUG, fallback: __('Changes', domain: 'wppilot'))); ?></h1>
-    <p class="wppilot-lede"><?php esc_html_e('Everything an agent changed through WPPilot, newest first, with the way back where one exists.', domain: 'wppilot'); ?></p>
+    <p class="wppilot-lede"><?php esc_html_e('Everything an agent changed through GoBuildWP, newest first, with the way back where one exists.', domain: 'wppilot'); ?></p>
 
     <div class="wppilot-panel">
         <form method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>" class="wppilot-changes__filters">
@@ -210,7 +210,7 @@ $active_session = (string) ($filters['session'] ?? '');
                         <tbody>
                             <?php foreach ($recent_sessions as $recent) {
                                 $last = strtotime((string) $recent['last_change_at']);
-                                $who = trim((string) $recent['agent']['label'] . ' ' . ((string) $recent['agent']['client'] !== '' ? '(' . (string) $recent['agent']['client'] . ')' : ''));
+                                $who = \wppilot_client_display((string) $recent['agent']['label'], (string) $recent['agent']['client']);
                                 ?>
                                 <tr>
                                     <td><code title="<?php echo esc_attr((string) $recent['session_id']); ?>"><?php echo esc_html(session_label((string) $recent['session_id'])); ?></code></td>
@@ -273,7 +273,7 @@ $active_session = (string) ($filters['session'] ?? '');
         <?php if ($visible === []) { ?>
             <p class="wppilot-muted">
                 <?php echo esc_html($filters === []
-                    ? __('No changes yet. Every write an agent makes through WPPilot is recorded here, with a way to undo it when WPPilot kept a before-image.', domain: 'wppilot')
+                    ? __('No changes yet. Every write an agent makes through GoBuildWP is recorded here, with a way to undo it when GoBuildWP kept a before-image.', domain: 'wppilot')
                     : __('Nothing matches those filters.', domain: 'wppilot')); ?>
             </p>
         <?php } else { ?>

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -10,7 +10,7 @@ declare(strict_types=1);
  *
  * These are the typed wrappers for the platform itself — content, media, terms,
  * comments, revisions, menus, users, and the allowlisted settings surface. They
- * ship in WPPilot Free and never call into Pro: Pro is for plugin-aware
+ * ship in GoBuildWP Free and never call into Pro: Pro is for plugin-aware
  * integrations (page builders, WooCommerce, forms, SEO suites), not for the
  * WordPress operations every site has.
  *

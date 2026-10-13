@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,7 +8,7 @@ declare(strict_types=1);
 // phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
 
 /**
- * The Dashboard: what WPPilot is currently exposing, and who is using it.
+ * The Dashboard: what GoBuildWP is currently exposing, and who is using it.
  *
  * Until now the answer to "is anything actually connected?" was spread across
  * Configuration, Troubleshoot, and Connected Apps, and partly not shown at all.
@@ -54,7 +54,7 @@ function wppilot_dashboard_handle_forget(): ?array
     check_admin_referer(WPPILOT_FORGET_CLIENT_NONCE);
 
     if (!wppilot_current_user_can_manage()) {
-        wp_die(esc_html__('You are not allowed to manage WPPilot connections.', domain: 'wppilot'));
+        wp_die(esc_html__('You are not allowed to manage GoBuildWP connections.', domain: 'wppilot'));
     }
 
     if ($sweep) {
@@ -143,7 +143,7 @@ function wppilot_dashboard_oauth_clients(int $limit = 25): array
 }
 
 /**
- * What WPPilot Pro reports about itself, or null when it is not answering.
+ * What GoBuildWP Pro reports about itself, or null when it is not answering.
  *
  * Published by Pro on a filter rather than fetched by calling into it, so this
  * screen has no dependency on Pro being installed, on its version, or on its
@@ -653,7 +653,7 @@ function wppilot_dashboard_clients(): void
                     } ?>
                 </div>
                 <p class="description"><?php esc_html_e(
-                    'Name and version are what each client said about itself during the handshake, so treat them as a label rather than proof — the credential, transport, request count and times are WPPilot\'s own observations. Times are UTC.',
+                    'Name and version are what each client said about itself during the handshake, so treat them as a label rather than proof — the credential, transport, request count and times are GoBuildWP\'s own observations. Times are UTC.',
                     domain: 'wppilot',
                 ); ?></p>
 
@@ -669,7 +669,7 @@ function wppilot_dashboard_clients(): void
 
             <?php
 
-            // Every client WPPilot knows about, connected ones marked. This
+            // Every client GoBuildWP knows about, connected ones marked. This
             // used to list only the ones that had never called, under the
             // heading "Not connected yet" — which, on a site where something
             // *was* connected, read as a flat denial and contradicted the
@@ -887,7 +887,7 @@ function wppilot_dashboard_endpoints(): void
 
         <?php if (!$oauth_available) { ?>
             <p class="description"><?php esc_html_e(
-                'OAuth is not being served on this site, so only the application-password endpoint exists. WPPilot withholds the OAuth routes on a public plain-HTTP site because authorization codes and access tokens would cross the network unencrypted. Enable HTTPS and they appear here.',
+                'OAuth is not being served on this site, so only the application-password endpoint exists. GoBuildWP withholds the OAuth routes on a public plain-HTTP site because authorization codes and access tokens would cross the network unencrypted. Enable HTTPS and they appear here.',
                 domain: 'wppilot',
             ); ?></p>
         <?php } ?>
@@ -934,7 +934,7 @@ function wppilot_dashboard_endpoint_rows(): array
     ];
 
     // The OAuth routes are registered as a set or not at all — on a public
-    // plain-HTTP site WPPilot refuses to serve them, because authorization codes
+    // plain-HTTP site GoBuildWP refuses to serve them, because authorization codes
     // and bearer tokens would cross the network in the clear. Listing the
     // addresses anyway would hand someone four URLs that all 404 and no clue why,
     // so the whole group is omitted and the panel says what is missing instead.
@@ -959,7 +959,7 @@ function wppilot_dashboard_endpoint_rows(): array
 }
 
 // The old `wppilot-dashboard` screen is gone; the home screen is the
-// `wppilot-connect` page, the parent slug every other WPPilot screen hangs off.
+// `wppilot-connect` page, the parent slug every other GoBuildWP screen hangs off.
 //
 // Requests to the old dashboard URL are forwarded rather than 404ed, because it
 // was a real page people could have bookmarked.

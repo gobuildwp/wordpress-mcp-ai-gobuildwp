@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -66,13 +66,13 @@ function wppilot_ability_meta(mixed $ability): array
 }
 
 /**
- * Whether an ability is published to WPPilot's MCP surface.
+ * Whether an ability is published to GoBuildWP's MCP surface.
  *
- * `mcp.public` is WPPilot's own flag and stays authoritative. WordPress 7.1 added a
+ * `mcp.public` is GoBuildWP's own flag and stays authoritative. WordPress 7.1 added a
  * channel-independent `public` flag that is resolved to a boolean for every ability whether or
  * not one was supplied at registration, and core's documented precedence for a single channel
  * is "the channel's own flag, then `public`, then false". Following that same order here means
- * an ability registered by someone who never heard of WPPilot, with nothing but
+ * an ability registered by someone who never heard of GoBuildWP, with nothing but
  * `'public' => true`, is reachable over MCP — while an ability that sets
  * `mcp.public => false` stays hidden even when it is public everywhere else.
  *

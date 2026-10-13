@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 /**
  * Internal compatibility contract shared by metadata, startup gates, and agent context.
  */
-define(constant_name: 'WPPILOT_VERSION', value: '1.18.5');
+define(constant_name: 'WPPILOT_VERSION', value: '1.18.6');
 define(constant_name: 'WPPILOT_REST_API_VERSION', value: 1);
 define(constant_name: 'WPPILOT_MINIMUM_WORDPRESS_VERSION', value: '6.9');
 // The newest WordPress this release was exercised against. Advertised rather
@@ -46,7 +46,7 @@ function wppilot_rest_api_features(): array
         'mcp_legacy_protocol' => true,
         'mcp_modern_protocol' => true,
         // Not implemented, and advertised as false rather than omitted so a
-        // client can tell "absent" from "unsupported": WPPilot has no
+        // client can tell "absent" from "unsupported": GoBuildWP has no
         // change-notification producer, so there is nothing to subscribe to.
         'mcp_subscriptions' => false,
         'mcp_tasks_extension' => false,
@@ -72,7 +72,7 @@ function wppilot_wordpress_version(): string
 }
 
 /**
- * Whether this WordPress installation has the minimum Abilities API generation WPPilot supports.
+ * Whether this WordPress installation has the minimum Abilities API generation GoBuildWP supports.
  */
 function wppilot_wordpress_abilities_supported(?string $wordpress_version = null): bool
 {
@@ -85,7 +85,7 @@ function wppilot_wordpress_abilities_supported(?string $wordpress_version = null
 /**
  * What the host WordPress offers, detected rather than inferred from its version.
  *
- * Each entry is a capability WPPilot changes its behaviour for. They are probed by asking for
+ * Each entry is a capability GoBuildWP changes its behaviour for. They are probed by asking for
  * the function or class that implements them, not by comparing version strings, because a
  * feature plugin, a backport, or a site running a release candidate can all put a capability
  * on a WordPress whose reported version says otherwise — and the version is the one thing here
@@ -95,10 +95,10 @@ function wppilot_wordpress_abilities_supported(?string $wordpress_version = null
  *   see abilities that discovery filters hide (WordPress 6.9+).
  * - `abilities_query_args`: `wp_get_abilities()` accepts filtering arguments (WordPress 7.1+).
  * - `abilities_lifecycle_filters`: the execution lifecycle can be mediated, so the safety
- *   profile applies to every caller and not only to WPPilot's own transports (WordPress 7.1+).
+ *   profile applies to every caller and not only to GoBuildWP's own transports (WordPress 7.1+).
  * - `json_schema_client_prep`: core can translate a WordPress schema into a client-facing one
  *   (WordPress 7.1+).
- * - `ai_client`: the AI Client is present, which is what WPPilot Chat runs on (WordPress 7.0+).
+ * - `ai_client`: the AI Client is present, which is what GoBuildWP Chat runs on (WordPress 7.0+).
  *
  * @return array<string, bool>
  */
@@ -182,7 +182,7 @@ function wppilot_render_wordpress_compatibility_notice(): void
         sprintf(
             /* translators: 1: minimum required WordPress version, 2: installed WordPress version */
             esc_html__(
-                'WPPilot requires WordPress %1$s or newer for the Abilities API. WordPress %2$s is installed, so WPPilot Ability and REST registration is disabled.',
+                'GoBuildWP requires WordPress %1$s or newer for the Abilities API. WordPress %2$s is installed, so GoBuildWP Ability and REST registration is disabled.',
                 domain: 'wppilot',
             ),
             esc_html(WPPILOT_MINIMUM_WORDPRESS_VERSION),

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ function regressions(): array
 {
     $found = [];
 
-    // Application Passwords turned off while WPPilot passwords have actually been used.
+    // Application Passwords turned off while GoBuildWP passwords have actually been used.
     $status = \wppilot_app_passwords_status();
     if (!$status['available'] && $status['reason'] === 'filtered') {
         foreach (\wppilot_get_mcp_passwords() as $password) {
@@ -86,7 +86,7 @@ function maybe_render(): void
     $connect_url = admin_url('admin.php?page=wppilot-connect');
     echo
         '<div class="notice notice-error"><p><strong>'
-            . esc_html__('WPPilot connections are broken.', domain: 'wppilot')
+            . esc_html__('GoBuildWP connections are broken.', domain: 'wppilot')
             . '</strong></p>'
     ;
     foreach ($found as $message) {

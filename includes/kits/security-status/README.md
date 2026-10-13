@@ -39,11 +39,11 @@ One provider throwing is reported against that provider and never hides the othe
 `Runtime\can_run()` plus `manage_options`, and `Runtime\unclaimed()` (runtime 1.2).
 
 <!-- kit-export:omit -->
-Inside WPPilot this kit carries the three reads WPPilot Pro 1.10.0's `security` kit registered;
+Inside GoBuildWP this kit carries the three reads GoBuildWP Pro 1.10.0's `security` kit registered;
 Pro keeps the hardening plan and apply, IP blocks and scans. The output is kept identical to
 Pro's, which still registers these names first on a site running Pro 1.10.0.
 
 ## Tests
 
-`tests/Unit/Kits/SecurityStatus/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/SecurityStatus/` in the GoBuildWP repository (not shipped).
 <!-- /kit-export:omit -->

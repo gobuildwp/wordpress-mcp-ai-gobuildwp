@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -212,7 +212,7 @@ final class WpSource implements Source
     }
 
     /**
-     * Every provider the host's `seo-provider-registry` extension point lists (WPPilot Pro offers
+     * Every provider the host's `seo-provider-registry` extension point lists (GoBuildWP Pro offers
      * one; anywhere else it is null and the audit falls back to meta keys).
      *
      * @return array<string, array<string, mixed>>

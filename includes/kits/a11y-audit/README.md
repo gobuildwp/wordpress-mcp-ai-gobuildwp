@@ -19,7 +19,7 @@ it as plain JSON. `get-media-image` works either way; only the first costs no to
 image as text.
 
 <!-- kit-export:omit -->
-WPPilot's modern transport and its legacy adapter path both convert it
+GoBuildWP's modern transport and its legacy adapter path both convert it
 (`includes/mcp/transport.php`: `tool_result()`, `legacy_image_result()`).
 <!-- /kit-export:omit -->
 
@@ -39,6 +39,6 @@ instructions.
 <!-- kit-export:omit -->
 ## Tests
 
-`tests/Unit/Kits/A11yAudit/` in the WPPilot repository (not shipped), with
+`tests/Unit/Kits/A11yAudit/` in the GoBuildWP repository (not shipped), with
 `tests/Unit/Kits/media-doubles.php`.
 <!-- /kit-export:omit -->

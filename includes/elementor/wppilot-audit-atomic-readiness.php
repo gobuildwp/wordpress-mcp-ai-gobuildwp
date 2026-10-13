@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 /**
  * Element classes, worst to best, for the per-document verdict.
  *
- * `classic_mapped` is the interesting one: a classic widget WPPilot knows how
+ * `classic_mapped` is the interesting one: a classic widget GoBuildWP knows how
  * to turn into an atomic element. It is not atomic today, but it is not a
  * blocker either, and collapsing it into `classic` would report a site as
  * hopeless when it is an afternoon's conversion.
@@ -128,7 +128,7 @@ function elementor_audit_atomic_readiness(array $input): array|\WP_Error
     if (!el_min_runtime_available()) {
         return new \WP_Error(
             'wppilot_elementor_unavailable',
-            __('Elementor is not active, or is older than the minimum version WPPilot supports.', domain: 'wppilot'),
+            __('Elementor is not active, or is older than the minimum version GoBuildWP supports.', domain: 'wppilot'),
             ['status' => 400],
         );
     }
@@ -520,7 +520,7 @@ function el_audit_report(
             'atomic_or_mappable' => $coverage,
             'atomic_only' => $total === 0 ? 0.0 : round($counts['atomic'] / $total, 4),
             'explanation' => __(
-                'atomic_or_mappable is the share of elements that are already atomic or that WPPilot can convert to an atomic element. atomic_only is the share an atomic-only tool can work with today, with no conversion.',
+                'atomic_or_mappable is the share of elements that are already atomic or that GoBuildWP can convert to an atomic element. atomic_only is the share an atomic-only tool can work with today, with no conversion.',
                 domain: 'wppilot',
             ),
         ],
@@ -624,7 +624,7 @@ function el_audit_next_step(array $counts, int $total): string
     }
 
     return __(
-        'The classic elements have to be rebuilt as atomic elements. WPPilot Pro converts them; otherwise this is manual work in the editor, and the blockers list is the order to do it in.',
+        'The classic elements have to be rebuilt as atomic elements. GoBuildWP Pro converts them; otherwise this is manual work in the editor, and the blockers list is the order to do it in.',
         domain: 'wppilot',
     );
 }

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -23,15 +23,15 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * The kit host for a plugin that is not WPPilot.
+ * The kit host for a plugin that is not GoBuildWP.
  *
- * Supplies from nothing what WPPilot supplies from its own machinery: a capability check, a
+ * Supplies from nothing what GoBuildWP supplies from its own machinery: a capability check, a
  * safety profile, the confirm flag on destructive calls (there is no gate pipeline to demand it),
  * the `min_profile` rule, a change ledger, and two abilities to read and undo that ledger.
  *
  * Those two abilities are named from the host id at runtime rather than written out, because a
- * literal `wp_register_ability('wppilot/…')` anywhere under includes/ is counted as a WPPilot
- * ability by every verifier and by the website, and these never register inside WPPilot.
+ * literal `wp_register_ability('wppilot/…')` anywhere under includes/ is counted as a GoBuildWP
+ * ability by every verifier and by the website, and these never register inside GoBuildWP.
  */
 final class StandaloneHost implements Host, ProfileGate
 {

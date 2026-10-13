@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,6 +17,7 @@ use function WPPilot\Mcp\advertise_confirmation;
 use function WPPilot\Mcp\empty_input_for;
 use function WPPilot\Mcp\is_mcp_route;
 use function WPPilot\Mcp\normalize_schema;
+use function WPPilot\Mcp\route_is_served;
 use function WPPilot\Mcp\tool_name;
 
 /**
@@ -36,14 +37,19 @@ final class TransportTest extends TestCase
         return [
             'wppilot endpoint' => ['/mcp/wppilot'],
             'wppilot subpath' => ['/mcp/wppilot/messages'],
+            // The OAuth mirror advertises the modern revision in its protected-resource
+            // metadata, so it must be claimed like the canonical endpoint.
+            'oauth endpoint' => ['/mcp/wppilot-oauth'],
+            'oauth subpath' => ['/mcp/wppilot-oauth/x'],
             'adapter default' => ['/mcp/mcp-adapter-default-server'],
             'adapter subpath' => ['/mcp/mcp-adapter-default-server/x'],
         ];
     }
 
     /**
-     * The dispatcher must not intercept WPPilot's own REST surface or the OAuth
-     * endpoints — those are ordinary routes with their own handlers.
+     * The dispatcher must not intercept GoBuildWP's own REST surface or the OAuth
+     * protocol endpoints under /wppilot/v1/oauth — those are ordinary routes with
+     * their own handlers.
      */
     #[DataProvider('nonMcpRoutes')]
     public function testUnrelatedRoutesAreLeftAlone(string $route): void
@@ -55,13 +61,30 @@ final class TransportTest extends TestCase
     public static function nonMcpRoutes(): array
     {
         return [
-            'oauth' => ['/mcp/wppilot-oauth'],
-            'oauth subpath' => ['/mcp/wppilot-oauth/token'],
+            'oauth token endpoint' => ['/wppilot/v1/oauth/token'],
+            'oauth lookalike' => ['/mcp/wppilot-oauthx'],
             'wppilot rest' => ['/wppilot/v1/run'],
             'wp core' => ['/wp/v2/posts'],
             'prefix lookalike' => ['/mcp/wppilot-other'],
             'root' => ['/'],
         ];
+    }
+
+    /**
+     * The OAuth server exists only where the OAuth transport is allowed. The dispatcher runs
+     * before route matching, so it asks the same question rather than answering on a route
+     * legacy clients get a 404 from. The suite's home_url() is HTTPS, where OAuth is allowed.
+     */
+    public function testOAuthRouteIsServedOnlyWhereTheOAuthTransportIs(): void
+    {
+        require_once dirname(__DIR__, 2) . '/includes/admin/connect-methods.php';
+
+        self::assertTrue(route_is_served('/mcp/wppilot'));
+        require_once dirname(__DIR__, 2) . '/includes/mcp/adapter-origin.php';
+        // The default server's route is GoBuildWP's only when its adapter copy is the loaded one.
+        self::assertSame(\wppilot_owns_mcp_adapter(), route_is_served('/mcp/mcp-adapter-default-server'));
+        self::assertSame(\wppilot_oauth_transport_allowed(), route_is_served('/mcp/wppilot-oauth'));
+        self::assertTrue(route_is_served('/mcp/wppilot-oauth'));
     }
 
     /**

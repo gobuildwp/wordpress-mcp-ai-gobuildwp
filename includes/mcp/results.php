@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ const CACHEABLE_METHODS = [
 /**
  * Freshness hint for list and read results, in milliseconds.
  *
- * Deliberately short. A WPPilot tool list changes whenever an administrator
+ * Deliberately short. A GoBuildWP tool list changes whenever an administrator
  * toggles an ability, switches the safety profile, or activates a plugin that
  * registers new ones — none of which produce a notification a cache could
  * observe. A minute bounds how long a client can act on a stale surface.
@@ -67,11 +67,11 @@ const TTL_LIST_MS = 60000;
 const TTL_DISCOVER_MS = 300000;
 
 /**
- * Cache visibility for every WPPilot result.
+ * Cache visibility for every GoBuildWP result.
  *
  * Always private, and not a placeholder. `public` is only permissible when a
  * result is provably identical for every requester and carries nothing
- * sensitive. WPPilot's surface fails that test in three independent ways: the
+ * sensitive. GoBuildWP's surface fails that test in three independent ways: the
  * ability list is filtered by the connected account's WordPress capabilities,
  * it is further filtered by the active safety profile, and individual
  * abilities can be switched off per site. A shared intermediary caching one

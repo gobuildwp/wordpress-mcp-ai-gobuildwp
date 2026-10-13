@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -94,7 +94,7 @@ final class ProfileGateTest extends TestCase
     }
 
     /**
-     * Inside WPPilot the answer is WPPilot's own profile rule, read from its setting.
+     * Inside GoBuildWP the answer is GoBuildWP's own profile rule, read from its setting.
      */
     public function testTheWPPilotHostAnswersWithItsOwnProfile(): void
     {

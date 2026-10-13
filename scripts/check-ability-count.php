@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -16,7 +16,7 @@ declare(strict_types=1);
  * the website's product:sync and the release verifiers count: distinct literal `wppilot/…` names
  * passed to wp_register_ability() or to the WordPress module's register_core_ability() wrapper,
  * anywhere under includes/. Names built at run time are not counted, deliberately; that is how
- * the standalone kit host keeps its `<id>/kit-*` abilities out of WPPilot's total.
+ * the standalone kit host keeps its `<id>/kit-*` abilities out of GoBuildWP's total.
  *
  * Usage: php scripts/check-ability-count.php
  */

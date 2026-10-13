@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -129,7 +129,7 @@ function wordpress_search_images(array $input): array|WP_Error
 
     $response = wp_remote_get(add_query_arg($args, WPPILOT_OPENVERSE_ENDPOINT), [
         'timeout' => 15,
-        'user-agent' => 'WPPilot/' . (defined('WPPILOT_VERSION') ? WPPILOT_VERSION : 'dev') . ' (https://wppilot.co)',
+        'user-agent' => 'GoBuildWP/' . (defined('WPPILOT_VERSION') ? WPPILOT_VERSION : 'dev') . ' (https://gobuildwp.com)',
     ]);
     if (is_wp_error($response)) {
         return new WP_Error('wppilot_openverse_unreachable', sprintf(

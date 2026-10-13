@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -96,7 +96,7 @@ function redirect_to_authorization_page(): void
     $url = add_query_arg($parameters, admin_url('admin.php?page=wppilot-oauth-authorize'));
     nocache_headers();
     if (!wp_safe_redirect($url)) {
-        wp_die(esc_html__('Could not open the WPPilot authorization page.', domain: 'wppilot'), title: '', args: [
+        wp_die(esc_html__('Could not open the GoBuildWP authorization page.', domain: 'wppilot'), title: '', args: [
             'response' => 500,
         ]);
     }

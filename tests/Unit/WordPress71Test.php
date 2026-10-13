@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -16,7 +16,7 @@ use WP_Ability;
 use function WPPilot\Mcp\normalize_schema;
 
 /**
- * What WordPress 7.1 changed under WPPilot, and what WPPilot decided to do about it.
+ * What WordPress 7.1 changed under GoBuildWP, and what GoBuildWP decided to do about it.
  *
  * Each of these is a decision that stays invisible in a running site until it is wrong: an
  * exposure rule that silently drops a third-party ability, an enforcement loop reading a list

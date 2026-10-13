@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -472,7 +472,7 @@ final class BackupStatusTest extends TestCase
     // Last: it leaves the names claimed in the shared registry, which the tests above need free.
     public function testTheKitStandsAsideWhenAnotherPluginRegisteredTheNamesFirst(): void
     {
-        // WPPilot Pro 1.10.0 registers both at priority 10, before the kit loader's 20.
+        // GoBuildWP Pro 1.10.0 registers both at priority 10, before the kit loader's 20.
         foreach (['wppilot/backup-status', 'wppilot/backup-list'] as $name) {
             if (!\wp_has_ability($name)) {
                 \wp_register_ability($name, ['label' => 'Registered first elsewhere']);

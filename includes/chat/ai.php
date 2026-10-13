@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: talking to the model.
+ * GoBuildWP Chat: talking to the model.
  *
  * Builds the message history in the AI Client's shape, runs a generation
  * step, and parses the response back into Chat's own message/tool-call
@@ -20,13 +20,13 @@ if (!defined('ABSPATH')) {
 function wppilot_chat_system_instruction(): string
 {
     $lines = [
-        'You are WPPilot Chat inside WordPress admin.',
+        'You are GoBuildWP Chat inside WordPress admin.',
         'Your abilities are not all declared up front. Discover them first: call discover-abilities to get the list of ability names, then call get-ability-info with an exact ability_name to read its input schema. Then call execute-ability with that exact ability_name and parameters matching the schema.',
         'Copy ability names verbatim from discover-abilities. Never construct a name from a category or guess it; if execute-ability reports an unknown ability, call discover-abilities again and use an exact name.',
         'Prefer a specific, scoped ability (for example updating a post or a product) over general code execution. Reach for code execution only when no scoped ability fits the task.',
         'Do not emit JSON-encoded tool calls in text.',
         'execute-ability must include confirmation_reason: a very short, single-line question for the user, ideally under 12 words. Discovery calls do not need it.',
-        'This WPPilot Chat page embeds the Gutenberg finalizer runtime needed to serialize native/static Gutenberg blocks. For Gutenberg queue abilities, do not ask the user to open or keep a separate Block Editor Queue/finalization page while this dashboard is open. If finalizer_runtime.online is false, ask the user to reload WPPilot Chat; after enabling a batch, use Gutenberg pending-batch status abilities until it is finalized, failed, or conflicted.',
+        'This GoBuildWP Chat page embeds the Gutenberg finalizer runtime needed to serialize native/static Gutenberg blocks. For Gutenberg queue abilities, do not ask the user to open or keep a separate Block Editor Queue/finalization page while this dashboard is open. If finalizer_runtime.online is false, ask the user to reload GoBuildWP Chat; after enabling a batch, use Gutenberg pending-batch status abilities until it is finalized, failed, or conflicted.',
         'If the task is complete, answer normally in text.',
     ];
 
@@ -37,7 +37,7 @@ function wppilot_chat_system_instruction(): string
 }
 
 /**
- * The shared WPPilot server instructions (environment, WordPress-native guidance,
+ * The shared GoBuildWP server instructions (environment, WordPress-native guidance,
  * available skills, and the administrator Context), as sent to MCP agents. Returns
  * an empty string when the builder is unavailable.
  */

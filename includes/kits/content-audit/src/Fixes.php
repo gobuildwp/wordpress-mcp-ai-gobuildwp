@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ final class Fixes
 
     /**
      * SEO plugins recognised by the meta keys they store per post, keyed by the slug the host's
-     * SEO provider registry (WPPilot Pro) uses for the same plugin.
+     * SEO provider registry (GoBuildWP Pro) uses for the same plugin.
      *
      * Where the host offers that registry, the audit reads through it instead (see
      * Source::seo_providers()), and these keys only label the evidence. Without it, detection is

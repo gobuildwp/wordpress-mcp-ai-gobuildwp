@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -19,10 +19,10 @@ if (!defined('ABSPATH')) {
  *
  *   1. site-kit        Site Kit by Google's PageSpeed Insights module, through Site Kit's own
  *                      REST route, when the module is connected and Site Kit lets this user read
- *                      it. Google is called with Site Kit's credentials; WPPilot never sees them.
- *   2. cloud           The WPPilot Cloud proxy, which holds WPPilot's own PageSpeed key. Works
+ *                      it. Google is called with Site Kit's credentials; GoBuildWP never sees them.
+ *   2. cloud           The GoBuildWP Cloud proxy, which holds GoBuildWP's own PageSpeed key. Works
  *                      whether or not the site is paired with the Cloud.
- *   3. google-api-key  Google directly, with a key the site owner saved in WPPilot settings.
+ *   3. google-api-key  Google directly, with a key the site owner saved in GoBuildWP settings.
  *   4. google-keyless  Google directly with no key. Its quota is shared by every keyless caller
  *                      on the internet and answers 429 for much of the day, so it is last.
  *
@@ -313,7 +313,7 @@ function site_kit_get(string $route, array $params): mixed
 }
 
 /**
- * The WPPilot Cloud proxy (pairing protocol §8).
+ * The GoBuildWP Cloud proxy (pairing protocol §8).
  *
  * POST {cloud}/api/pagespeed/v1/run with JSON {url, strategy, site_url}; 200 with the shared shape,
  * cached by the Cloud for an hour per (url, strategy); errors {error: {code, message,
@@ -406,7 +406,7 @@ function cloud_post(string $base, string $body, array $extra_headers, string $ur
 }
 
 /**
- * The Cloud's base URL: the host's (WPPilot's own setting, so WPPILOT_CLOUD_URL points both
+ * The Cloud's base URL: the host's (GoBuildWP's own setting, so WPPILOT_CLOUD_URL points both
  * pairing and this at a local Cloud), else the default, through this kit's filter either way.
  */
 function cloud_url(): string

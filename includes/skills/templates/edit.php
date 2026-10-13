@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -196,7 +196,7 @@ $heading_title = match (true) {
                                     esc_html__('Just say to your AI: %s', domain: 'wppilot'),
                                     '<em>“'
                                     . esc_html__(
-                                        'Create a WPPilot skill that builds landing pages from a brief.',
+                                        'Create a GoBuildWP skill that builds landing pages from a brief.',
                                         domain: 'wppilot',
                                     )
                                     . '”</em>',

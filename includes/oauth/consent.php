@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -87,7 +87,7 @@ function resolve_pending(): ?array
         return null;
     }
     if (!\wppilot_current_user_can_manage()) {
-        wp_die('You are not allowed to authorize WPPilot applications.', title: '', args: ['response' => 403]);
+        wp_die('You are not allowed to authorize GoBuildWP applications.', title: '', args: ['response' => 403]);
         return null;
     }
 
@@ -210,11 +210,11 @@ function render_post(string $token, array $pending, string $redirect_uri, string
         delete_transient(Authorize\PENDING_PREFIX . $token);
         if (\wppilot_debug_logging_enabled()) {
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log('WPPilot OAuth: ' . $e->getMessage());
+            error_log('GoBuildWP OAuth: ' . $e->getMessage());
         }
         wp_die(
             esc_html__(
-                'WPPilot could not create the OAuth signing keys for this site. Run "wp wppilot oauth-keys generate" from WP-CLI to create the keys, then authorize again. With WP_DEBUG enabled, the PHP error log records the OpenSSL reason.',
+                'GoBuildWP could not create the OAuth signing keys for this site. Run "wp wppilot oauth-keys generate" from WP-CLI to create the keys, then authorize again. With WP_DEBUG enabled, the PHP error log records the OpenSSL reason.',
                 domain: 'wppilot',
             ),
             title: '',
@@ -296,7 +296,7 @@ function consent_grant_details(string $scope): array
     return [
         'label' => __('full access to your WordPress site', domain: 'wppilot'),
         'description' => __(
-            'Full access permits execution of WPPilot capabilities through MCP and REST, including REST-visible abilities registered by compatible third-party plugins.',
+            'Full access permits execution of GoBuildWP capabilities through MCP and REST, including REST-visible abilities registered by compatible third-party plugins.',
             domain: 'wppilot',
         ),
         'risks' => [

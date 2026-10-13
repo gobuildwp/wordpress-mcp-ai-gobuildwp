@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -63,7 +63,7 @@ function el_elementor_version(): string
  *
  * The version is checked alongside the class because an install one minor
  * release too old fails deep inside a call with a message about a missing
- * method, which reads as a WPPilot bug rather than as an unsupported version.
+ * method, which reads as a GoBuildWP bug rather than as an unsupported version.
  */
 function el_min_runtime_available(): bool
 {

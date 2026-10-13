@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('wppilot/list-sessions', [
     'label' => __('List Agent Sessions', domain: 'wppilot'),
     'description' => __(
-        'Lists agent sessions recorded in the WPPilot change ledger, most recently active first: one per MCP connection (or per stdio process, or per agent credential and client until it has been idle for 30 minutes). Each shows the agent, the time span, and how many of its changes can be undone, are undone, or cannot be undone. current_session_id is the session this call belongs to. Pass session_id to get that session\'s changes and what undo-session and redo-session would do right now: conflicts (targets changed by something else since), changes that cannot be undone or redone, and whether a run is ready.',
+        'Lists agent sessions recorded in the GoBuildWP change ledger, most recently active first: one per MCP connection (or per stdio process, or per agent credential and client until it has been idle for 30 minutes). Each shows the agent, the time span, and how many of its changes can be undone, are undone, or cannot be undone. current_session_id is the session this call belongs to. Pass session_id to get that session\'s changes and what undo-session and redo-session would do right now: conflicts (targets changed by something else since), changes that cannot be undone or redone, and whether a run is ready.',
         domain: 'wppilot',
     ),
     'category' => 'changes',
@@ -68,7 +68,7 @@ $wppilot_session_run_schema = [
 wp_register_ability('wppilot/undo-session', [
     'label' => __('Undo Agent Session', domain: 'wppilot'),
     'description' => __(
-        'Undoes every change one agent session made, newest first, each restored and verified against its before-image. Before touching anything it checks that no target was changed by something else after the session wrote to it; if one was, nothing is changed and the conflicts are listed. It stops at the first change that fails verification and reports what was undone, what failed and what was not attempted. Changes that cannot be undone are listed, never skipped silently: the run is refused unless allow_partial is true. Check wppilot/list-sessions with the session_id first to see the plan. Every undo can be put back with wppilot/redo-session. Requires explicit confirmation.',
+        'Undoes every change one agent session made, newest first, each restored and verified against its before-image. Before touching anything it checks that no target was changed by something else after the session wrote to it; if one was, nothing is changed and the conflicts are listed. It stops at the first change that fails verification and reports what was undone, what failed and what was not attempted. Changes that cannot be undone are listed, never skipped silently: the run is refused unless allow_partial is true. Check wppilot/list-sessions with the session_id first to see the plan. Undone changes can usually be put back with wppilot/redo-session; a created term or comment the undo deleted, or a target too large to copy, cannot be redone. Requires explicit confirmation.',
         domain: 'wppilot',
     ),
     'category' => 'changes',

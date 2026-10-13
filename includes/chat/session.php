@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,7 +8,7 @@ declare(strict_types=1);
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Chat sessions live in a custom table (see schema in storage.php); there is no WP API for it. Identifiers are prefix-built constants, values are prepared.
 
 /**
- * WPPilot Chat: the session record — reading, mutating, and persisting the
+ * GoBuildWP Chat: the session record — reading, mutating, and persisting the
  * conversation shape.
  *
  * This is the in-memory view. The database layer is storage.php.

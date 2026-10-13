@@ -1,11 +1,12 @@
-# WPPilot documentation
+# GoBuildWP documentation
 
 <!-- current-releases:start -->
-Current releases: **WPPilot Free 1.18.5 / Pro 1.12.3**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.18.6 / Pro 1.12.4**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
+
 The technical documentation that ships with the free plugin. Task-based guides
-for site owners live at <https://wppilot.co/docs>; these files describe how the
+for site owners live at <https://gobuildwp.com/docs>; these files describe how the
 server itself behaves, so they can be read next to the code.
 
 | Document | What it covers |

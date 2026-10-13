@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use function WPPilot\Mcp\success;
  * Every call still runs through WPPilot\Mcp\call_tool(): the safety profile, confirmation,
  * rate limit and ledger apply to a task-augmented call exactly as to a plain one.
  *
- * `input_required` is never produced: no WPPilot job pauses for input.
+ * `input_required` is never produced: no GoBuildWP job pauses for input.
  *
  * Tasks are per-user. Every read and cancel checks the task's owner against the current user and
  * answers "not found" for anyone else's, so a task id is not an oracle for other users' work.
@@ -69,7 +69,7 @@ const META_RELATED_TASK = 'io.modelcontextprotocol/related-task';
 /** `_meta` key on a CreateTaskResult giving the model something to say while the task runs. */
 const META_MODEL_IMMEDIATE_RESPONSE = 'io.modelcontextprotocol/model-immediate-response';
 
-/** WPPilot's own `_meta` key for a job's fractional progress (0..1). */
+/** GoBuildWP's own `_meta` key for a job's fractional progress (0..1). */
 const META_PROGRESS = 'co.wppilot/progress';
 
 const STATUS_WORKING = 'working';

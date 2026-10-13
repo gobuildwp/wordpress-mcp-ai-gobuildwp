@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -1139,7 +1139,7 @@ function wppilot_snapshot_term(int $term_id, string $taxonomy): ?array
  * Capture a comment's editable fields.
  *
  * The commenter's email and IP are deliberately excluded: the ledger is readable
- * by any WPPilot administrator, and restoring a comment's text never needs them.
+ * by any GoBuildWP administrator, and restoring a comment's text never needs them.
  *
  * @return array<string, mixed>|null
  */
@@ -1202,7 +1202,7 @@ function wppilot_snapshot_menu_order(int $menu_id): ?array
  * review moves the rating counts. A before-image must leave them out, or undoing a price edit a
  * week later writes the old sales count back over every order placed since. Listed in
  * `excluded_meta_keys` instead, so the restore neither deletes nor rewrites them and its own check
- * does not read the live count as drift. WPPilot Pro hides the same keys during its rollbacks.
+ * does not read the live count as drift. GoBuildWP Pro hides the same keys during its rollbacks.
  */
 function wppilot_post_meta_is_live_counter(string $post_type, string $key): bool
 {
@@ -2176,7 +2176,7 @@ function wppilot_restore_order_status(array $snapshot): array|WP_Error
         ));
     }
     $status = sanitize_key((string) ($values['status'] ?? ''));
-    $order->update_status($status, __('Order status restored by WPPilot rollback.', domain: 'wppilot'), true);
+    $order->update_status($status, __('Order status restored by GoBuildWP rollback.', domain: 'wppilot'), true);
     $observed = ['order_id' => $order->get_id(), 'status' => $order->get_status()];
     $expected = (string) ($snapshot['fingerprint'] ?? '');
     $actual = wppilot_snapshot_fingerprint($observed);

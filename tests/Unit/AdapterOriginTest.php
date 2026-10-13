@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -10,8 +10,8 @@ namespace WPPilot\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Whose copy of the MCP Adapter is loaded decides whether WPPilot may rename the
- * adapter's default server. Get it wrong in the permissive direction and WPPilot
+ * Whose copy of the MCP Adapter is loaded decides whether GoBuildWP may rename the
+ * adapter's default server. Get it wrong in the permissive direction and GoBuildWP
  * takes a route another plugin owns; get it wrong in the strict direction and
  * `/wp-json/mcp/wppilot` never exists. Both failures are silent on the site that
  * has them, so the classification is worth testing directly.

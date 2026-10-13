@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -18,7 +18,7 @@ function finalizer_runtime_startup_instruction(): string
     $runtime = finalizer_runtime_status();
     if (($runtime['online'] ?? false) === true) {
         return sprintf(
-            'The WPPilot Block Editor Queue page is open. Keep %s open while Gutenberg static/native changes are queued and finalized. You can stream %s with curl -N, or poll %s with curl, to check whether the page is still online. If a later status shows finalizer_runtime.online=false, ask the user to reopen it before treating queued changes as live.',
+            'The GoBuildWP Block Editor Queue page is open. Keep %s open while Gutenberg static/native changes are queued and finalized. You can stream %s with curl -N, or poll %s with curl, to check whether the page is still online. If a later status shows finalizer_runtime.online=false, ask the user to reopen it before treating queued changes as live.',
             finalizer_dashboard_url(),
             (string) ($runtime['sse_url'] ?? finalizer_runtime_sse_url()),
             (string) ($runtime['poll_url'] ?? finalizer_runtime_poll_url()),
@@ -26,7 +26,7 @@ function finalizer_runtime_startup_instruction(): string
     }
 
     return sprintf(
-        'The WPPilot Block Editor Queue page is not currently online. Before queueing Gutenberg static/native changes, ask the user to open %s in wp-admin and keep it open while you work. Stream %s with curl -N, or poll %s with curl; if it stays or becomes offline, ask the user to reopen it before treating queued changes as live.',
+        'The GoBuildWP Block Editor Queue page is not currently online. Before queueing Gutenberg static/native changes, ask the user to open %s in wp-admin and keep it open while you work. Stream %s with curl -N, or poll %s with curl; if it stays or becomes offline, ask the user to reopen it before treating queued changes as live.',
         finalizer_dashboard_url(),
         (string) ($runtime['sse_url'] ?? finalizer_runtime_sse_url()),
         (string) ($runtime['poll_url'] ?? finalizer_runtime_poll_url()),

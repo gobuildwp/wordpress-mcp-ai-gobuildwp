@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -415,7 +415,7 @@ final class ChangeLogTableTest extends TestCase
         $this->activate();
         wppilot_store_change($this->row('free-row'));
 
-        // What WPPilot Pro's WooCommerce bulk ledger does: read the log, append, save the option.
+        // What GoBuildWP Pro's WooCommerce bulk ledger does: read the log, append, save the option.
         $log = wppilot_get_change_log();
         $log[] = $this->row('pro-row');
         $written = wppilot_change_intercept_option_write($log, false);
@@ -425,7 +425,7 @@ final class ChangeLogTableTest extends TestCase
     }
 
     /**
-     * WPPilot Pro annotates the row being stored from `pre_update_option_wppilot_change_log`.
+     * GoBuildWP Pro annotates the row being stored from `pre_update_option_wppilot_change_log`.
      */
     public function testTheOptionsPreUpdateFilterStillSeesNewRows(): void
     {

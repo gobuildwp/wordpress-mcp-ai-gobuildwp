@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Boot the kit runtime on WPPilot's host and load the free kits.
+ * Boot the kit runtime on GoBuildWP's host and load the free kits.
  *
  * Kits live in includes/kits/<slug>/ rather than beside the modules they resemble, because every
  * verifier and the website's product:sync already scan includes/ for literal ability names: a
@@ -34,7 +34,7 @@ function boot(): void
 }
 
 /**
- * Load kits from another directory — Pro's includes/kits — on WPPilot's host.
+ * Load kits from another directory — Pro's includes/kits — on GoBuildWP's host.
  *
  * @param list<string> $only Slugs to load; empty loads every kit found there.
  * @return array{loaded: list<string>, skipped: array<string, string>}
@@ -60,7 +60,7 @@ function report(): array
 
 require_once __DIR__ . '/_runtime/runtime.php';
 require_once __DIR__ . '/_runtime/hosts/wppilot.php';
-// The scheduled-audits kit's WPPilot side: it answers whether WPPilot Pro 1.10.0 still runs this
+// The scheduled-audits kit's GoBuildWP side: it answers whether GoBuildWP Pro 1.10.0 still runs this
 // site's routines before the kits boot, so it loads here, on every request, not with the screens.
 require_once dirname(__DIR__) . '/admin/routines.php';
 

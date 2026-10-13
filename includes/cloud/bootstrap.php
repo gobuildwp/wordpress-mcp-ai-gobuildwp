@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Cloud: pairing this site with an app.wppilot.co workspace.
+ * GoBuildWP Cloud: pairing this site with an app.gobuildwp.com workspace.
  *
  * The wire protocol lives in the platform repository (docs/pairing-protocol.md)
  * and both sides implement it exactly; section numbers in comments here refer
@@ -22,7 +22,7 @@ declare(strict_types=1);
  *   policy.php      §7     safety settings pushed from the Cloud, only as far as the owner allows
  *   rate-limit.php  §6     the Cloud credential's write budget
  *
- * What the Cloud holds is an ordinary WPPilot access token, minted on this
+ * What the Cloud holds is an ordinary GoBuildWP access token, minted on this
  * site with the scope and ceiling the account owner chose. It passes every
  * check any other token does - safety profile, ceiling, scope, confirmations,
  * the owner's capability - so the site stays the final authority on what the
@@ -33,7 +33,13 @@ if (!defined('ABSPATH')) {
     exit();
 }
 
-const WPPILOT_CLOUD_DEFAULT_URL = 'https://app.wppilot.co';
+/**
+ * Where a new pairing starts. Only §1 (begin) reads it: a pending pairing and the link it becomes
+ * keep the `cloud_url` they began with, and the heartbeat, the unlink and the signed PageSpeed call
+ * all use that stored value. A site paired before the move to gobuildwp.com therefore keeps calling
+ * app.wppilot.co, which serves the same Cloud; the signature covers only the body, not the host.
+ */
+const WPPILOT_CLOUD_DEFAULT_URL = 'https://app.gobuildwp.com';
 
 /** The pairing record, §3.4. Not autoloaded: nothing on a front-end request reads it. */
 const WPPILOT_CLOUD_LINK_OPTION = 'wppilot_cloud_link';
@@ -56,7 +62,7 @@ const WPPILOT_CLOUD_PAIR_TTL = 600;
 const WPPILOT_CLOUD_RATE_LIMIT_FLOOR = 600;
 
 /** Name of the access token the Cloud holds, §3.1. */
-const WPPILOT_CLOUD_TOKEN_NAME = 'WPPilot Cloud';
+const WPPILOT_CLOUD_TOKEN_NAME = 'GoBuildWP Cloud';
 
 require_once __DIR__ . '/pairing.php';
 require_once __DIR__ . '/signing.php';

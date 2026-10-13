@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -168,7 +168,7 @@ function render_gutenberg_finalizer_dashboard(): void
 
     <section class="summary-panel" aria-live="polite">
         <p><?php esc_html_e(
-            'This background utility page is used by WPPilot to safely validate and serialize Gutenberg blocks. During Gutenberg editing sessions, this page serves as a technical bridge, utilizing the native WordPress editor engine to serialize block structures securely.',
+            'This background utility page is used by GoBuildWP to safely validate and serialize Gutenberg blocks. During Gutenberg editing sessions, this page serves as a technical bridge, utilizing the native WordPress editor engine to serialize block structures securely.',
             domain: 'wppilot',
         ); ?></p>
         <p><strong><?php esc_html_e(
@@ -184,7 +184,7 @@ function render_gutenberg_finalizer_dashboard(): void
         <iframe
             id="wppilot-gb-editor-frame"
             class="wppilot-gb-editor-frame"
-            title="<?php esc_attr_e('WPPilot hidden block editor', domain: 'wppilot'); ?>"
+            title="<?php esc_attr_e('GoBuildWP hidden block editor', domain: 'wppilot'); ?>"
             tabindex="-1"
             src="about:blank"
         ></iframe>
@@ -317,7 +317,7 @@ function gutenberg_finalizer_script(): string
                 const frame = document.createElement( 'iframe' );
                 frame.id = 'wppilot-gb-editor-frame';
                 frame.className = 'wppilot-gb-editor-frame';
-                frame.title = 'WPPilot hidden block editor';
+                frame.title = 'GoBuildWP hidden block editor';
                 frame.tabIndex = -1;
                 frame.src = 'about:blank';
                 frame.style.display = 'block';

@@ -1,7 +1,7 @@
 /*
  * Design System admin styles. Visual vocabulary mirrors the Configuration
  * page (card-based sections, white background, 1px #c3c4c7 border, 6px
- * radius, subtle drop shadow) so the WPPilot admin feels cohesive across
+ * radius, subtle drop shadow) so the GoBuildWP admin feels cohesive across
  * pages. The page chrome is WordPress-native; only the specimens (the
  * preview mini-UI, palette, type samples, components) wear the design's
  * own tokens via the --wppilot-* custom properties.
@@ -33,7 +33,7 @@
     --ds-sunken: #f7f8f9;
     --ds-ink: #1d2327;
     --ds-muted: #59636e;
-    --ds-brand: #2271b1;
+    --ds-brand: #4b3cf0;
 
     --ds-shadow-sm: 0 1px 2px rgba(16, 24, 40, .04);
     --ds-shadow: 0 1px 3px rgba(16, 24, 40, .06), 0 1px 2px rgba(16, 24, 40, .04);
@@ -77,8 +77,8 @@
     border-color: #a7aaad;
 }
 .wppilot-design-card2.is-active {
-    border-color: #2271b1;
-    box-shadow: 0 0 0 1px #2271b1;
+    border-color: #4b3cf0;
+    box-shadow: 0 0 0 1px #4b3cf0;
 }
 .wppilot-design-stage {
     display: block;
@@ -109,7 +109,7 @@
     text-decoration: none;
 }
 .wppilot-design-card2-head h2 a:hover {
-    color: #2271b1;
+    color: #4b3cf0;
 }
 .wppilot-design-card2-body .wppilot-design-desc {
     margin: 0;
@@ -208,7 +208,7 @@
     display: inline-block;
     margin: 8px 0 16px;
     font-size: 13px;
-    color: #2271b1;
+    color: #4b3cf0;
     text-decoration: none;
 }
 .wppilot-detail-back:hover {
@@ -370,7 +370,7 @@
     height: 72px;
     display: block;
     background: var(--wppilot-bg, #ffffff);
-    border: 2px solid var(--wppilot-accent, #2271b1);
+    border: 2px solid var(--wppilot-accent, #4b3cf0);
 }
 .wppilot-shape-spec-label {
     font-family: var(--ds-mono);
@@ -399,7 +399,7 @@
     height: 10px;
     max-width: 100%;
     border-radius: 2px;
-    background: var(--wppilot-accent, #2271b1);
+    background: var(--wppilot-accent, #4b3cf0);
 }
 
 /* Composition dials. */
@@ -432,7 +432,7 @@
     display: block;
     height: 100%;
     border-radius: 999px;
-    background: #2271b1;
+    background: #4b3cf0;
 }
 .wppilot-dials-note {
     margin: 4px 0 0;
@@ -515,7 +515,7 @@
     cursor: default !important;
 }
 .wppilot-comp-primary {
-    background: var(--wppilot-accent, #2271b1) !important;
+    background: var(--wppilot-accent, #4b3cf0) !important;
     color: #fff !important;
 }
 .wppilot-comp-secondary {
@@ -525,7 +525,7 @@
 }
 .wppilot-comp-ghost {
     background: transparent !important;
-    color: var(--wppilot-accent, #2271b1) !important;
+    color: var(--wppilot-accent, #4b3cf0) !important;
     padding: 11px 8px !important;
 }
 .wppilot-comp-badge {
@@ -535,8 +535,8 @@
     letter-spacing: 0.05em !important;
     padding: 5px 11px !important;
     border-radius: var(--ds-pill) !important;
-    background: color-mix(in srgb, var(--wppilot-accent, #2271b1) 14%, transparent) !important;
-    color: color-mix(in srgb, var(--wppilot-accent, #2271b1) 80%, var(--wppilot-ink, #15171c)) !important;
+    background: color-mix(in srgb, var(--wppilot-accent, #4b3cf0) 14%, transparent) !important;
+    color: color-mix(in srgb, var(--wppilot-accent, #4b3cf0) 80%, var(--wppilot-ink, #15171c)) !important;
 }
 .wppilot-components input.wppilot-comp-input {
     width: 100% !important;
@@ -805,7 +805,7 @@ ul.wppilot-doc-list {
     user-select: none;
 }
 .wppilot-detail-raw > summary:hover {
-    color: #2271b1;
+    color: #4b3cf0;
 }
 .wppilot-detail-raw > summary::-webkit-details-marker {
     display: none;
@@ -1028,7 +1028,7 @@ ul.wppilot-doc-list {
     width: 16px !important;
     height: 16px !important;
     border-radius: calc(var(--wppilot-radius, 8px) * 0.4) !important;
-    background: var(--wppilot-accent, #2271b1) !important;
+    background: var(--wppilot-accent, #4b3cf0) !important;
 }
 .wppilot-preview-links {
     display: flex !important;
@@ -1054,8 +1054,8 @@ ul.wppilot-doc-list {
     text-transform: uppercase !important;
     padding: 5px 11px !important;
     border-radius: 999px !important;
-    background: color-mix(in srgb, var(--wppilot-accent, #2271b1) 14%, transparent) !important;
-    color: color-mix(in srgb, var(--wppilot-accent, #2271b1) 85%, var(--wppilot-ink, #15171c)) !important;
+    background: color-mix(in srgb, var(--wppilot-accent, #4b3cf0) 14%, transparent) !important;
+    color: color-mix(in srgb, var(--wppilot-accent, #4b3cf0) 85%, var(--wppilot-ink, #15171c)) !important;
     margin-bottom: 18px !important;
 }
 .wppilot-preview-title {
@@ -1089,9 +1089,9 @@ ul.wppilot-doc-list {
     padding: 12px 22px !important;
 }
 .wppilot-preview-btn-primary {
-    background: var(--wppilot-accent, #2271b1) !important;
+    background: var(--wppilot-accent, #4b3cf0) !important;
     color: #fff !important;
-    box-shadow: 0 14px 30px -14px color-mix(in srgb, var(--wppilot-accent, #2271b1) 80%, transparent) !important;
+    box-shadow: 0 14px 30px -14px color-mix(in srgb, var(--wppilot-accent, #4b3cf0) 80%, transparent) !important;
 }
 .wppilot-preview-btn-ghost {
     background: transparent !important;
@@ -1102,7 +1102,7 @@ ul.wppilot-doc-list {
     gap: 8px !important;
 }
 .wppilot-preview-arrow {
-    color: var(--wppilot-accent, #2271b1) !important;
+    color: var(--wppilot-accent, #4b3cf0) !important;
 }
 
 /* Mini-UI: feature tiles */
@@ -1125,7 +1125,7 @@ ul.wppilot-doc-list {
     font-family: var(--wppilot-font-heading, var(--wppilot-font-body)) !important;
     font-weight: var(--wppilot-weight-heading, 700) !important;
     font-size: 0.85rem !important;
-    color: var(--wppilot-accent, #2271b1) !important;
+    color: var(--wppilot-accent, #4b3cf0) !important;
     margin-bottom: 6px !important;
 }
 .wppilot-preview-tile strong {
@@ -1390,7 +1390,7 @@ ul.wppilot-doc-list {
     display: inline-block;
     padding: 10px 20px;
     border-radius: var(--wppilot-radius, 8px);
-    background: var(--wppilot-accent, #2271b1);
+    background: var(--wppilot-accent, #4b3cf0);
     color: var(--wppilot-bg, #fff);
     font-size: 13px;
     font-weight: 600;

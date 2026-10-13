@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * The kit host inside WPPilot: its switch, capability, safety profile and change ledger.
+ * The kit host inside GoBuildWP: its switch, capability, safety profile and change ledger.
  *
  * This is the one file in includes/kits allowed to name a wppilot_* function
  * (scripts/check-kit-boundaries.php enforces it). The exporter does not ship it: a kit carried
@@ -68,7 +68,7 @@ final class WPPilotHost implements Host, ProfileGate
      * Pro, and anything else, offers extension points through this filter:
      * `add_filter('wppilot_kit_extension', fn($ext, $point) => $point === 'seo-providers' ? $registry : $ext, 10, 2)`.
      *
-     * `ability-runner` is WPPilot's own and not filterable: it is the gate pipeline, and a filter
+     * `ability-runner` is GoBuildWP's own and not filterable: it is the gate pipeline, and a filter
      * that could swap it would be a way to run abilities around it.
      */
     public function extension(string $point): mixed
@@ -124,7 +124,7 @@ final class WPPilotHost implements Host, ProfileGate
 
     /**
      * Write an Elementor document through wppilot/elementor-set-content, so a kit's Elementor
-     * write gets the same normalisation and schema validation as WPPilot's own, under the gate
+     * write gets the same normalisation and schema validation as GoBuildWP's own, under the gate
      * pipeline (run_ability). Null when that ability is not registered (Elementor inactive); the
      * kit then saves through Elementor's document API itself.
      *
@@ -194,7 +194,7 @@ un_ability().
     }
 
     /**
-     * WPPilot's own profile rule, so a kit ability answers exactly as the Abilities Hub and the
+     * GoBuildWP's own profile rule, so a kit ability answers exactly as the Abilities Hub and the
      * MCP transports do: min_profile first, then the risk class the profile allows.
      */
     public function profile_allows(string $ability_name): bool|WP_Error

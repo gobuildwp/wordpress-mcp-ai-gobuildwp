@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -19,7 +19,7 @@ const RELOAD_NOTICE_TTL = 60;
 
 /**
  * Mark that the skill index has changed and a reload-MCP-client notice
- * should be shown to the admin the next time they land on a WPPilot
+ * should be shown to the admin the next time they land on a GoBuildWP
  * admin page. Transient auto-expires after RELOAD_NOTICE_TTL seconds.
  */
 function set_pending_reload_notice(): void
@@ -31,7 +31,7 @@ function set_pending_reload_notice(): void
  * Hooked on `admin_notices`. Renders:
  *  - any inline notice queued by `redirect_with_notice()` (one-shot transient),
  *  - the reload-MCP-client notice while a change is "recent" (< 60s) and the
- *    current admin screen belongs to WPPilot.
+ *    current admin screen belongs to GoBuildWP.
  */
 function render(): void
 {
@@ -54,7 +54,7 @@ function render(): void
     }
 
     // Reload notice while the change is "recent" (transient still alive)
-    // and we're on the Skills admin page specifically — other WPPilot
+    // and we're on the Skills admin page specifically — other GoBuildWP
     // screens don't need this prompt.
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     if (!$screen instanceof \WP_Screen) {

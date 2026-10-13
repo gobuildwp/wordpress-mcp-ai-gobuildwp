@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -23,7 +23,7 @@ function register(): void
     wp_register_ability('wppilot/skill-delete', [
         'label' => __('Delete Skill', domain: 'wppilot'),
         'description' => __(
-            'Move a WPPilot user skill to trash. Pass `permanent=true` to skip trash and delete immediately.',
+            'Move a GoBuildWP user skill to trash. Pass `permanent=true` to skip trash and delete immediately.',
             domain: 'wppilot',
         ),
         'category' => 'skill',

@@ -59,10 +59,10 @@ addresses refused, redirects re-checked), and a page fetch only to this site. A 
 readable by the user who started it and by administrators.
 
 <!-- kit-export:omit -->
-Fix suggestions name WPPilot abilities: `wppilot/search-replace-preview`/`-apply` and
+Fix suggestions name GoBuildWP abilities: `wppilot/search-replace-preview`/`-apply` and
 `wppilot/update-post` (Free), and the redirect and SEO-meta abilities Pro ships per plugin.
 
 ## Tests
 
-`tests/Unit/Kits/ContentAudit/` in the WPPilot repository (not shipped).
+`tests/Unit/Kits/ContentAudit/` in the GoBuildWP repository (not shipped).
 <!-- /kit-export:omit -->

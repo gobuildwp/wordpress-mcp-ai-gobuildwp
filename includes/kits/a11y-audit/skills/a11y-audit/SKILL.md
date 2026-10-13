@@ -49,7 +49,7 @@ or the whole batch by its `group`. The undo restores exactly the previous alt, i
 alt at all", and checks it took.
 
 <!-- kit-export:omit -->
-In WPPilot, `wppilot/rollback-change` undoes one `change_id`; the Changes screen's "undo this
+In GoBuildWP, `wppilot/rollback-change` undoes one `change_id`; the Changes screen's "undo this
 batch" undoes the whole `group`.
 <!-- /kit-export:omit -->
 

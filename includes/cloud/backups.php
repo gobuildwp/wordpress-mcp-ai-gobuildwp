@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,7 +15,7 @@ declare(strict_types=1);
  * plugins are active, the newest successful backup, and whether one is running.
  *
  * Since 1.18.4 each provider also says why a backup is stuck: whether it is
- * running, the site's own reason it cannot be started, and the export WPPilot
+ * running, the site's own reason it cannot be started, and the export GoBuildWP
  * Pro started (All-in-One WP Migration: running, stalled, failed or finished,
  * with its plain reason), so Cloud can show it and stop waiting for an export
  * that failed. File names, folders, job ids and keys are never passed on: the
@@ -69,7 +69,7 @@ function wppilot_cloud_backup_summary(): ?array
             'provider' => $provider['provider'],
             'label' => is_string($provider['label'] ?? null) ? $provider['label'] : $provider['provider'],
             'readable' => ($provider['readable'] ?? false) === true,
-            // Whether WPPilot Pro could start a backup with it here (the adapter's trigger.supported),
+            // Whether GoBuildWP Pro could start a backup with it here (the adapter's trigger.supported),
             // so Cloud does not offer a start the site would refuse.
             'startable' => $startable,
             'running' => $provider_running,
@@ -101,7 +101,7 @@ function wppilot_cloud_backup_summary(): ?array
 }
 
 /**
- * The export WPPilot Pro started, as Cloud may see it: state, the plain reason, the step and its
+ * The export GoBuildWP Pro started, as Cloud may see it: state, the plain reason, the step and its
  * times. backup_id and anything else the site adds are left out.
  *
  * @return array{state: string, reason: string|null, step: string|null, started_at: int|null, last_progress_at: int|null, finished_at: int|null}|null

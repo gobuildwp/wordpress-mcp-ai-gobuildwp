@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -23,7 +23,7 @@ use WP_REST_Response;
  * in September 2026 and settles on a document that is a strict subset of the MCP Registry's
  * `server.json`: name, title, description, version, websiteUrl, repository, `remotes` (each with its
  * own transport, URL, headers and protocol versions) and `capabilities`. That is the shape used here.
- * Everything WPPilot-specific — the endpoint map, the auth methods, the safety profile names, links —
+ * Everything GoBuildWP-specific — the endpoint map, the auth methods, the safety profile names, links —
  * sits under one reverse-DNS `_meta` key, so a stricter validator can ignore it.
  *
  * The card is public, identical for every caller, and cacheable, so it carries nothing that depends on
@@ -44,15 +44,16 @@ const QUERY_VAR = 'wppilot_mcp_server_card';
 /** REST route under the `mcp` namespace, beside `/mcp/wppilot`. */
 const REST_ROUTE = '/wppilot/server-card';
 
-const REGISTRY_NAME = 'co.wppilot/wppilot';
+const REGISTRY_NAME = 'com.gobuildwp/gobuildwp';
 
+/** A wire key clients may already read; it stays as it shipped. */
 const META_KEY = 'co.wppilot/server-card';
 
-const WEBSITE_URL = 'https://wppilot.co';
+const WEBSITE_URL = 'https://gobuildwp.com';
 
-const DOCS_URL = 'https://wppilot.co/docs';
+const DOCS_URL = 'https://gobuildwp.com/docs';
 
-const REPOSITORY_URL = 'https://github.com/wppilot-labs/wordpress-mcp-elementor-wppilot';
+const REPOSITORY_URL = 'https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp';
 
 /** One hour: the card changes only when the plugin is updated or OAuth is switched on or off. */
 const MAX_AGE = 3600;
@@ -93,7 +94,7 @@ function build_card(array $context): array
 
     $authorization_header = [
         'name' => 'Authorization',
-        'description' => 'Basic credentials with a WordPress Application Password, or a WPPilot access token as a Bearer token.',
+        'description' => 'Basic credentials with a WordPress Application Password, or a GoBuildWP access token as a Bearer token.',
         'isRequired' => true,
         'isSecret' => true,
     ];
@@ -149,7 +150,7 @@ function build_card(array $context): array
 
     return [
         'name' => REGISTRY_NAME,
-        'title' => 'WPPilot',
+        'title' => 'GoBuildWP',
         'description' => DESCRIPTION,
         'version' => $context['version'],
         'websiteUrl' => WEBSITE_URL,

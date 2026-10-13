@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: the discovery meta-tools.
+ * GoBuildWP Chat: the discovery meta-tools.
  *
  * Chat does not hand the model 1000 function declarations. It exposes a
  * small discovery pair the model calls to find abilities on demand, which

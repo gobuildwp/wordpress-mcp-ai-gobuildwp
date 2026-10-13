@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 /*
- * The basic product editor. WPPilot Pro registers a richer editor under the same name (SKU,
+ * The basic product editor. GoBuildWP Pro registers a richer editor under the same name (SKU,
  * status, categories, images, attributes, dimensions...), and on a site running Pro that one
  * wins. The before-image is attached only when this copy registered: attached to Pro's ability
  * it would take the place of Pro's own undo record.

@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: provider and model discovery.
+ * GoBuildWP Chat: provider and model discovery.
  *
  * Wraps the AI Client registry so the rest of Chat sees a flat list of
  * selectable models rather than provider-specific metadata objects.

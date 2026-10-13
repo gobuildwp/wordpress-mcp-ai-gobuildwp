@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,10 +8,10 @@ declare(strict_types=1);
 use WPPilot\Mcp\ServerCard;
 
 /**
- * Generate the MCP Registry entry (server.json) for WPPilot.
+ * Generate the MCP Registry entry (server.json) for GoBuildWP.
  *
  * The Registry lists a server once, by a reverse-DNS name, with the remotes a client connects to.
- * WPPilot is installed on each customer's own site, so there is no single URL: the remotes use the
+ * GoBuildWP is installed on each customer's own site, so there is no single URL: the remotes use the
  * Registry's URL-template variables, and the client asks for the site when it installs the entry.
  * Name, title, description, links and protocol facts come from the same constants the site's
  * public server card uses (includes/mcp/server-card.php), and the version from the plugin header,
@@ -20,8 +20,8 @@ use WPPilot\Mcp\ServerCard;
  * Format: https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json, the schema
  * the Registry's generic server.json reference documented in September 2026.
  *
- * Publishing is not automated here. `co.wppilot/wppilot` is a reverse-DNS name, and the Registry
- * only accepts it from a publisher that has proved control of wppilot.co (DNS or HTTP verification
+ * Publishing is not automated here. `com.gobuildwp/gobuildwp` is a reverse-DNS name, and the Registry
+ * only accepts it from a publisher that has proved control of gobuildwp.com (DNS or HTTP verification
  * with `mcp-publisher login dns|http`), then `mcp-publisher publish`.
  *
  * Usage:
@@ -56,7 +56,7 @@ $site = [
 $document = [
     '$schema' => 'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json',
     'name' => ServerCard\REGISTRY_NAME,
-    'title' => 'WPPilot',
+    'title' => 'GoBuildWP',
     'description' => ServerCard\DESCRIPTION,
     'version' => $version,
     'websiteUrl' => ServerCard\WEBSITE_URL,
@@ -68,7 +68,7 @@ $document = [
             'variables' => ['site' => $site],
             'headers' => [[
                 'name' => 'Authorization',
-                'description' => 'Basic credentials with a WordPress Application Password, or a WPPilot access token as a Bearer token. Create either under WPPilot > Connect.',
+                'description' => 'Basic credentials with a WordPress Application Password, or a GoBuildWP access token as a Bearer token. Create either under GoBuildWP > Connect.',
                 'isRequired' => true,
                 'isSecret' => true,
             ]],
@@ -100,7 +100,7 @@ $mode = $argv[1] ?? '';
 
 if ($mode === '--write') {
     file_put_contents($target, $json);
-    echo "Wrote server.json for WPPilot {$version}\n";
+    echo "Wrote server.json for GoBuildWP {$version}\n";
     exit(0);
 }
 

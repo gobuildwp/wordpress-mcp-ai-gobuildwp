@@ -32,7 +32,7 @@ For an MCP adapter call, confirmation belongs inside the target parameters:
 }
 ```
 
-WPPilot removes the control-only `confirm` field before target schema validation unless the target ability explicitly declares its own field with that name.
+GoBuildWP removes the control-only `confirm` field before target schema validation unless the target ability explicitly declares its own field with that name.
 
 ### Confirmation mode: a person approves
 
@@ -73,8 +73,8 @@ Installing and deleting fetch and write executable code, which is the same class
 Additional rules specific to these abilities:
 
 - **`DISALLOW_FILE_MODS` is honoured** through `wp_is_file_mod_allowed()` before any file operation begins, so a site that has opted out of code changes gets a named refusal rather than a partial install.
-- **Direct filesystem access is required.** WPPilot runs headless, and `request_filesystem_credentials()` has no screen to render an FTP form on. Anything other than the `direct` method is refused with the method WordPress selected, instead of stalling or half-writing.
-- **WPPilot cannot target itself.** `deactivate-plugin` and `delete-plugin` refuse WPPilot and WPPilot Pro: severing the connection mid-call would leave the agent unable to undo what it just did.
+- **Direct filesystem access is required.** GoBuildWP runs headless, and `request_filesystem_credentials()` has no screen to render an FTP form on. Anything other than the `direct` method is refused with the method WordPress selected, instead of stalling or half-writing.
+- **GoBuildWP cannot target itself.** `deactivate-plugin` and `delete-plugin` refuse GoBuildWP and GoBuildWP Pro: severing the connection mid-call would leave the agent unable to undo what it just did.
 - **Deletion requires prior deactivation.** WordPress's own `delete_plugins()` does not check, so the refusal lives in the ability. The active theme, and the parent of an active child theme, are refused for the same reason.
 - **Package URLs must be HTTPS.** An install from an explicit ZIP validates the scheme before download; plain HTTP would let anything on the path substitute its own code.
 - **Slugs and plugin files are path-validated.** Both go through `validate_file()` and a plain-directory-name pattern, because WordPress concatenates a stylesheet directly into a filesystem path.

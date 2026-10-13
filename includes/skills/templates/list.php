@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -63,7 +63,7 @@ $trashed_posts = get_posts([
 ]);
 
 // Group skills from non-user-cpt sources by source_id so each contributor
-// gets its own table with its own dynamic heading (e.g. "WPPilot Pro").
+// gets its own table with its own dynamic heading (e.g. "GoBuildWP Pro").
 $external_groups = [];
 foreach (Sources\registry() as $entry) {
     if ($entry['id'] === 'user-cpt') {
@@ -131,7 +131,7 @@ $new_url = add_query_arg(['page' => Admin\PAGE_SLUG, 'skill' => 'new'], admin_ur
                     domain: 'wppilot',
                 ); ?></li>
                 <li><?php esc_html_e(
-                    'Get the AI to run arbitrary code on your site via WPPilot\'s PHP-execution abilities.',
+                    'Get the AI to run arbitrary code on your site via GoBuildWP\'s PHP-execution abilities.',
                     domain: 'wppilot',
                 ); ?></li>
             </ul>
@@ -396,7 +396,7 @@ $new_url = add_query_arg(['page' => Admin\PAGE_SLUG, 'skill' => 'new'], admin_ur
             <h2><?php
 
             printf(
-                /* translators: %s: contributor label, e.g. "WPPilot Pro" */
+                /* translators: %s: contributor label, e.g. "GoBuildWP Pro" */
                 esc_html__('Skills from %s', domain: 'wppilot'),
                 esc_html($group['label']),
             );
@@ -417,7 +417,7 @@ $new_url = add_query_arg(['page' => Admin\PAGE_SLUG, 'skill' => 'new'], admin_ur
                         domain: 'wppilot',
                     ),
                     esc_html($group['label']),
-                    '<a href="https://wppilot.co/pro/?utm_source=plugin&utm_medium=skills" target="_blank" rel="noopener">',
+                    '<a href="https://gobuildwp.com/pro/?utm_source=plugin&utm_medium=skills" target="_blank" rel="noopener">',
                     '</a>',
                 );
                 ?>

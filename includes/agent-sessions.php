@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ declare(strict_types=1);
  *
  * - `mcp-…`   The legacy MCP transport hands out an `Mcp-Session-Id` the client echoes on every
  *             call. That is exactly one client connection. Stored as a keyed hash, never raw:
- *             the ledger is readable by every WPPilot administrator and the id is the handle the
+ *             the ledger is readable by every GoBuildWP administrator and the id is the handle the
  *             adapter looks the session up by.
  * - `stdio-…` `wp wppilot mcp serve` is one process per client connection; the command mints the
  *             id when it starts.

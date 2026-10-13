@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ function wppilot_ensure_mcp_adapter_category(): void
  * own init(), which runs at `init` priority 20 or `rest_api_init`. The registry initializes on the
  * first wp_get_abilities()/wp_get_ability() call after `init`, so any plugin that reads it earlier
  * fires the action before the adapter is listening. Those two abilities then never exist, every
- * mirror server drops them, and a client sees only discover-abilities (WPPilot registers its own)
+ * mirror server drops them, and a client sees only discover-abilities (GoBuildWP registers its own)
  * - it can list abilities but never run one. These hooks are added at plugin load, before `init`,
  * so they are always in time; on a site where the adapter's hook did run (priority 10) they find
  * both abilities registered and do nothing.

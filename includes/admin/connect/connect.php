@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Configuration page.
+ * GoBuildWP Configuration page.
  *
  * Walks the site owner from "AI Abilities are off" to a connected MCP client.
  * The steps are split across this directory:
@@ -20,7 +20,7 @@ declare(strict_types=1);
  *   client-configs.php    generated config for each supported client
  *   token-configs.php     generated config for the Access token method
  *   stdio-panel.php       the local WP-CLI stdio connection (wp wppilot mcp serve)
- *   cloud-panel.php       the WPPilot Cloud connection method (pairing lives in includes/cloud/)
+ *   cloud-panel.php       the GoBuildWP Cloud connection method (pairing lives in includes/cloud/)
  *   page.php              the top-level render and shared sections
  */
 

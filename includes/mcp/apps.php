@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -91,7 +91,7 @@ function list_resources(): array
     return [[
         'uri' => PREVIEW_CARD_URI,
         'name' => 'wppilot-preview-card',
-        'title' => 'WPPilot preview card',
+        'title' => 'GoBuildWP preview card',
         'description' => 'Renders a wppilot/preview-ability result: the target, what will change, and an Apply '
             . 'button where the host lets the card call tools.',
         'mimeType' => MIME_TYPE,
@@ -184,7 +184,7 @@ function card_config(): array
         'applyTool' => \WPPilot\Mcp\tool_name('wppilot/apply-preview'),
         'strings' => [
             'waiting' => __('Waiting for the preview…', domain: 'wppilot'),
-            'noPreview' => __('This result is not a WPPilot preview.', domain: 'wppilot'),
+            'noPreview' => __('This result is not a GoBuildWP preview.', domain: 'wppilot'),
             'unsupported' => __('No preview for this call', domain: 'wppilot'),
             'wouldFail' => __('This call would be refused', domain: 'wppilot'),
             'target' => __('Target', domain: 'wppilot'),
@@ -229,7 +229,7 @@ function preview_card_html(string $site_name): string
 {
     $config = json_for_script(card_config());
     $site = esc_html($site_name);
-    $title = esc_html(__('WPPilot preview', domain: 'wppilot'));
+    $title = esc_html(__('GoBuildWP preview', domain: 'wppilot'));
 
     return <<<HTML
 <!DOCTYPE html>

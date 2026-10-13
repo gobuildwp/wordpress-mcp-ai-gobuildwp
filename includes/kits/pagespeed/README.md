@@ -50,7 +50,7 @@ own hour-long cache; the Cloud honours that only for a paired site's signed call
 `cloud-url` extension point.
 
 <!-- kit-export:omit -->
-Inside WPPilot the API key is set on WPPilot > Settings > PageSpeed, and `WPPILOT_CLOUD_URL` in
+Inside GoBuildWP the API key is set on GoBuildWP > Settings > PageSpeed, and `WPPILOT_CLOUD_URL` in
 wp-config.php points the proxy at a local Cloud along with pairing.
 <!-- /kit-export:omit -->
 

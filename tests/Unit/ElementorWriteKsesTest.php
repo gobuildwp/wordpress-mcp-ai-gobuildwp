@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ use function WPPilot\Elementor\el_kses_elements_for_current_user;
 require_once dirname(__DIR__, levels: 2) . '/includes/elementor/helpers/wppilot-page-io.php';
 
 /**
- * WPPilot must not let a user store more than Elementor's own editor would.
+ * GoBuildWP must not let a user store more than Elementor's own editor would.
  * For a user without unfiltered_html, Elementor runs every string in the
  * document through wp_kses_post before it is saved; the raw write path, which
  * skips Document::save(), has to do the same or an HTML widget written through

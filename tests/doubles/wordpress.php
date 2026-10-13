@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -468,7 +468,7 @@ if (!function_exists('maybe_unserialize')) {
 
 if (!function_exists('get_posts')) {
     /**
-     * The posts in WPPilot_Test_State::$posts that match the arguments WPPilot and its kits pass:
+     * The posts in WPPilot_Test_State::$posts that match the arguments GoBuildWP and its kits pass:
      * post_type, post_status, post_mime_type (a prefix such as `image`), paging, ID order and
      * `fields => ids`. No posts stored means no posts returned.
      *
@@ -861,7 +861,7 @@ if (!class_exists('WP_Ability')) {
     /**
      * Stand-in for the Abilities API's ability object.
      *
-     * WPPilot's risk classification, confirmation gate, and MCP tool listing all
+     * GoBuildWP's risk classification, confirmation gate, and MCP tool listing all
      * read an ability rather than a plain array, so exercising them without a
      * WordPress install needs a real object with those accessors. Only the ones
      * that decision logic reads are modelled — execute() and the permission
@@ -927,7 +927,7 @@ if (!class_exists('WP_Ability')) {
 
 
 /**
- * The WordPress 7.1 ability registry, reduced to the one method WPPilot reads.
+ * The WordPress 7.1 ability registry, reduced to the one method GoBuildWP reads.
  *
  * The point of the real class here is that it answers with everything registered, ahead of the
  * discovery filters `wp_get_abilities()` runs, so the double is seeded by hand: a test that
@@ -962,7 +962,7 @@ if (!class_exists('WP_Abilities_Registry')) {
 }
 
 /**
- * WordPress 7.1's client-facing schema translation, in the two transformations WPPilot relies
+ * WordPress 7.1's client-facing schema translation, in the two transformations GoBuildWP relies
  * on it for: a property-level `required: true` is hoisted into the parent's `required` array,
  * and the PHP-only keys that no JSON Schema validator understands are dropped.
  */

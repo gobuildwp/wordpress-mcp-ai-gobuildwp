@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -78,7 +78,9 @@ function wppilot_build_building_context_lines(): array
         '',
         'Before any visual work (building or restyling a page, template, section, or component), load the `wppilot-design` skill and follow it.',
         '',
-        'The site-wide header (logo, menu, language switcher, cart) is built with `wppilot/build-site-header`, which sizes the layout to the menu, makes one header per language and checks the served result. Do not hand-build a header template from element trees.',
+        function_exists('wp_has_ability') && wp_has_ability('wppilot/build-site-header')
+            ? 'The site-wide header (logo, menu, language switcher, cart) is built with `wppilot/build-site-header`, which sizes the layout to the menu, makes one header per language and checks the served result. Do not hand-build a header template from element trees.'
+            : '',
         '',
         'Before building or restructuring a page\'s content or layout, check the installed-plugins inventory above for page builders (which replace the editor) and block libraries (which extend Gutenberg), then ask the user which approach to use: a page builder, Gutenberg, classic theme templates, a child theme, or a custom theme. Ask once and follow that choice; do not mix approaches (e.g. Gutenberg blocks in a page-builder page).',
     ];
@@ -135,7 +137,7 @@ function wppilot_build_speed_context_lines(): array
 function wppilot_build_server_instructions()
 {
     $lines = [
-        'WPPilot gives you unrestricted control over this WordPress installation.',
+        'GoBuildWP gives you unrestricted control over this WordPress installation.',
         '',
         '## Environment',
         '',

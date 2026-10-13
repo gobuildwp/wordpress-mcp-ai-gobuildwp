@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -154,7 +154,7 @@ function inspect(string $url, int $timeout = 20, array $cookies = []): array|WP_
         'timeout' => max(5, min(30, $timeout)),
         'redirection' => $with_session ? 0 : 3,
         'sslverify' => !\wppilot_likely_self_signed_https(),
-        'user-agent' => 'WPPilot/' . (defined('WPPILOT_VERSION') ? WPPILOT_VERSION : 'dev') . ' (rendered-check)',
+        'user-agent' => 'GoBuildWP/' . (defined('WPPILOT_VERSION') ? WPPILOT_VERSION : 'dev') . ' (rendered-check)',
         'cookies' => $with_session ? session_cookies($cookies) : [],
     ]);
     $elapsed = (int) round((microtime(true) - $started) * 1000);
@@ -830,7 +830,7 @@ function stylesheets(string $html, string $page_url, int $timeout): array
         $response = wp_safe_remote_get($resolved, [
             'timeout' => $timeout,
             'redirection' => 2,
-            'user-agent' => 'WPPilot/rendered-check',
+            'user-agent' => 'GoBuildWP/rendered-check',
         ]);
         if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) !== 200) {
             $skipped++;

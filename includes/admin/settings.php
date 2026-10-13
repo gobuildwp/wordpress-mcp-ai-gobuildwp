@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,11 +8,11 @@ declare(strict_types=1);
 // phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
 
 /**
- * The Settings screen: one home for every site-wide WPPilot switch.
+ * The Settings screen: one home for every site-wide GoBuildWP switch.
  *
  * These switches used to live on whichever screen happened to use them — the
  * abilities toggle on Configuration, user context on Context, memory on Pro's
- * own page — so there was no single place to see or change how WPPilot behaves.
+ * own page — so there was no single place to see or change how GoBuildWP behaves.
  *
  * Sections are collected through the `wppilot_settings_sections` filter and
  * each one carries its own save callback, so a section's owner keeps ownership
@@ -105,7 +105,7 @@ function wppilot_settings_sections(): array
             'id' => 'pagespeed',
             'title' => __('PageSpeed', domain: 'wppilot'),
             'description' => __(
-                'PageSpeed checks need no Google key: Site Kit by Google answers them when it can, and WPPilot Cloud otherwise, paired or not, with WPPilot\'s own key. You do not need to add one.',
+                'PageSpeed checks need no Google key: Site Kit by Google answers them when it can, and GoBuildWP Cloud otherwise, paired or not, with GoBuildWP\'s own key. You do not need to add one.',
                 domain: 'wppilot',
             ),
             'fields' => [
@@ -114,7 +114,7 @@ function wppilot_settings_sections(): array
                     'name' => WPPILOT_SETTINGS_PAGESPEED_KEY_FIELD,
                     'label' => __('PageSpeed API key (optional)', domain: 'wppilot'),
                     'help' => __(
-                        'Optional and not needed: leave it blank and WPPilot Cloud runs your checks. Only for power users who run many checks and reach the shared quota. In Google Cloud console, create an API key (APIs & Services > Credentials > Create credentials > API key) and enable the PageSpeed Insights API for its project. The key is stored on this site, used only for PageSpeed requests to Google, and never shown again or sent to agents.',
+                        'Optional and not needed: leave it blank and GoBuildWP Cloud runs your checks. Only for power users who run many checks and reach the shared quota. In Google Cloud console, create an API key (APIs & Services > Credentials > Create credentials > API key) and enable the PageSpeed Insights API for its project. The key is stored on this site, used only for PageSpeed requests to Google, and never shown again or sent to agents.',
                         domain: 'wppilot',
                     ),
                     'link' => ['url' => 'https://console.cloud.google.com/apis/credentials', 'text' => __('Open Google Cloud credentials', domain: 'wppilot')],
@@ -126,7 +126,7 @@ function wppilot_settings_sections(): array
     }
 
     /**
-     * Filter the WPPilot settings sections.
+     * Filter the GoBuildWP settings sections.
      *
      * Add a section to expose a site-wide switch on the Settings screen. Keep
      * the save callback with whichever code owns the option.
@@ -266,7 +266,7 @@ function wppilot_handle_settings_save(): void
 function wppilot_render_settings_screen(): void
 {
     if (!wppilot_current_user_can_manage()) {
-        wp_die(esc_html__('You are not allowed to manage WPPilot settings.', domain: 'wppilot'));
+        wp_die(esc_html__('You are not allowed to manage GoBuildWP settings.', domain: 'wppilot'));
     }
 
     wppilot_render_admin_header();
@@ -274,7 +274,7 @@ function wppilot_render_settings_screen(): void
     <div class="wrap">
         <h1><?php echo esc_html(wppilot_nav_label('wppilot-settings')); ?></h1>
         <p class="wppilot-lede"><?php esc_html_e(
-            'Every site-wide WPPilot switch, in one place. Per-ability and per-skill controls stay on their own screens.',
+            'Every site-wide GoBuildWP switch, in one place. Per-ability and per-skill controls stay on their own screens.',
             domain: 'wppilot',
         ); ?></p>
 

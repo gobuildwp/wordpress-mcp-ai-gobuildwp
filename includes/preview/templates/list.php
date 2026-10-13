@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ $resolved = array_values(array_filter(
 
         <?php if ($pending === []) { ?>
             <p class="wppilot-muted">
-                <?php esc_html_e('Nothing is waiting. When an agent calls WPPilot Preview before a write, the proposed change appears here with its diff, and nothing is written until you apply it.', domain: 'wppilot'); ?>
+                <?php esc_html_e('Nothing is waiting. When an agent calls GoBuildWP Preview before a write, the proposed change appears here with its diff, and nothing is written until you apply it.', domain: 'wppilot'); ?>
             </p>
         <?php } else { ?>
             <table class="widefat striped wppilot-preview-table">

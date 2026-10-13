@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit();
 }
 
-// WPPilot Pro 1.10.0 registers both names itself, earlier in the same hook; its copies then answer.
+// GoBuildWP Pro 1.10.0 registers both names itself, earlier in the same hook; its copies then answer.
 if (Runtime\unclaimed('wppilot/forminator-list-forms')) {
     wp_register_ability('wppilot/forminator-list-forms', [
         'label' => __('List Forminator Forms', domain: 'wppilot'),
@@ -59,7 +59,7 @@ if (Runtime\unclaimed('wppilot/forminator-list-entries')) {
     wp_register_ability('wppilot/forminator-list-entries', [
         'label' => __('List Forminator Entries', domain: 'wppilot'),
         'description' => __(
-            'Submitted entries for one Forminator form, newest first: id, date_created (site time), status, and answers (field_id, label, type, value). Personal data is withheld: email and phone answers, passwords, card and payment data, uploads, signatures and the submitter\'s IP come back as "[REDACTED]" with a redacted reason, and email addresses or phone numbers typed into any other answer are cut out of it (redacted: "contact_in_text"). Names and other answers are returned as submitted. There is no option to return the withheld values; a person can see them in Forminator > Submissions. date_from and date_to (YYYY-MM-DD, site time, inclusive) narrow the range; limit defaults to 20 (max 100), offset pages; total counts every matching entry. Spam and draft entries are not listed. Read-only.',
+            'Submitted entries for one Forminator form, newest first: id, date_created (site time), status, and answers (field_id, label, type, value). Contact details and sensitive fields are withheld (names and other answers are not): email and phone answers, passwords, card and payment data, uploads, signatures and the submitter\'s IP come back as "[REDACTED]" with a redacted reason, and email addresses or phone numbers typed into any other answer are cut out of it (redacted: "contact_in_text"). There is no option to return the withheld values; a person can see them in Forminator > Submissions. date_from and date_to (YYYY-MM-DD, site time, inclusive) narrow the range; limit defaults to 20 (max 100), offset pages; total counts every matching entry. Spam and draft entries are not listed. Read-only.',
             domain: 'wppilot',
         ),
         'category' => 'forms',

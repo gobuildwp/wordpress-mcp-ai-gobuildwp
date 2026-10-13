@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -13,15 +13,15 @@ if (!defined('ABSPATH')) {
  * WordPress core's own ability runner, POST /wp-abilities/v1/abilities/{name}/run.
  *
  * Core routes it straight to WP_Ability::execute(). The safety profile reaches it
- * through `wp_ability_permission_result` on 7.1, but nothing else WPPilot enforces
+ * through `wp_ability_permission_result` on 7.1, but nothing else GoBuildWP enforces
  * did: the confirmation gate, the write rate limit, the preview and design gates,
- * and Pro's approval queue all sit on WPPilot's own transports. An Application
+ * and Pro's approval queue all sit on GoBuildWP's own transports. An Application
  * Password could therefore run a destructive ability without `confirm`, at any
  * rate, past a queue the site had switched on.
  *
  * `rest_dispatch_request` fires after core has matched the route and run its
  * permission check, and before the controller executes. Answering there with the
- * same pipeline WPPilot's own REST route runs closes the gap without replacing
+ * same pipeline GoBuildWP's own REST route runs closes the gap without replacing
  * core's route or its permission decision.
  */
 
@@ -35,7 +35,7 @@ function wppilot_core_rest_run_is_gated(): bool
 }
 
 /**
- * Run a core ability-runner request through WPPilot's controls, or leave it alone.
+ * Run a core ability-runner request through GoBuildWP's controls, or leave it alone.
  *
  * @param mixed $result Response from an earlier filter, or null.
  * @param array<string, mixed> $handler
@@ -94,7 +94,7 @@ function wppilot_core_rest_run_confirmation_hint(WP_Error $error, WP_Ability $ab
     return new WP_Error(
         'wppilot_confirmation_required',
         sprintf(
-            /* translators: %s: the WPPilot REST route that accepts confirm. */
+            /* translators: %s: the GoBuildWP REST route that accepts confirm. */
             __('This ability needs confirm=true, and WordPress core\'s ability runner rejects confirm for abilities that do not declare it. Send the confirmed call to %s instead.', domain: 'wppilot'),
             rest_url('wppilot/v1/abilities/' . $ability->get_name() . '/run'),
         ),

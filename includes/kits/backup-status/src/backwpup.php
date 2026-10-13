@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -24,7 +24,7 @@ if (!defined('ABSPATH')) {
  * Jobs flagged `tempjob` are BackWPup's own scaffolding (the onboarding "First backup" job) and
  * are hidden, as its own CLI and REST listings hide them.
  *
- * A job queued now on BackWPup's own `backwpup_cron` event (how WPPilot Pro's backup-trigger starts
+ * A job queued now on BackWPup's own `backwpup_cron` event (how GoBuildWP Pro's backup-trigger starts
  * one) shows as `queued` until WP-Cron picks it up. Only jobs that start with WP-Cron (activetype
  * `wpcron`) can be started that way, which is what each job's `can_trigger` says.
  *

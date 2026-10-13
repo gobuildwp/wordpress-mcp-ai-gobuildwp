@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -14,11 +14,11 @@ use function WPPilot\Mcp\error_response;
 use function WPPilot\Mcp\success;
 
 /**
- * WPPilot's skills and industry briefs as MCP resources, per the Skills extension.
+ * GoBuildWP's skills and industry briefs as MCP resources, per the Skills extension.
  *
  * Implements SEP-2640 (Final): each skill is a directory whose `SKILL.md` is the resource
  * `skill://<skill-path>/SKILL.md`, served as `text/markdown`, enumerated by `skills/list`,
- * described by `skills/get`, and read through plain `resources/read`. WPPilot skills are single
+ * described by `skills/get`, and read through plain `resources/read`. GoBuildWP skills are single
  * files, so every entry lists exactly one resource with its SHA-256 digest and byte size.
  *
  *   skill://<slug>/SKILL.md                     a skill from any catalog source (built-in, kits,
@@ -406,7 +406,7 @@ function dispatch(string $method, array $params, mixed $id): ?array
  */
 
 /**
- * Whether an adapter server is one of WPPilot's, by its REST route.
+ * Whether an adapter server is one of GoBuildWP's, by its REST route.
  *
  * The adapter runs this filter for every server on the site, and since Elementor 4.3 the default
  * server can be Elementor's; its clients must not start seeing WordPress skills they never asked for.

@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
  * it is blocking. Read-only.
  *
  * Returned to the kit loader, which registers the ability files inside wp_abilities_api_init.
- * Skipped when neither vendor is active, with the same test WPPilot Pro's security kit is gated
+ * Skipped when neither vendor is active, with the same test GoBuildWP Pro's security kit is gated
  * on; which of them answers is decided per call (active_providers()), so a site running both gets
  * both.
  */

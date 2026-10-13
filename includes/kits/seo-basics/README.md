@@ -42,7 +42,7 @@ Focus keywords, canonical URLs, social previews, schema, redirects, scores and r
 are not included here.
 
 <!-- kit-export:omit -->
-WPPilot Pro 1.10.0 and later register richer abilities under these same names at
+GoBuildWP Pro 1.10.0 and later register richer abilities under these same names at
 `wp_abilities_api_init` priority 10. They cover focus keywords, canonical URLs, social previews,
 schema and redirects. On a licensed Pro site those register first, and every ability here stands
 aside through `Runtime\unclaimed()`, along with its undo capture. Each input schema here is a

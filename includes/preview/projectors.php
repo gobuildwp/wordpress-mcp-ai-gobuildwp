@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Projected after-images for the writes WPPilot understands.
+ * Projected after-images for the writes GoBuildWP understands.
  *
  * A projector is a pure function of (before-snapshot, normalized input) that
  * returns an after-snapshot in the exact shape wppilot_snapshot_post() and its
@@ -144,7 +144,7 @@ function unsupported_reason(string $ability_name): ?array
 
     return [
         'reason' => 'no_projector',
-        'message' => 'Preview is not available for ' . $ability_name . '. WPPilot only previews abilities it has a '
+        'message' => 'Preview is not available for ' . $ability_name . '. GoBuildWP only previews abilities it has a '
             . 'typed projector for, rather than guessing at a diff that might be wrong.',
     ];
 }

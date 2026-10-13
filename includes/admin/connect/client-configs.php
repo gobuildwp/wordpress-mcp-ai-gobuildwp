@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 /**
  * Compute the default MCP server name from the current site host.
  *
- * Capped at 25 characters total ("wppilot-" prefix + up to 16 chars of host slug)
+ * Capped at 25 characters total ("gobuildwp-" prefix + up to 15 chars of host slug)
  * because some MCP clients reject longer server names. Used as the placeholder default
  * when no name has been saved by the user.
  */
@@ -33,9 +33,9 @@ function wppilot_get_mcp_server_name_default(): string
     $site_slug = (string) preg_replace(pattern: '/^www\./', replacement: '', subject: $site_host);
     $site_slug = (string) preg_replace(pattern: '/[^a-z0-9-]+/', replacement: '-', subject: strtolower($site_slug));
     $site_slug = trim($site_slug, characters: '-');
-    $site_slug = substr($site_slug, offset: 0, length: 16);
+    $site_slug = substr($site_slug, offset: 0, length: 15);
     $site_slug = rtrim($site_slug, characters: '-');
-    return 'wppilot-' . $site_slug;
+    return 'gobuildwp-' . $site_slug;
 }
 
 /**
@@ -75,7 +75,7 @@ function wppilot_build_paste_to_agent_paragraph(
         '',
         'Don\'t ask me to confirm choices already specified above. After writing the config, restart or reload the MCP session (most clients require it), then verify by listing the server\'s tools. If it fails, show me the stderr from the npx process before proposing changes.',
         '',
-        'If you cannot modify the config of this AI client from here, tell me to expand "Manual configuration for your AI client" on the WPPilot Connect page and copy the snippet manually.',
+        'If you cannot modify the config of this AI client from here, tell me to expand "Manual configuration for your AI client" on the GoBuildWP Connect page and copy the snippet manually.',
     ];
 
     return implode("\n", $lines);
@@ -242,7 +242,7 @@ function wppilot_build_mcpb_manifest(
     }
 
     $site_name = trim(get_bloginfo('name'));
-    $display_name = $site_name !== '' ? 'WPPilot — ' . $site_name : 'WPPilot';
+    $display_name = $site_name !== '' ? 'GoBuildWP — ' . $site_name : 'GoBuildWP';
 
     return [
         'manifest_version' => '0.3',
@@ -253,7 +253,7 @@ function wppilot_build_mcpb_manifest(
             'Full WordPress control for your AI agent. Runs real PHP, queries the database, edits files — on your dev or staging site.',
             domain: 'wppilot',
         ),
-        'author' => ['name' => 'WPPilot'],
+        'author' => ['name' => 'GoBuildWP'],
         'server' => [
             // entry_point is required by the MCPB schema even though the server
             // is launched via mcp_config (npx); the bundled stub is never run.
@@ -339,7 +339,7 @@ function wppilot_build_codex_toml(
  *
  * The npx form below shells out to a Node wrapper that re-implements the
  * transport, which means Node, a package download, and four environment
- * variables all have to be right before anything works. WPPilot already serves
+ * variables all have to be right before anything works. GoBuildWP already serves
  * MCP over HTTP with Basic authentication, so a client that speaks HTTP needs
  * none of that — just the URL and one header.
  *

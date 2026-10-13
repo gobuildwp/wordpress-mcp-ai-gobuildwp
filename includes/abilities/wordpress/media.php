@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -113,7 +113,7 @@ register_core_ability('wppilot/update-media', [
 register_core_ability('wppilot/delete-media', [
     'label' => __('Delete Media', domain: 'wppilot'),
     'description' => __(
-        'Permanently deletes a Media Library attachment and its generated files. This is irreversible and requires explicit confirmation through WPPilot safety enforcement.',
+        'Permanently deletes a Media Library attachment and its generated files. This is irreversible and requires explicit confirmation through GoBuildWP safety enforcement.',
         domain: 'wppilot',
     ),
     'category' => 'wordpress',
@@ -197,7 +197,7 @@ function wordpress_import_media_url(array $input): array|WP_Error
             domain: 'wppilot',
         ));
     }
-    // These are WordPress core files, not WPPilot's. The middle one was
+    // These are WordPress core files, not GoBuildWP's. The middle one was
     // 'wppilot-media.php' — a rebrand find-and-replace that renamed a core
     // include path — so every call to this ability died on a require_once
     // before it reached the download.

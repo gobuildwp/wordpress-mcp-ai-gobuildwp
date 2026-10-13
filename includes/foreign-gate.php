@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -10,10 +10,10 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * WPPilot's approvals for writes made through other plugins' MCP servers.
+ * GoBuildWP's approvals for writes made through other plugins' MCP servers.
  *
  * Elementor (4.3+) and WooCommerce (10.3+) ship MCP servers of their own. An agent connected to
- * one of them reaches their abilities without passing WPPilot's gate pipeline: the safety profile
+ * one of them reaches their abilities without passing GoBuildWP's gate pipeline: the safety profile
  * and Hub rules still apply (they live in `wp_ability_permission_result`, inside execute()) and
  * the change ledger still records the write (it hooks execute() too), but the confirmation
  * contract, a person's approval and Pro's approval queue and backup gate do not.
@@ -22,13 +22,13 @@ if (!defined('ABSPATH')) {
  * setting on, a write that reaches it through some other REST route - another plugin's MCP
  * server - is put through the same controls:
  *
- * - The safety profile, as WPPilot's own transports apply it.
+ * - The safety profile, as GoBuildWP's own transports apply it.
  * - A destructive or critical ability needs a person's approval on a one-time wp-admin link, in
- *   either confirmation mode: those servers' clients cannot send WPPilot's `confirm` flag (their
+ *   either confirmation mode: those servers' clients cannot send GoBuildWP's `confirm` flag (their
  *   input schemas refuse unknown properties), so the agent flag is not an option there.
  * - `wppilot_pre_ability_execute` with transport `foreign`, so Pro's holds apply.
  *
- * Off by default: switching it on changes how agents on other servers behave. Calls WPPilot has
+ * Off by default: switching it on changes how agents on other servers behave. Calls GoBuildWP has
  * already gated pass once per gate (see wppilot_gate_mark_passed()), reads are never held, and
  * code that runs an ability outside a REST request (a plugin's own cron, say) is left alone.
  */
@@ -47,7 +47,7 @@ function wppilot_foreign_gate_enabled(): bool
  */
 function wppilot_foreign_gate(mixed $pre, string $ability_name, mixed $input, mixed $ability = null): mixed
 {
-    // Another filter already decided; and a call WPPilot gated passes, using up its pass.
+    // Another filter already decided; and a call GoBuildWP gated passes, using up its pass.
     if (!$pre instanceof WP_Filter_Sentinel || wppilot_gate_take_pass($ability_name)) {
         return $pre;
     }
@@ -121,7 +121,7 @@ function wppilot_foreign_gate_register_setting(mixed $sections): mixed
         'id' => 'wppilot-foreign-gate',
         'title' => __('Other MCP servers', domain: 'wppilot'),
         'description' => __(
-            'Elementor and WooCommerce have MCP servers of their own. Their writes are always recorded in the change log; this decides whether they also need WPPilot\'s approvals.',
+            'Elementor and WooCommerce have MCP servers of their own. Their writes are always recorded in the change log; this decides whether they also need GoBuildWP\'s approvals.',
             domain: 'wppilot',
         ),
         'fields' => [
@@ -130,13 +130,13 @@ function wppilot_foreign_gate_register_setting(mixed $sections): mixed
                 'name' => WPPILOT_FOREIGN_GATE_OPTION,
                 'label' => __('Approvals for their writes', domain: 'wppilot'),
                 'help' => __(
-                    'On: a write an agent makes through another plugin\'s MCP server follows this site\'s safety profile, a destructive one waits for a person to approve it on a wp-admin link, and WPPilot Pro\'s approval queue and backup gate apply. Reads are never held. Needs WordPress 7.1.',
+                    'On: a write an agent makes through another plugin\'s MCP server follows this site\'s safety profile, a destructive one waits for a person to approve it on a wp-admin link, and GoBuildWP Pro\'s approval queue and backup gate apply. Reads are never held. Needs WordPress 7.1.',
                     domain: 'wppilot',
                 ),
                 'value' => wppilot_foreign_gate_enabled() ? 'on' : 'off',
                 'options' => [
                     'off' => __('Off: record their writes only', domain: 'wppilot'),
-                    'on' => __('On: apply WPPilot\'s approvals', domain: 'wppilot'),
+                    'on' => __('On: apply GoBuildWP\'s approvals', domain: 'wppilot'),
                 ],
             ],
         ],

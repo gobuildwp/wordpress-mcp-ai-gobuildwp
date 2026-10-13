@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -82,7 +82,7 @@ final class Auditor
     public function start(int $total): array
     {
         $sources = [];
-        // Where the host has an SEO provider registry (WPPilot Pro), the plugins it reports active
+        // Where the host has an SEO provider registry (GoBuildWP Pro), the plugins it reports active
         // are read through their own readers, which know storage the meta keys below do not
         // (AIOSEO's table, Slim SEO's array) and ignore the leftovers of a deactivated plugin.
         $providers = $this->enabled('seo_meta') ? $this->source->seo_providers() : [];

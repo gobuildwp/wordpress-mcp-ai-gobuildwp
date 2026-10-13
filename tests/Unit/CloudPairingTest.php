@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ if (!defined('WPPILOT_SETUP_PAGE')) {
 }
 
 /**
- * WPPilot Cloud pairing, against docs/pairing-protocol.md in the platform repo.
+ * GoBuildWP Cloud pairing, against docs/pairing-protocol.md in the platform repo.
  *
  * The Cloud is played by queued HTTP answers, and the token table is real SQL
  * on SQLite, so "the token was revoked" is proven by the row being gone.
@@ -173,16 +173,16 @@ final class CloudPairingTest extends TestCase
     public static function cloud_urls(): array
     {
         return [
-            'https' => ['https://app.wppilot.co/', 'production', 'https://app.wppilot.co'],
+            'https' => ['https://app.gobuildwp.com/', 'production', 'https://app.gobuildwp.com'],
             'https with path' => ['https://example.com/cloud', 'production', 'https://example.com/cloud'],
             'http in production' => ['http://app.localhost:3310', 'production', ''],
             'http on staging' => ['http://app.localhost:3310', 'staging', ''],
             'http on local' => ['http://app.localhost:3310', 'local', 'http://app.localhost:3310'],
             'http on development' => ['http://app.localhost:3310/', 'development', 'http://app.localhost:3310'],
-            'credentials' => ['https://user:pass@app.wppilot.co', 'production', ''],
-            'query' => ['https://app.wppilot.co?x=1', 'production', ''],
+            'credentials' => ['https://user:pass@app.gobuildwp.com', 'production', ''],
+            'query' => ['https://app.gobuildwp.com?x=1', 'production', ''],
             'no host' => ['https:///path', 'production', ''],
-            'other scheme' => ['ftp://app.wppilot.co', 'local', ''],
+            'other scheme' => ['ftp://app.gobuildwp.com', 'local', ''],
             'empty' => ['', 'production', ''],
         ];
     }
@@ -195,9 +195,9 @@ final class CloudPairingTest extends TestCase
         self::assertSame($expected, wppilot_cloud_normalize_url($url));
     }
 
-    public function test_cloud_url_defaults_to_app_wppilot_co_and_can_be_filtered(): void
+    public function test_cloud_url_defaults_to_app_gobuildwp_com_and_can_be_filtered(): void
     {
-        self::assertSame('https://app.wppilot.co', wppilot_cloud_url());
+        self::assertSame('https://app.gobuildwp.com', wppilot_cloud_url());
 
         add_filter('wppilot_cloud_url', static fn(): string => 'http://app.localhost:3310');
         self::assertSame('', wppilot_cloud_url(), 'plain HTTP is refused on a production site');
@@ -215,11 +215,11 @@ final class CloudPairingTest extends TestCase
         $pending = wppilot_cloud_pending($begun['state'], 1);
         self::assertIsArray($pending);
         self::assertSame(1, $pending['user_id']);
-        self::assertSame('https://app.wppilot.co', $pending['cloud_url']);
+        self::assertSame('https://app.gobuildwp.com', $pending['cloud_url']);
         self::assertGreaterThan(time() + 590, $pending['expires']);
 
         $url = $begun['url'];
-        self::assertStringStartsWith('https://app.wppilot.co/connect/site?', $url);
+        self::assertStringStartsWith('https://app.gobuildwp.com/connect/site?', $url);
         parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
         self::assertSame('https://example.test', $query['site']);
         self::assertSame($begun['state'], $query['state']);
@@ -273,7 +273,7 @@ final class CloudPairingTest extends TestCase
 
         self::assertTrue(wppilot_cloud_receive($begun['state'], 'code-1234567890', 1));
 
-        self::assertSame('https://app.wppilot.co/api/pair/policy', WPPilot_Test_State::$http_posts[0]['url']);
+        self::assertSame('https://app.gobuildwp.com/api/pair/policy', WPPilot_Test_State::$http_posts[0]['url']);
         $pending = wppilot_cloud_pending($begun['state'], 1);
         self::assertIsArray($pending);
         self::assertSame(
@@ -359,7 +359,7 @@ final class CloudPairingTest extends TestCase
         self::assertSame(['tighten' => false, 'loosen' => false], wppilot_cloud_manage_settings(), 'a new pairing starts unmanaged');
 
         self::assertIsArray($link);
-        self::assertSame('https://app.wppilot.co/api/pair/complete', WPPilot_Test_State::$http_posts[0]['url']);
+        self::assertSame('https://app.gobuildwp.com/api/pair/complete', WPPilot_Test_State::$http_posts[0]['url']);
         $sent = self::sent(0);
         self::assertSame('code-1234567890', $sent['code']);
         self::assertSame('https://example.test', $sent['site_url']);
@@ -383,7 +383,7 @@ final class CloudPairingTest extends TestCase
 
         self::assertSame('site_abc', $link['site_id']);
         self::assertSame('a***@example.com', $link['account_hint']);
-        self::assertSame('https://app.wppilot.co', $link['cloud_url']);
+        self::assertSame('https://app.gobuildwp.com', $link['cloud_url']);
         self::assertMatchesRegularExpression('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/', $link['paired_at']);
         self::assertSame(
             ['site_id', 'token_id', 'account_hint', 'cloud_url', 'paired_at'],
@@ -529,7 +529,7 @@ final class CloudPairingTest extends TestCase
 
         self::assertCount(1, WPPilot_Test_State::$http_posts);
         $post = WPPilot_Test_State::$http_posts[0];
-        self::assertSame('https://app.wppilot.co/api/sites/heartbeat', $post['url']);
+        self::assertSame('https://app.gobuildwp.com/api/sites/heartbeat', $post['url']);
         $body = (string) $post['body'];
         $sent = self::sent(0);
         self::assertSame($link['site_id'], $sent['site_id']);
@@ -591,7 +591,7 @@ final class CloudPairingTest extends TestCase
 
         self::assertNull(wppilot_cloud_link());
         self::assertCount(1, WPPilot_Test_State::$http_posts);
-        self::assertSame('https://app.wppilot.co/api/sites/unlink', WPPilot_Test_State::$http_posts[0]['url']);
+        self::assertSame('https://app.gobuildwp.com/api/sites/unlink', WPPilot_Test_State::$http_posts[0]['url']);
     }
 
     public function test_disconnect_revokes_first_then_tells_the_cloud(): void
@@ -605,11 +605,31 @@ final class CloudPairingTest extends TestCase
         self::assertFalse($this->tokenExists($link['token_id']));
         self::assertNull(wppilot_cloud_link());
         self::assertArrayNotHasKey(WPPILOT_CLOUD_HEARTBEAT_HOOK, WPPilot_Test_State::$cron);
-        self::assertSame('https://app.wppilot.co/api/sites/unlink', WPPilot_Test_State::$http_posts[0]['url']);
+        self::assertSame('https://app.gobuildwp.com/api/sites/unlink', WPPilot_Test_State::$http_posts[0]['url']);
         $sent = self::sent(0);
         self::assertSame(['site_id', 'ts', 'nonce'], array_keys($sent));
         self::assertSame($link['site_id'], $sent['site_id']);
         self::assertFalse(wppilot_cloud_disconnect(), 'nothing left to disconnect');
+    }
+
+    public function test_a_site_paired_before_the_domain_move_keeps_its_cloud_host(): void
+    {
+        // A link written by a release whose default was app.wppilot.co. The new default must not
+        // redirect its signed calls: that host still serves the same Cloud, and only it was told
+        // about this pairing's key when the site was paired.
+        $link = $this->pairedLink();
+        $stored = WPPilot_Test_State::$options[WPPILOT_CLOUD_LINK_OPTION];
+        $stored['cloud_url'] = 'https://app.wppilot.co';
+        WPPilot_Test_State::$options[WPPILOT_CLOUD_LINK_OPTION] = $stored;
+        self::assertSame('https://app.gobuildwp.com', wppilot_cloud_url(), 'new pairings use the new host');
+
+        wppilot_cloud_send_heartbeat();
+        self::assertTrue(wppilot_cloud_disconnect());
+
+        self::assertCount(2, WPPilot_Test_State::$http_posts);
+        self::assertSame('https://app.wppilot.co/api/sites/heartbeat', WPPilot_Test_State::$http_posts[0]['url']);
+        self::assertSame('https://app.wppilot.co/api/sites/unlink', WPPilot_Test_State::$http_posts[1]['url']);
+        self::assertSame($link['site_id'], self::sent(1)['site_id']);
     }
 
     public function test_cloud_routes_accept_only_the_linked_token(): void
@@ -892,9 +912,17 @@ final class CloudPairingTest extends TestCase
 
     public function test_the_cloud_is_labelled_by_its_client_name_and_user_agent(): void
     {
-        self::assertSame('WPPilot Cloud', wppilot_client_label('wppilot-cloud'));
-        self::assertSame('WPPilot Cloud', wppilot_client_label('WPPilot-Cloud/1 (+https://app.wppilot.co)'));
+        self::assertSame('GoBuildWP Cloud', wppilot_client_label('wppilot-cloud'));
+        self::assertSame('GoBuildWP Cloud', wppilot_client_label('WPPilot-Cloud/1 (+https://app.wppilot.co)'));
         self::assertArrayNotHasKey('wppilot-cloud', wppilot_selectable_clients(), 'nothing to configure by hand');
+    }
+
+    public function test_the_cloud_user_agent_is_not_shown_beside_its_label(): void
+    {
+        self::assertSame('GoBuildWP Cloud', wppilot_client_display('GoBuildWP Cloud', 'WPPilot-Cloud/1 (+https://app.gobuildwp.com)'));
+        self::assertSame('Cursor (cursor-vscode)', wppilot_client_display('Cursor', 'cursor-vscode'), 'a configurable client keeps its reported name');
+        self::assertSame('Team laptop (WPPilot-Cloud/1)', wppilot_client_display('Team laptop', 'WPPilot-Cloud/1'), 'hidden only when it adds nothing to the label');
+        self::assertSame('Cursor', wppilot_client_display('Cursor', ''));
     }
 
     public function test_an_upgrade_of_this_plugin_queues_a_heartbeat_while_connected(): void

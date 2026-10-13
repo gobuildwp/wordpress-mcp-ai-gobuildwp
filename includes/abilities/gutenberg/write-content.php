@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('wppilot/gutenberg-write-content', [
     'label' => __('Write Gutenberg Content', domain: 'wppilot'),
     'description' => __(
-        'Directly writes Gutenberg post_content only when every supplied block is a registered WPPilot-owned dynamic-only block. Native/static Gutenberg blocks require browser JS finalization; queue them with gutenberg-add-pending-change, then call gutenberg-enable-batch-finalization and send the finalization link to the user.',
+        'Directly writes Gutenberg post_content only when every supplied block is a registered GoBuildWP-owned dynamic-only block. Native/static Gutenberg blocks require browser JS finalization; queue them with gutenberg-add-pending-change, then call gutenberg-enable-batch-finalization and send the finalization link to the user.',
         domain: 'wppilot',
     ),
     'category' => 'gutenberg',
@@ -60,7 +60,7 @@ wp_register_ability('wppilot/gutenberg-write-content', [
         'show_in_rest' => true,
         'mcp' => ['public' => true],
         'annotations' => [
-            'instructions' => 'Use this only for WPPilot-owned dynamic-only Gutenberg blocks where save:null means no static saved HTML is needed. For static/native blocks, this ability refuses the write and tells you to use the pending queue and Block Editor Queue browser runtime.',
+            'instructions' => 'Use this only for GoBuildWP-owned dynamic-only Gutenberg blocks where save:null means no static saved HTML is needed. For static/native blocks, this ability refuses the write and tells you to use the pending queue and Block Editor Queue browser runtime.',
             'readonly' => false,
             'destructive' => true,
             'idempotent' => true,
@@ -127,7 +127,7 @@ function gutenberg_write_content(array $input): array|WP_Error
         'written' => true,
         'finalization_required' => false,
         'warnings' => [
-            'Direct write path used because every block is a registered WPPilot-owned dynamic-only block.',
+            'Direct write path used because every block is a registered GoBuildWP-owned dynamic-only block.',
         ],
     ];
 }

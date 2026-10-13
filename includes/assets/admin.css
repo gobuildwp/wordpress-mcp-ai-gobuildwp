@@ -1,10 +1,10 @@
 /*
- * SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+ * SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
- * WPPilot admin design system.
+ * GoBuildWP admin design system.
  *
- * One stylesheet for every WPPilot screen, built on the tokens below so the
+ * One stylesheet for every GoBuildWP screen, built on the tokens below so the
  * screen-specific sheets (Abilities, Skills, Design, Changes, Preview, Sandbox)
  * change with it.
  *
@@ -40,8 +40,8 @@ body[class*='wppilot'] {
 	--wpp-line-soft: #eef0f3;
 
 	/* Identity. Position, selection, focus, the primary action. */
-	--wpp-accent: #675cf4;
-	--wpp-accent-hover: #4a3fd1;
+	--wpp-accent: #4b3cf0;
+	--wpp-accent-hover: #3a2ccc;
 	--wpp-accent-soft: #f4f3fe;
 
 	/* State, never decoration. */
@@ -153,7 +153,7 @@ body[class*='wppilot'] .wrap .wrap-title h1 {
 
 .wppilot-masthead__brand:focus {
 	box-shadow: none;
-	outline: 2px solid var(--wpp-accent, #675cf4);
+	outline: 2px solid var(--wpp-accent, #4b3cf0);
 	outline-offset: 4px;
 	border-radius: 4px;
 }
@@ -214,13 +214,13 @@ body[class*='wppilot'] .wrap .wrap-title h1 {
 .wppilot-masthead__link--upgrade:hover,
 .wppilot-masthead__link--upgrade:focus {
 	color: #fff;
-	background: var(--wpp-accent, #675cf4);
+	background: var(--wpp-accent, #4b3cf0);
 	margin-left: 4px;
 }
 
 .wppilot-masthead__link--upgrade:hover,
 .wppilot-masthead__link--upgrade:focus {
-	background: var(--wpp-accent-hover, #2f1fe0);
+	background: var(--wpp-accent-hover, #3a2ccc);
 	color: #fff;
 }
 
@@ -307,7 +307,7 @@ a.wppilot-masthead__status--armed:focus {
  * desktop width, and the sub-row only ever holds two to four entries.
  *
  * Each row scrolls inside itself on a narrow screen instead of widening the
- * page, which is what pushed every WPPilot screen sideways on a phone.
+ * page, which is what pushed every GoBuildWP screen sideways on a phone.
  */
 .wppilot-tabs {
 	background: var(--wpp-surface, #fff);
@@ -359,7 +359,7 @@ a.wppilot-masthead__status--armed:focus {
 .wppilot-tabs__section.is-current {
 	color: var(--wpp-ink, #101828);
 	font-weight: 600;
-	border-bottom-color: var(--wpp-accent, #675cf4);
+	border-bottom-color: var(--wpp-accent, #4b3cf0);
 }
 
 .wppilot-tabs__badge {
@@ -425,7 +425,7 @@ body[class*='wppilot'] .wppilot-subtabs a.wppilot-subtabs__tab.is-current {
 
 .wppilot-tabs__section:focus-visible,
 .wppilot-subtabs__tab:focus-visible {
-	outline: 2px solid var(--wpp-accent, #675cf4);
+	outline: 2px solid var(--wpp-accent, #4b3cf0);
 	outline-offset: -2px;
 	border-radius: 6px;
 }
@@ -2027,9 +2027,11 @@ body[class*='wppilot'] .wppilot-switch input:checked + .wppilot-switch__track::a
 	transform: translateX(22px);
 }
 
+/* Brand accent rather than green: "on" here means agents can write, which is not a
+   health signal, so it must not read as an all-clear. */
 body[class*='wppilot'] .wppilot-switch--armed input:checked + .wppilot-switch__track {
-	background: var(--wpp-live);
-	border-color: var(--wpp-live);
+	background: var(--wpp-accent);
+	border-color: var(--wpp-accent);
 }
 
 body[class*='wppilot'] .wppilot-switch input:focus-visible + .wppilot-switch__track {
@@ -2139,7 +2141,7 @@ body[class*='wppilot'] .wppilot-approval__actions {
 /* ----------------------------------------------------------------- plans -- */
 
 /*
- * The Upgrade screen. Price cards are the one place on any WPPilot screen where
+ * The Upgrade screen. Price cards are the one place on any GoBuildWP screen where
  * a number is the argument, so the figure is set at display size and everything
  * else defers to it. The recommended tier lifts off the page with the same hard
  * offset shadow the rest of the system uses, rather than a coloured fill: the
@@ -2344,8 +2346,20 @@ body[class*='wppilot'] .wppilot-prompt-locked-list {
 body[class*='wppilot'] .wppilot-prompt-lock {
 	margin-left: 6px;
 	font-size: 11px;
-	opacity: 0.75;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	color: #334155;
+	background: #eef2f6;
+	border-radius: 4px;
+	padding: 1px 5px;
 }
+body[class*='wppilot'] .wppilot-prompt-lock .dashicons { width: 13px; height: 13px; font-size: 13px; }
+.wppilot-masthead { flex-direction: column; align-items: stretch; }
+.wppilot-masthead__inner { min-height: 60px; margin: 0 auto; }
+.wppilot-cloud-banner { box-sizing: border-box; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 20px; padding: 9px 24px; background: #f1efff; border-bottom: 1px solid #dfd9ff; color: #2b2560; font-size: 12px; line-height: 1.6; }
+.wppilot-cloud-banner a { color: #3a2ccc; text-decoration: underline; text-underline-offset: 3px; padding: 4px 0; }
+.wppilot-cloud-banner a:focus-visible { outline: 2px solid #4b3cf0; outline-offset: 3px; }
 
 /* The builder picker: one select, the first line of every brief follows it. */
 body[class*='wppilot'] .wppilot-prompt-toolbar {

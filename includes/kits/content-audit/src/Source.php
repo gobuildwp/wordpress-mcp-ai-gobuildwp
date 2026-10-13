@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -83,7 +83,7 @@ interface Source
 
     /**
      * The SEO plugins the host's provider registry reports active on this request, slug to
-     * label. Empty when the host offers no registry (a copy of this kit outside WPPilot Pro).
+     * label. Empty when the host offers no registry (a copy of this kit outside GoBuildWP Pro).
      *
      * @return array<string, string>
      */

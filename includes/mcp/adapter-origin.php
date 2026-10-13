@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,16 +8,16 @@ declare(strict_types=1);
 /**
  * Which copy of the MCP Adapter this request is actually running.
  *
- * WPPilot bundles the adapter, and so does every other plugin that speaks MCP -
+ * GoBuildWP bundles the adapter, and so does every other plugin that speaks MCP -
  * Elementor 4.3 ships it inside `elementor/elementor-mcp-composer`. The classes
  * are global and unprefixed (`WP\MCP\…`), so only one copy can ever be loaded,
  * and which one wins is decided by the Jetpack autoloader's version arbitration
  * rather than by load order: the highest version tag in the merged classmap is
  * served to everybody. A plugin bundling a newer adapter therefore replaces
- * WPPilot's copy site-wide, silently.
+ * GoBuildWP's copy site-wide, silently.
  *
  * `class_exists()` cannot see this. It answers true whoever provided the class,
- * which is exactly the case where WPPilot most needs to behave differently: the
+ * which is exactly the case where GoBuildWP most needs to behave differently: the
  * adapter's default server belongs to whoever bundled it, so renaming that
  * server and aliasing the adapter's own default slug - both correct when the
  * copy is ours - would contest routes another plugin legitimately owns.
@@ -171,10 +171,10 @@ function wppilot_mcp_adapter_version(string $file): ?string
 }
 
 /**
- * Whether WPPilot may take over the adapter's default server.
+ * Whether GoBuildWP may take over the adapter's default server.
  *
- * True only when the loaded adapter is the copy WPPilot shipped. On a site where
- * another plugin's copy won, its default server is that plugin's, and WPPilot
+ * True only when the loaded adapter is the copy GoBuildWP shipped. On a site where
+ * another plugin's copy won, its default server is that plugin's, and GoBuildWP
  * registers its own server beside it instead of renaming theirs.
  */
 function wppilot_owns_mcp_adapter(): bool
@@ -198,7 +198,7 @@ function wppilot_mcp_adapter_origin_summary(): string
     if ($origin['ours']) {
         return sprintf(
             /* translators: %s: the MCP Adapter version */
-            __('Serving MCP with the adapter bundled in WPPilot (%s).', domain: 'wppilot'),
+            __('Serving MCP with the adapter bundled in GoBuildWP (%s).', domain: 'wppilot'),
             $origin['version'] ?? __('version unknown', domain: 'wppilot'),
         );
     }
@@ -206,7 +206,7 @@ function wppilot_mcp_adapter_origin_summary(): string
     return sprintf(
         /* translators: 1: plugin directory name, 2: the MCP Adapter version */
         __(
-            'Serving MCP with the adapter bundled in another plugin (%1$s, %2$s). Only one copy of the adapter can load, and this one won. WPPilot keeps its own endpoint at /wp-json/mcp/wppilot; the adapter\'s default server belongs to that plugin.',
+            'Serving MCP with the adapter bundled in another plugin (%1$s, %2$s). Only one copy of the adapter can load, and this one won. GoBuildWP keeps its own endpoint at /wp-json/mcp/wppilot; the adapter\'s default server belongs to that plugin.',
             domain: 'wppilot',
         ),
         $origin['owner'] ?? __('unknown plugin', domain: 'wppilot'),

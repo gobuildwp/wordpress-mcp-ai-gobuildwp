@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -227,7 +227,7 @@ final class Findings
 /**
  * The full name of the ability that fixes a rule, if this site has it.
  *
- * Built from the host's prefix rather than written out: `update-post` is WPPilot's own ability,
+ * Built from the host's prefix rather than written out: `update-post` is GoBuildWP's own ability,
  * not this kit's, so a copy of the kit in another plugin must not advertise it, and there it is
  * simply not registered. Only a registered ability is named, so an agent is never sent to one
  * that does not exist.

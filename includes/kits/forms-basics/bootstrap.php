@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
  *
  * Returned to the kit loader, which registers the ability files inside wp_abilities_api_init.
  * Only the files of the form plugins active on this request are listed, each checked against the
- * same version floor WPPilot Pro uses for it, so an agent sees tools for the plugins the site has.
+ * same version floor GoBuildWP Pro uses for it, so an agent sees tools for the plugins the site has.
  * Skipped when none is active.
  */
 require_once __DIR__ . '/src/redaction.php';

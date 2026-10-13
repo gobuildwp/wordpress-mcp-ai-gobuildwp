@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,7 +12,7 @@ declare(strict_types=1);
  *
  * Creating, reusing, listing, and revoking the password an MCP client
  * authenticates with. A generated password is shown once and never stored
- * in plaintext by WPPilot.
+ * in plaintext by GoBuildWP.
  */
 
 if (!defined('ABSPATH')) {
@@ -85,7 +85,7 @@ function wppilot_handle_create_password()
     $user_id = get_current_user_id();
     $raw_name = $_POST['wppilot_password_name'] ?? '';
     $input_name = is_string($raw_name) ? trim($raw_name) : '';
-    $app_name = $input_name !== '' ? 'WPPilot: ' . $input_name : 'WPPilot';
+    $app_name = $input_name !== '' ? 'GoBuildWP: ' . $input_name : 'GoBuildWP';
 
     // Avoid duplicate names — append a counter if one already exists.
     $existing = WP_Application_Passwords::get_user_application_passwords($user_id);
@@ -137,7 +137,8 @@ function wppilot_handle_revoke_password(): void
 }
 
 /**
- * Return all application passwords for the current user whose name begins with "WPPilot".
+ * Return all application passwords for the current user whose name begins with "GoBuildWP",
+ * or "WPPilot" for those created before the rename, which still authenticate.
  *
  * @return array<int, array<string, mixed>>
  */
@@ -145,7 +146,7 @@ function wppilot_get_mcp_passwords(): array
 {
     $user_id = get_current_user_id();
     $all = WP_Application_Passwords::get_user_application_passwords($user_id);
-    return array_values(array_filter($all, static fn($item) => str_starts_with($item['name'], 'WPPilot')));
+    return array_values(array_filter($all, static fn($item) => str_starts_with($item['name'], 'GoBuildWP') || str_starts_with($item['name'], 'WPPilot')));
 }
 
 /**
@@ -297,7 +298,7 @@ function wppilot_render_password_step(
             />
             <p class="description" style="margin-top:4px;">
                 <?php esc_html_e(
-                    'A label to identify this credential later. Leave blank to use "WPPilot".',
+                    'A label to identify this credential later. Leave blank to use "GoBuildWP".',
                     domain: 'wppilot',
                 ); ?>
             </p>
@@ -366,7 +367,7 @@ function wppilot_render_password_step(
 /**
  * Render the "Manage existing application passwords" collapsible section at the bottom of the page.
  *
- * Only meaningful when at least one WPPilot-tagged password exists. Hosts the list with revoke
+ * Only meaningful when at least one GoBuildWP-tagged password exists. Hosts the list with revoke
  * buttons. Used both when AI Abilities are enabled (revoke + create lives elsewhere) and when
  * disabled (revoke only).
  */
@@ -399,7 +400,7 @@ function wppilot_render_manage_passwords_section(string $context = 'enabled'): v
             <?php if ($context === 'disabled'): ?>
                 <p class="description" style="margin:0 0 12px;">
                     <?php esc_html_e(
-                        'AI Abilities are disabled. These credentials remain valid for WordPress authentication, but the WPPilot MCP endpoint will reject requests until AI Abilities are turned back on.',
+                        'AI Abilities are disabled. These credentials remain valid for WordPress authentication, but the GoBuildWP MCP endpoint will reject requests until AI Abilities are turned back on.',
                         domain: 'wppilot',
                     ); ?>
                 </p>

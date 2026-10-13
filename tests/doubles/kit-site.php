@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -8,7 +8,7 @@ declare(strict_types=1);
 /**
  * Post storage for kit tests, under names that carry no plugin prefix.
  *
- * Kit tests are exported with their kit (scripts/export-kit.php) and must not name WPPilot, so
+ * Kit tests are exported with their kit (scripts/export-kit.php) and must not name GoBuildWP, so
  * they cannot reach WPPilot_Test_State directly. They set up posts, meta, users and capabilities
  * through Kit_Test_Site instead, and the receiving plugin's harness provides its own
  * Kit_Test_Site over its own doubles. The WordPress functions below are the post and meta writes

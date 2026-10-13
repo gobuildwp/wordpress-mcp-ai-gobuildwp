@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -237,7 +237,7 @@ function wppilot_home_recent_changes(): void
         <?php if ($rows === []) { ?>
             <div class="wppilot-home__empty">
                 <p><strong><?php esc_html_e('No changes yet', domain: 'wppilot'); ?></strong></p>
-                <p><?php esc_html_e('Every edit an agent makes through WPPilot shows up here, with a one-click undo when one is possible.', domain: 'wppilot'); ?></p>
+                <p><?php esc_html_e('Every edit an agent makes through GoBuildWP shows up here, with a one-click undo when one is possible.', domain: 'wppilot'); ?></p>
             </div>
         <?php } else { ?>
             <ul class="wppilot-home__changes">
@@ -431,7 +431,7 @@ function wppilot_home_pro(): void
         ?>
         <section class="wppilot-panel wppilot-home__card">
             <header class="wppilot-home__card-head">
-                <h2><?php esc_html_e('WPPilot Pro', domain: 'wppilot'); ?></h2>
+                <h2><?php esc_html_e('GoBuildWP Pro', domain: 'wppilot'); ?></h2>
                 <?php if ($status['version'] !== '') { ?>
                     <span class="wppilot-pill wppilot-pill--ready"><?php echo esc_html('v' . $status['version']); ?></span>
                 <?php } ?>

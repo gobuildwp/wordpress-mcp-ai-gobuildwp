@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -15,7 +15,7 @@ use WPPilot_Test_State;
 require_once dirname(__DIR__) . '/doubles/kit-site.php';
 
 /**
- * The declarative ledger map: before-images and undo for abilities WPPilot did not write.
+ * The declarative ledger map: before-images and undo for abilities GoBuildWP did not write.
  *
  * Each test drives the ledger the way an ability execution does — the before hook,
  * the write, the after hook — then undoes the row, so what is proved is the

@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: admin workbench and REST API.
+ * GoBuildWP Chat: admin workbench and REST API.
  *
  * This file loads the module and wires its hooks. The implementation is split
  * by concern across this directory:
@@ -47,7 +47,7 @@ require_once __DIR__ . '/gutenberg.php';
 require_once __DIR__ . '/ai.php';
 require_once __DIR__ . '/usage.php';
 
-// Priority 70 places Chat directly before Visual (80) in the WPPilot submenu.
+// Priority 70 places Chat directly before Visual (80) in the GoBuildWP submenu.
 add_action('admin_menu', callback: 'wppilot_register_chat_menu', priority: 70);
 add_action('admin_enqueue_scripts', callback: 'wppilot_enqueue_chat_assets');
 add_action('rest_api_init', callback: 'wppilot_register_chat_routes');

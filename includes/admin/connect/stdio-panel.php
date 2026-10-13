@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -30,9 +30,9 @@ function wppilot_render_stdio_section(): void
         static fn(string $arg): string => preg_match('/^[A-Za-z0-9_@%+=:,.\/-]+$/', $arg) === 1 ? $arg : "'" . str_replace("'", "'\\''", $arg) . "'",
         $args,
     ));
-    $claude = 'claude mcp add wppilot-local -- wp ' . $quoted;
+    $claude = 'claude mcp add gobuildwp-local -- wp ' . $quoted;
     $cursor = (string) wp_json_encode(
-        ['mcpServers' => ['wppilot-local' => ['command' => 'wp', 'args' => $args]]],
+        ['mcpServers' => ['gobuildwp-local' => ['command' => 'wp', 'args' => $args]]],
         JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,
     );
     $script = "printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{},\"clientInfo\":{\"name\":\"ci\",\"version\":\"1\"}}}' | wp " . $quoted;
@@ -41,7 +41,7 @@ function wppilot_render_stdio_section(): void
         <summary><strong><?php esc_html_e('Local connection over WP-CLI (Claude Code, Cursor, CI)', domain: 'wppilot'); ?></strong></summary>
         <p class="description">
             <?php esc_html_e(
-                'When the AI client runs on the machine that runs this site, it can start WPPilot itself instead of connecting over HTTP: no password or token to create. It gets the same abilities, safety profile, confirmations and permission checks as HTTP, as the WordPress user named in --user, and every write it makes is one session on the Changes screen, undoable as one.',
+                'When the AI client runs on the machine that runs this site, it can start GoBuildWP itself instead of connecting over HTTP: no password or token to create. It gets the same abilities, safety profile, confirmations and permission checks as HTTP, as the WordPress user named in --user, and every write it makes is one session on the Changes screen, undoable as one.',
                 domain: 'wppilot',
             ); ?>
         </p>

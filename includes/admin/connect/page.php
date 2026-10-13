@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ function wppilot_render_connect_page(): void
         'revoked' => __('Application password revoked.', domain: 'wppilot'),
         'token_revoked' => __('Access token revoked.', domain: 'wppilot'),
         'token_updated' => __('Access token limits saved.', domain: 'wppilot'),
-        'token_cloud_managed' => __('That token is managed by WPPilot Cloud. To change what Cloud may do, disconnect and connect the site again.', domain: 'wppilot'),
+        'token_cloud_managed' => __('That token is managed by GoBuildWP Cloud. To change what Cloud may do, disconnect and connect the site again.', domain: 'wppilot'),
         'token_update_failed' => __('The access token limits were not saved. A restricted token needs at least one ability or category.', domain: 'wppilot'),
         default => null,
     };
@@ -275,7 +275,7 @@ function wppilot_render_method_chooser(
     $password_active =
         !$token_active && wppilot_password_method_preselected($new_password, $existing_password, $existing_error);
     $has_password = $new_password !== null || $existing_password !== null;
-    // A WPPilot Cloud pairing step that just redirected back here opens its own card.
+    // A GoBuildWP Cloud pairing step that just redirected back here opens its own card.
     $cloud_available = wppilot_cloud_available();
     $cloud_active = $cloud_available && !$token_active && !$password_active && wppilot_cloud_method_preselected();
     // What the page opens on: whatever happened this request, else the
@@ -539,10 +539,10 @@ function wppilot_render_method_cards(
             data-method="cloud"
         >
             <span class="wppilot-method-title">
-                <?php esc_html_e('WPPilot Cloud', domain: 'wppilot'); ?>
+                <?php esc_html_e('GoBuildWP Cloud', domain: 'wppilot'); ?>
             </span>
             <span class="description"><?php esc_html_e(
-                'Pair this site with your WPPilot Cloud workspace once; its AI clients connect through it.',
+                'Pair this site with your GoBuildWP Cloud workspace once; its AI clients connect through it.',
                 domain: 'wppilot',
             ); ?></span>
         </button>
@@ -756,7 +756,7 @@ function wppilot_render_config_section(string $rest_url, string $username, strin
         <div id="wppilot-name-suggestion" class="notice notice-warning inline" style="display:none; margin:8px 0 0;">
             <p style="margin:0;">
                 <?php esc_html_e(
-                    'Tip: keep "wppilot" in the name so you (and your AI agent) can tell this MCP server apart from others.',
+                    'Tip: keep "gobuildwp" in the name so you (and your AI agent) can tell this MCP server apart from others.',
                     domain: 'wppilot',
                 ); ?>
             </p>
@@ -1003,8 +1003,9 @@ function wppilot_render_config_section(string $rest_url, string $username, strin
 
             var suggestion = document.getElementById('wppilot-name-suggestion');
             var trimmed = value.trim();
-            var missingWPPilot = trimmed.length > 0 && trimmed.toLowerCase().indexOf('wppilot') === -1;
-            suggestion.style.display = missingWPPilot ? 'block' : 'none';
+            // A name an older version suggested ("wppilot-...") still identifies this server.
+            var missingBrand = trimmed.length > 0 && trimmed.toLowerCase().indexOf('gobuildwp') === -1 && trimmed.toLowerCase().indexOf('wppilot') === -1;
+            suggestion.style.display = missingBrand ? 'block' : 'none';
         }
 
         window.wppilotUpdateName = function (value) {
@@ -1224,7 +1225,7 @@ function wppilot_render_mcp_dependency_inline_notice(?WP_Error $dependency_error
 
     ?>
     <div class="wppilot-mcp-error-panel" role="alert">
-        <h2><?php esc_html_e('WPPilot cannot expose MCP', domain: 'wppilot'); ?></h2>
+        <h2><?php esc_html_e('GoBuildWP cannot expose MCP', domain: 'wppilot'); ?></h2>
         <p><?php echo esc_html($dependency_error->get_error_message()); ?></p>
     </div>
     <?php

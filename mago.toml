@@ -1,4 +1,4 @@
-# Static analysis for WPPilot.
+# Static analysis for GoBuildWP.
 #
 # mago ships in require-dev but had no configuration, so `mago lint` answered
 # "No files found to lint" and the tool never ran. It earns its place: the
@@ -19,7 +19,7 @@ php-version = "8.0"
 paths = ["includes"]
 
 # WordPress itself, and the runtime dependencies, are read for their signatures
-# but never analysed as WPPilot's own code. Without the stubs every core call
+# but never analysed as GoBuildWP's own code. Without the stubs every core call
 # reports as undefined and the real findings drown: 7,727 errors against 341.
 #
 # Integrations Pro detects at runtime — WooCommerce and the rest — have no stubs

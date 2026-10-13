@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ if (!defined('ABSPATH')) {
  *
  * Going through the route rather than writing the option is the point: Site Kit decides who may
  * share whose Google data, and an administrator who is not the module's owner cannot widen it
- * through WPPilot any more than through Site Kit's screen. No Google token is read or written.
+ * through GoBuildWP any more than through Site Kit's screen. No Google token is read or written.
  */
 
 const ABILITY = 'wppilot/site-kit-enable-sharing';
@@ -381,9 +381,13 @@ function restore(array $payload): array|WP_Error
 
     foreach ([SHARING_OPTION, PSI_SETTINGS_OPTION] as $name) {
         $row = $options[$name];
-        if (!is_array($row)) {
+        if (!is_array($row) || !is_bool($row['absent'] ?? null) || (!$row['absent'] && !array_key_exists('value', $row))) {
             return new WP_Error('kit_rollback_invalid', sprintf('The snapshot of %s is damaged.', $name));
         }
+    }
+    // Validate every row before restoring either: damaged owner data must not partially undo sharing.
+    foreach ([SHARING_OPTION, PSI_SETTINGS_OPTION] as $name) {
+        $row = $options[$name];
         if (($row['absent'] ?? false) === true) {
             delete_option($name);
             continue;

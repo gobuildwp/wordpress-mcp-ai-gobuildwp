@@ -1,15 +1,15 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * Ability: Discover Abilities (WPPilot replacement).
+ * Ability: Discover Abilities (GoBuildWP replacement).
  *
  * Replaces the MCP Adapter's bundled discover-abilities tool so the response
- * includes WPPilot's environment/usage instructions alongside the list of
+ * includes GoBuildWP's environment/usage instructions alongside the list of
  * abilities. These used to be sent via the MCP initialize handshake's
  * server_description, but some clients drop that; returning them here
  * guarantees the agent sees them on first tool discovery.
@@ -33,7 +33,7 @@ if (wp_has_ability('mcp-adapter/discover-abilities')) {
 wp_register_ability('mcp-adapter/discover-abilities', [
     'label' => __('Discover Abilities', domain: 'wppilot'),
     'description' => __(
-        'Discover all available WordPress abilities in the system. Returns a list of all registered abilities with their basic information and input signature (parameter names and types), plus WPPilot environment instructions.',
+        'Discover all available WordPress abilities in the system. Returns a list of all registered abilities with their basic information and input signature (parameter names and types), plus GoBuildWP environment instructions.',
         domain: 'wppilot',
     ),
     'category' => 'mcp-adapter',
@@ -42,7 +42,7 @@ wp_register_ability('mcp-adapter/discover-abilities', [
         'properties' => [
             'wppilot_instructions' => [
                 'type' => 'string',
-                'description' => 'WPPilot environment and usage guidance for the agent.',
+                'description' => 'GoBuildWP environment and usage guidance for the agent.',
             ],
             'abilities' => [
                 'type' => 'array',
@@ -78,11 +78,13 @@ wp_register_ability('mcp-adapter/discover-abilities', [
     'execute_callback' => static function (): array {
         $ability_list = [];
         foreach (wp_get_abilities() as $ability) {
-            $meta = $ability->get_meta();
-            if (!($meta['mcp']['public'] ?? false)) {
+            $meta = wppilot_ability_meta($ability);
+            // GoBuildWP's exposure rule on its own servers, so this list matches the modern
+            // transport's tools/list; the adapter's rule on another plugin's server sharing it.
+            if (!\WPPilot\Mcp\Legacy\publishes($meta)) {
                 continue;
             }
-            if (($meta['mcp']['type'] ?? 'tool') !== 'tool') {
+            if (wppilot_ability_mcp_type($meta) !== 'tool') {
                 continue;
             }
             $ability_list[] = [

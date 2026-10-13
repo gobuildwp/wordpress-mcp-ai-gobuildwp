@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -12,7 +12,7 @@ use WPPilot\Kits\Runtime\Hosts\WPPilotLedger;
 use WPPilot\Kits\Runtime\SessionLedger;
 
 /**
- * A kit's own restore type takes part in session undo and redo through WPPilot's ledger: the
+ * A kit's own restore type takes part in session undo and redo through GoBuildWP's ledger: the
  * reader it registers answers the change log's current-state and target questions for that type,
  * and only for that type.
  */

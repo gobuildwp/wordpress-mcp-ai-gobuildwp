@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -10,9 +10,9 @@ declare(strict_types=1);
  *
  *   php scripts/check-kit-boundaries.php [--pro-src=../wppilot-pro]
  *
- * A kit is copied into plugins that are not WPPilot (scripts/export-kit.php). Anything it takes
- * from WPPilot directly — a wppilot_* function, a WPPILOT_* constant, a class from another
- * WPPilot namespace — works here and fatals there, on a site this repository never sees. So
+ * A kit is copied into plugins that are not GoBuildWP (scripts/export-kit.php). Anything it takes
+ * from GoBuildWP directly — a wppilot_* function, a WPPILOT_* constant, a class from another
+ * GoBuildWP namespace — works here and fatals there, on a site this repository never sees. So
  * this reads every kit under includes/kits (and Pro's, with --pro-src) plus the runtime, token
  * by token, and refuses:
  *
@@ -35,7 +35,7 @@ declare(strict_types=1);
  *   - shop_order read through the posts table, which returns nothing on an HPOS store;
  *   - a kit hooking wp_abilities_api_init or wp_abilities_api_categories_init itself: the
  *     runtime owns those hooks, once per copy, and a registration outside them is silent;
- *   - an i18n call without WPPilot's literal text domain, which the exporter cannot rewrite;
+ *   - an i18n call without GoBuildWP's literal text domain, which the exporter cannot rewrite;
  *   - an ability declaring meta.safety.min_profile whose registration does not call
  *     Runtime\require_profile() with its own name: before WordPress 7.1 the key alone is
  *     enforced by nothing outside the host's own gate.
@@ -46,8 +46,8 @@ declare(strict_types=1);
  * that each declared skill has skills/<slug>/SKILL.md (and each SKILL.md is declared), and that
  * declared tests exist.
  *
- * WPPilot-side glue — _runtime/hosts/wppilot.php, includes/kits/loader.php and skills.php — is
- * never exported, so it may name WPPilot freely; it is held to the PHP 8.0 rules only.
+ * GoBuildWP-side glue — _runtime/hosts/wppilot.php, includes/kits/loader.php and skills.php — is
+ * never exported, so it may name GoBuildWP freely; it is held to the PHP 8.0 rules only.
  *
  * Development-only: package.sh excludes scripts/.
  */
@@ -306,7 +306,7 @@ function check_signature(array $tokens, int $i, string $where, Report $report): 
 }
 
 /**
- * The rules for code that is exported: kits and the runtime, not WPPilot's glue.
+ * The rules for code that is exported: kits and the runtime, not GoBuildWP's glue.
  *
  * @param list<array{0: int, 1: string, 2: int}> $tokens
  * @param list<string> $lines
@@ -348,7 +348,7 @@ function check_portable(array $tokens, array $lines, string $where, ?string $own
 
         if (($id === T_STRING || $id === T_NAME_FULLY_QUALIFIED) && preg_match('/^\\\\?WPPILOT_[A-Z0-9_]+$/', $text) === 1
             && ($tokens[next_significant($tokens, $i)][1] ?? '') !== '(') {
-            $report->add($where, $line, "{$text} is a WPPilot constant; ask the host instead");
+            $report->add($where, $line, "{$text} is a GoBuildWP constant; ask the host instead");
         }
 
         $value = literal($tokens[$i]);
@@ -359,10 +359,10 @@ function check_portable(array $tokens, array $lines, string $where, ?string $own
         if ($value !== null) {
             // 'wppilot-pro' alone is Pro's text domain, which the exporter rewrites.
             if ($value !== 'wppilot-pro' && preg_match('/(?<![A-Za-z0-9])wppilot(?:_(?!kit_)|-(?!kit))[a-z0-9_-]*/i', $value, $m) === 1) {
-                $report->add($where, $line, "'{$m[0]}' names WPPilot's own hook, option or handle; kits may only use wppilot_kit_* and wppilot-kit* names");
+                $report->add($where, $line, "'{$m[0]}' names GoBuildWP's own hook, option or handle; kits may only use wppilot_kit_* and wppilot-kit* names");
             }
             if (preg_match('/WPPilot\\\\{1,2}(?!Kits\\\\)[A-Za-z]/', $value) === 1) {
-                $report->add($where, $line, "a string names a WPPilot class outside the kits: {$value}");
+                $report->add($where, $line, "a string names a GoBuildWP class outside the kits: {$value}");
             }
             if ($value === 'shop_order') {
                 for ($j = prev_significant($tokens, $i), $n = 0; $j !== -1 && $n < 8; $j = prev_significant($tokens, $j), $n++) {
@@ -389,7 +389,7 @@ function check_portable(array $tokens, array $lines, string $where, ?string $own
         $close_line = $tokens[matching_close($tokens, $open)][2];
 
         if (str_starts_with($short, 'wppilot_')) {
-            $report->add($where, $line, "{$short}() is WPPilot's; a kit reaches WPPilot only through Runtime\\host()");
+            $report->add($where, $line, "{$short}() is GoBuildWP's; a kit reaches GoBuildWP only through Runtime\\host()");
         }
         if ($short === 'spl_autoload_register') {
             $report->add($where, $line, 'spl_autoload_register(): two plugins carrying this kit would both answer for the same classes');
@@ -506,7 +506,7 @@ function check_manifest(array $manifest, string $slug, string $tier, string $whe
                 // A name the kit owns has to be renamed on export, which is what the coexistence
                 // gate catches; declaring it vendor-owned would silence that.
                 if (!is_string($name) || $name === '' || stripos($name, 'wppilot') !== false) {
-                    $report->add($where, 0, "kit.json vendor_storage.{$kind} must list the other plugin's names, none of them WPPilot's");
+                    $report->add($where, 0, "kit.json vendor_storage.{$kind} must list the other plugin's names, none of them GoBuildWP's");
                     break;
                 }
             }
@@ -675,7 +675,7 @@ if ($problems !== []) {
     foreach ($problems as $problem) {
         fwrite(STDERR, "  - {$problem}\n");
     }
-    fwrite(STDERR, "\nA kit is exported into plugins that have none of WPPilot; see the header of scripts/check-kit-boundaries.php.\n");
+    fwrite(STDERR, "\nA kit is exported into plugins that have none of GoBuildWP; see the header of scripts/check-kit-boundaries.php.\n");
     exit(1);
 }
 

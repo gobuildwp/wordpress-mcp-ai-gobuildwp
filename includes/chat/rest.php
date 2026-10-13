@@ -1,12 +1,12 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
 
 /**
- * WPPilot Chat: REST route registration and request handlers.
+ * GoBuildWP Chat: REST route registration and request handlers.
  *
  * Handlers stay thin. Anything a handler needs beyond unwrapping the request
  * and shaping the response belongs in session.php, tool-calls.php, or ai.php.
@@ -112,7 +112,7 @@ function wppilot_chat_rest_permission(): bool|WP_Error
 }
 
 /**
- * Record that the current user accepted the one-time WPPilot Chat cost notice.
+ * Record that the current user accepted the one-time GoBuildWP Chat cost notice.
  *
  * @return array{consented: bool}
  */

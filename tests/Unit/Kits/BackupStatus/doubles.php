@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -230,7 +230,7 @@ namespace {
         }
     }
 
-    // What WPPilot Pro's export runner calls (ai1wm_runner_missing()); the chain is Vendors::$ai1wmChain,
+    // What GoBuildWP Pro's export runner calls (ai1wm_runner_missing()); the chain is Vendors::$ai1wmChain,
     // empty unless a test registers steps, so an install counts as startable only when it has one.
     if (!function_exists('ai1wm_get_filters')) {
         /** @return array<int, list<array<string, mixed>>> */

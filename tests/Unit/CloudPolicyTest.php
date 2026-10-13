@@ -1,6 +1,6 @@
 <?php
 
-// SPDX-FileCopyrightText: 2026 WPPilot <dev@wppilot.co>
+// SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 declare(strict_types=1);
@@ -21,7 +21,7 @@ require_once dirname(__DIR__, 2) . '/includes/rate-limit.php';
 require_once dirname(__DIR__, 2) . '/includes/cloud/bootstrap.php';
 
 /**
- * Safety settings pushed from WPPilot Cloud (includes/cloud/policy.php).
+ * Safety settings pushed from GoBuildWP Cloud (includes/cloud/policy.php).
  *
  * The rules under test: nothing without the owner's opt-in; a policy is
  * applied whole or not at all; loosening needs its own opt-in; Developer Full
