@@ -53,7 +53,7 @@ const WEBSITE_URL = 'https://gobuildwp.com';
 
 const DOCS_URL = 'https://gobuildwp.com/docs';
 
-const REPOSITORY_URL = 'https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp';
+const REPOSITORY_URL = 'https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp';
 
 /** One hour: the card changes only when the plugin is updated or OAuth is switched on or off. */
 const MAX_AGE = 3600;

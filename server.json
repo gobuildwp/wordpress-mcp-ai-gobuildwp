@@ -6,7 +6,7 @@
     "version": "1.18.5",
     "websiteUrl": "https://gobuildwp.com",
     "repository": {
-        "url": "https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp",
+        "url": "https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp",
         "source": "github"
     },
     "remotes": [

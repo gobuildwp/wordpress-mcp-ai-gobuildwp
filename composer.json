@@ -17,10 +17,10 @@
 	],
 	"homepage": "https://gobuildwp.com",
 	"support": {
-		"issues": "https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/issues",
-		"source": "https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp",
+		"issues": "https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/issues",
+		"source": "https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp",
 		"docs": "https://gobuildwp.com/docs",
-		"security": "https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/blob/main/SECURITY.md"
+		"security": "https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/blob/main/SECURITY.md"
 	},
 	"license": "GPL-2.0-or-later",
 	"require": {

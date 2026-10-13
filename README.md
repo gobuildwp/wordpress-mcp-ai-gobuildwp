@@ -4,14 +4,14 @@
 Current releases: **GoBuildWP Free 1.18.6 / Pro 1.12.4**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
-[![Version](https://img.shields.io/github/v/release/wppilot-labs/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases)
-[![Quality](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/actions/workflows/quality.yml)
+[![Version](https://img.shields.io/github/v/release/gobuildwp/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
+[![Quality](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/actions/workflows/quality.yml)
 [![WordPress](https://img.shields.io/badge/WordPress-6.9%2B-6D28D9)](https://wordpress.org/)
 [![Tested up to](https://img.shields.io/badge/tested%20up%20to-WordPress%207.1-6D28D9)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-6D28D9)](https://www.php.net/)
 [![License](https://img.shields.io/badge/license-GPL--2.0--or--later-6D28D9)](LICENSE)
 
-[![Download gobuildwp.zip](https://img.shields.io/badge/Download-gobuildwp.zip-6D28D9?style=for-the-badge)](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases/latest/download/gobuildwp.zip)
+[![Download gobuildwp.zip](https://img.shields.io/badge/Download-gobuildwp.zip-6D28D9?style=for-the-badge)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases/latest/download/gobuildwp.zip)
 
 **GoBuildWP turns your WordPress site into an MCP server.** Connect Claude, ChatGPT, Claude Code, Codex, Cursor or any other MCP client, and an AI agent can build and edit pages, Elementor layouts, Gutenberg blocks, menus, media and SEO metadata, check PageSpeed and security, and read your WooCommerce store, all through typed WordPress abilities that your user permissions, a safety profile and an undoable change ledger still govern. The free plugin in this repository is a complete WordPress MCP server and a free Elementor MCP server. [GoBuildWP Pro](https://gobuildwp.com/pro) adds WooCommerce writes, the other page builders, SEO suites, safe updates and backups. [GoBuildWP Cloud](https://app.gobuildwp.com) is an optional hosted link for many sites.
 
@@ -57,6 +57,21 @@ The agent then makes these calls on your site:
 | 4 | `wppilot/elementor-clear-document-cache` | Regenerates Elementor's CSS for the page. |
 
 Both edits are checked against your WordPress capabilities and the active safety profile before they run. They appear on **GoBuildWP → Changes**, attributed to the agent that made them, and `wppilot/undo-session` (or **Undo session** on that screen) reverses them.
+
+### Real results: full pages built through GoBuildWP
+
+Each page below was built from one plain-language request through the real MCP, in native Elementor, saved as a draft and checked on desktop and mobile. Nothing was edited by hand afterwards. Full pages and the exact requests: [gobuildwp.com](https://gobuildwp.com/).
+
+| SaaS homepage (Lumora) | Car showroom (Noir Motor House) | Bakery (Hearth & Crumb) |
+|---|---|---|
+| ![Lumora SaaS homepage built by GoBuildWP in native Elementor](.github/readme/result-lumora.webp) | ![Noir Motor House car showroom homepage built by GoBuildWP in native Elementor](.github/readme/result-noir.webp) | ![Hearth & Crumb bakery homepage built by GoBuildWP in native Elementor](.github/readme/result-hearth-crumb.webp) |
+| 250 Elementor elements, checked at 1440 and 390 px | 130 elements, checked at 1920 to 390 px | 295 elements, checked at 1920 to 390 px |
+
+**Inside WordPress:** every change an agent makes is listed with a way back, and each site shows what is connected.
+
+| Changes and undo | Connect your AI client | Dashboard |
+|---|---|---|
+| ![GoBuildWP Changes screen listing an agent edit that can be undone](.github/readme/screen-changes.webp) | ![GoBuildWP Connect screen with AI client setup](.github/readme/screen-connection.webp) | ![GoBuildWP dashboard in WordPress admin](.github/readme/screen-dashboard.webp) |
 
 ### How it compares to other WordPress MCP servers
 
@@ -114,8 +129,8 @@ Content creation is draft-first: an absent, blank or malformed status resolves t
 
 ### 1. Install the plugin
 
-1. [**Download `gobuildwp.zip`**](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases/latest/download/gobuildwp.zip) and upload it in **Plugins → Add New → Upload Plugin**. The folder inside the archive is `wppilot/`, so the plugin installs as `wp-content/plugins/wppilot`. That is its internal id, kept so existing installs update in place.
-   *GitHub's own "Source code (zip)" download is **not** installable: it has no `vendor/` and uses a versioned folder name. Older versions are on the [releases page](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases).*
+1. [**Download `gobuildwp.zip`**](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases/latest/download/gobuildwp.zip) and upload it in **Plugins → Add New → Upload Plugin**. The folder inside the archive is `wppilot/`, so the plugin installs as `wp-content/plugins/wppilot`. That is its internal id, kept so existing installs update in place.
+   *GitHub's own "Source code (zip)" download is **not** installable: it has no `vendor/` and uses a versioned folder name. Older versions are on the [releases page](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases).*
 2. Activate GoBuildWP.
 3. Open **GoBuildWP → Configuration** and leave **Production Safe** selected.
 4. Open **GoBuildWP → Connect** and choose your AI client. The screen generates the exact configuration for that client, with your site's URL and a suggested server name (`gobuildwp-<your-site>`) filled in.
@@ -431,7 +446,7 @@ No. The free plugin is a complete WordPress MCP server with 232 abilities and ne
 It is built on both. Abilities are registered through the Abilities API, and the MCP Adapter is bundled to serve the legacy protocol revision. GoBuildWP adds authentication, safety profiles, confirmation gates, rate limiting, the change ledger with undo, and the abilities themselves.
 
 **Is it on WordPress.org?**
-Not currently. Install `gobuildwp.zip` from [Releases](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases). GoBuildWP Pro is sold at gobuildwp.com.
+Not currently. Install `gobuildwp.zip` from [Releases](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases). GoBuildWP Pro is sold at gobuildwp.com.
 
 **Why do the CLI, endpoints and ability names still say `wppilot`?**
 They are the plugin's internal identifiers (`wppilot/*` abilities, `wp wppilot`, `/wp-json/mcp/wppilot`) and were kept on purpose, so existing client configurations, scripts and installs keep working after the rename.
@@ -483,7 +498,7 @@ Index: [`docs/README.md`](docs/README.md)
 ## Support
 
 - Connection problems: **GoBuildWP → Diagnostics** runs the checks a client runs and usually names the fix. See [troubleshooting](https://gobuildwp.com/docs/troubleshooting).
-- Bugs, client connection reports and integration requests: [GitHub issues](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/issues).
+- Bugs, client connection reports and integration requests: [GitHub issues](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/issues).
 - Help and Pro or Cloud questions: <https://gobuildwp.com/support>.
 - Releases and build demos: [@gobuildwp on X](https://x.com/gobuildwp).
 

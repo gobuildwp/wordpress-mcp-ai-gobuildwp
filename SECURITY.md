@@ -31,7 +31,7 @@ already been exposed, rotate it - deleting a message does not un-send it.
 The current release line receives security fixes. GoBuildWP is distributed as
 GitHub releases rather than through the WordPress.org directory, so an install
 that has not been updated is not receiving them. `wppilot.zip` on the
-[releases page](https://github.com/wppilot-labs/wordpress-mcp-ai-gobuildwp/releases)
+[releases page](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
 is always the newest build, and the in-plugin updater points at the same file.
 
 ## Scope
