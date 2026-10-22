@@ -1,7 +1,7 @@
 # GoBuildWP: WordPress MCP server and AI website builder for Claude, ChatGPT, Cursor and Codex
 
 <!-- current-releases:start -->
-Current releases: **GoBuildWP Free 1.18.7 / Pro 1.12.4** (Pro 1.13.0, with whole-website builds, follows through Freemius). Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.18.7 / Pro 1.13.0**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
 [![Version](https://img.shields.io/github/v/release/gobuildwp/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
