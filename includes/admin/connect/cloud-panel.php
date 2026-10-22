@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Reads only: outcome codes and a pairing state set by this plugin's own redirects, each whitelist-compared or validated before use. Every action on this panel posts to admin-post.php with its own nonce.
-
 /**
  * The GoBuildWP Cloud method card's panel.
  *
@@ -25,8 +23,10 @@ if (!defined('ABSPATH')) {
  */
 function wppilot_cloud_method_preselected(): bool
 {
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Display-only: presence of this plugin's own redirect parameters decides which method card opens first; nothing is changed.
     return (isset($_GET['wppilot_method']) && $_GET['wppilot_method'] === 'cloud')
         || isset($_GET['wppilot_cloud_state']) || isset($_GET['wppilot_cloud_result']) || isset($_GET['wppilot_cloud_error']);
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 }
 
 /**
@@ -77,10 +77,12 @@ function wppilot_cloud_detail_hint(string $detail): string
 // @mago-expect lint:cyclomatic-complexity
 function wppilot_render_cloud_panel(): void
 {
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Display-only: outcome codes and the pairing state come from this plugin's own redirects; codes pick fixed messages, and the state only looks up the current user's pending pairing transient for the nonce-checked Confirm form.
     $result = is_string($_GET['wppilot_cloud_result'] ?? null) ? sanitize_key(wp_unslash($_GET['wppilot_cloud_result'])) : '';
     $error = is_string($_GET['wppilot_cloud_error'] ?? null) ? sanitize_key(wp_unslash($_GET['wppilot_cloud_error'])) : '';
     $detail = is_string($_GET['wppilot_cloud_detail'] ?? null) ? sanitize_key(wp_unslash($_GET['wppilot_cloud_detail'])) : '';
     $state = is_string($_GET['wppilot_cloud_state'] ?? null) ? sanitize_text_field(wp_unslash($_GET['wppilot_cloud_state'])) : '';
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
     $result_message = match ($result) {
         'connected' => __('This site is connected to GoBuildWP Cloud.', domain: 'wppilot'),

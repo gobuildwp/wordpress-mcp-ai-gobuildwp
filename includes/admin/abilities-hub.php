@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 if (!defined('ABSPATH')) {
     exit();
 }
@@ -217,7 +215,7 @@ function wppilot_format_ability_mcp_meta(array $meta): string
 
 function wppilot_handle_ability_hub_actions(): void
 {
-    if (($_POST['wppilot_ability_hub_action'] ?? null) === null) {
+    if (!isset($_POST['wppilot_ability_hub_action'])) {
         return;
     }
 
@@ -237,6 +235,7 @@ function wppilot_handle_ability_hub_actions(): void
     }
 
     $ability_name = is_string($_POST['ability_name'] ?? null)
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wppilot_sanitize_requested_ability_name() applies wp_unslash() and sanitize_text_field(); the name is then checked by wppilot_is_valid_ability_name().
         ? wppilot_sanitize_requested_ability_name($_POST['ability_name'])
         : '';
 
@@ -253,7 +252,7 @@ function wppilot_handle_ability_hub_actions(): void
         $rules = wppilot_set_ability_governance_rule(
             $rules,
             $ability_name,
-            require_confirmation: ($_POST['require_confirmation'] ?? '') === '1',
+            require_confirmation: isset($_POST['require_confirmation']) && $_POST['require_confirmation'] === '1',
             min_profile: $min_profile,
         );
     } else {
@@ -284,6 +283,7 @@ function wppilot_handle_ability_toggle_ajax(): void
     }
 
     $ability_name = is_string($_POST['ability_name'] ?? null)
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wppilot_sanitize_requested_ability_name() applies wp_unslash() and sanitize_text_field(); the name is then checked by wppilot_is_valid_ability_name().
         ? wppilot_sanitize_requested_ability_name($_POST['ability_name'])
         : '';
 
@@ -334,8 +334,10 @@ function wppilot_handle_ability_hub_bulk_action(): void
 
 function wppilot_get_ability_hub_bulk_action(): string
 {
+    // phpcs:disable WordPress.Security.NonceVerification.Missing -- Only called from wppilot_handle_ability_hub_actions() after check_admin_referer('wppilot_ability_hub_action').
     $top_action = is_string($_POST['bulk_action'] ?? null) ? sanitize_key(wp_unslash($_POST['bulk_action'])) : '';
     $bottom_action = is_string($_POST['bulk_action2'] ?? null) ? sanitize_key(wp_unslash($_POST['bulk_action2'])) : '';
+    // phpcs:enable WordPress.Security.NonceVerification.Missing
     $action = $top_action !== '-1' && $top_action !== '' ? $top_action : $bottom_action;
 
     return in_array($action, ['enable', 'disable'], strict: true) ? $action : '';
@@ -346,6 +348,7 @@ function wppilot_get_ability_hub_bulk_action(): string
  */
 function wppilot_get_ability_hub_bulk_ability_names(): array
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only called after check_admin_referer('wppilot_ability_hub_action'); each element is type-checked, then unslashed and sanitized by wppilot_sanitize_requested_ability_name() and validated in the loop below.
     $raw_names = is_array($_POST['ability_names'] ?? null) ? $_POST['ability_names'] : [];
 
     $ability_names = [];
@@ -681,6 +684,7 @@ function wppilot_render_settings_page()
     }
 
     $ability_groups = wppilot_collect_ability_hub_rows();
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only: a result code from this screen's own redirect selects which fixed notice to show.
     $result = is_string($_GET['wppilot_result'] ?? null) ? sanitize_key(wp_unslash($_GET['wppilot_result'])) : null;
     ?>
     <?php wppilot_render_admin_header(); ?>

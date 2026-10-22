@@ -5,13 +5,11 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * Plugin Name: GoBuildWP
  * Plugin URI: https://gobuildwp.com
  * Description: WordPress MCP server with free Elementor MCP editing. Connects Claude, Codex, Cursor and other AI clients to typed WordPress abilities over MCP, with OAuth 2.1, safety profiles, change evidence and rollback.
- * Version: 1.18.6
+ * Version: 1.18.7
  * Requires at least: 6.9
  * Requires PHP: 8.0
  * Update URI: https://gobuildwp.com/wppilot/
@@ -42,13 +40,13 @@ if (!defined('ABSPATH')) {
 // Both distributions share namespaces and stored data. Keep the first active
 // base authoritative; never auto-deactivate, uninstall or delete either copy.
 if (defined('WPPILOT_PLUGIN_FILE') && constant('WPPILOT_PLUGIN_FILE') !== __FILE__) {
-    $conflict_notice = static function (): void {
+    $wppilot_conflict_notice = static function (): void {
         echo '<div class="notice notice-error"><p>' . esc_html__(
             'GoBuildWP cannot load two Free editions together. Keep one Free edition active before enabling the other. Your stored data has not been deleted.',
             'wppilot',
         ) . '</p></div>';
     };
-    add_action('admin_notices', $conflict_notice);
+    add_action('admin_notices', $wppilot_conflict_notice);
     register_activation_hook(__FILE__, static function (): void {
         wp_die(esc_html__('Another GoBuildWP Free edition is already active. Deactivate it before activating this edition; do not uninstall it to switch editions.', 'wppilot'));
     });
@@ -261,8 +259,8 @@ add_filter('wppilot_discover_abilities_instructions', callback: 'wppilot_inject_
 
 
 add_action('admin_bar_menu', callback: 'wppilot_register_admin_bar_toggle', priority: 999);
-add_action('admin_head', callback: 'wppilot_render_admin_bar_toggle_assets');
-add_action('wp_head', callback: 'wppilot_render_admin_bar_toggle_assets');
+add_action('admin_enqueue_scripts', callback: 'wppilot_enqueue_admin_bar_toggle_assets');
+add_action('wp_enqueue_scripts', callback: 'wppilot_enqueue_admin_bar_toggle_assets');
 
 // Optional dev mock for the external-skills source. Gitignored. Loaded
 // only when the constant is set (e.g. in wp-config.php) so it never ships
@@ -295,25 +293,31 @@ add_filter(
 // Suppress noisy admin notices on the Configuration page via CSS: hide notices that are not
 // emitted by GoBuildWP or GoBuildWP Pro. Cheap and side-effect free, unlike iterating $wp_filter
 // with Reflection (which causes memory blow-ups when Query Monitor captures every remove_action).
-add_action('admin_head', static function () {
-    if (!in_array($_GET['page'] ?? null, ['wppilot-connect', WPPILOT_SETUP_PAGE], strict: true)) {
-        return;
-    }
-    ?>
-    <style id="wppilot-suppress-foreign-notices">
-        .wrap > .notice:not(.wppilot-pro-notice):not(.wppilot-keep),
-        #wpbody-content > .notice:not(.wppilot-pro-notice):not(.wppilot-keep),
-        #wpbody-content > .updated:not(.wppilot-keep),
-        #wpbody-content > .error:not(.wppilot-keep) {
-            display: none !important;
+// The WordPress.org edition does not hide other plugins' or core notices; the release build
+// removes this block from that edition.
+if (!wppilot_is_wordpress_org_edition()) {
+    add_action('admin_head', static function () {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only: the admin page slug decides whether a CSS rule is printed; nothing is changed.
+        if (!in_array($_GET['page'] ?? null, ['wppilot-connect', WPPILOT_SETUP_PAGE], strict: true)) {
+            return;
         }
-    </style>
-    <?php
-});
+        ?>
+        <style id="wppilot-suppress-foreign-notices">
+            .wrap > .notice:not(.wppilot-pro-notice):not(.wppilot-keep),
+            #wpbody-content > .notice:not(.wppilot-pro-notice):not(.wppilot-keep),
+            #wpbody-content > .updated:not(.wppilot-keep),
+            #wpbody-content > .error:not(.wppilot-keep) {
+                display: none !important;
+            }
+        </style>
+        <?php
+    });
+}
 
 // Handle form actions early (before headers are sent) for PRG redirect.
 add_action('admin_init', static function () {
-    $page = $_GET['page'] ?? null;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Routing only: the page slug picks which form handlers run, and each verifies its own nonce with check_admin_referer() before changing anything.
+    $page = isset($_GET['page']) && is_string($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : null;
     if ($page === 'wppilot-sandbox') {
         wppilot_handle_sandbox_actions();
     }
@@ -456,9 +460,9 @@ add_action(
     priority: 50,
 );
 
-$is_enabled = wppilot_is_enabled();
+$wppilot_is_enabled = wppilot_is_enabled();
 
-if (!$is_enabled && wppilot_is_domain_mismatch()) {
+if (!$wppilot_is_enabled && wppilot_is_domain_mismatch()) {
     add_action('admin_notices', static function () {
         if (!wppilot_current_user_can_manage()) {
             return;
@@ -482,7 +486,7 @@ if (!$is_enabled && wppilot_is_domain_mismatch()) {
 $wppilot_abilities_supported = wppilot_wordpress_abilities_supported();
 $wppilot_adapter_initialized = false;
 
-if ($is_enabled && $wppilot_abilities_supported) {
+if ($wppilot_is_enabled && $wppilot_abilities_supported) {
     wppilot_load_gutenberg_runtime();
     wppilot_register_ability_hooks();
 

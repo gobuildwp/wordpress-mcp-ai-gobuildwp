@@ -1,7 +1,7 @@
 # GoBuildWP: WordPress MCP server and AI website builder for Claude, ChatGPT, Cursor and Codex
 
 <!-- current-releases:start -->
-Current releases: **GoBuildWP Free 1.18.6 / Pro 1.12.4**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.18.7 / Pro 1.12.4** (Pro 1.13.0, with whole-website builds, follows through Freemius). Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
 [![Version](https://img.shields.io/github/v/release/gobuildwp/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
@@ -20,6 +20,15 @@ Current releases: **GoBuildWP Free 1.18.6 / Pro 1.12.4**. Pro requires Free 1.18
 Website: <https://gobuildwp.com> · Docs: <https://gobuildwp.com/docs> · Client setup guides: <https://gobuildwp.com/wordpress-mcp> · Release notes and build demos on X: <https://x.com/gobuildwp>
 
 ---
+
+## What's new in 1.18.7
+
+- **Build a whole Elementor page in one call.** `wppilot/elementor-build-page` takes the page as one nested description (`{type, settings, styles, children}`) on v3 containers or v4 atomic elements. The whole page is validated before anything is written, so a rejected widget never leaves a half-built page; the error carries that widget's compact schema so the agent can fix it in the next call. `dry_run=true` checks a description without touching the page, and the build is one undoable change.
+- **Style edits no longer wipe a layout.** `wppilot/elementor-edit-element` now merges styles property by property within the same breakpoint and state. Before, one small edit such as right-aligning a row deleted the row's other desktop styles and every tablet, mobile and hover variant.
+- **Clearer errors.** Block-note abilities say "No note has that ID" instead of "Permission denied" for an ID that does not exist, and `wppilot/import-media-url` names the host and the real HTTP status when a site refuses a download.
+- **Pro 1.13.0: whole websites in Elementor.** Plan every page and the menu in one checked call (`elementor-plan-site`), build the pages as drafts in short, resumable batches with a cross-page design review (`elementor-build-site`), then publish them with the front page and menu after a person approves (`elementor-publish-site`). Pages use the Elementor Canvas template by default, so the theme does not print a second header and page title above each page. The whole site, publish included, is one undo on the Changes screen.
+
+Tested on WordPress 7.1 with Elementor 4.3.5 over a real MCP connection: every free read-only ability and the write abilities with their undo, a full landing page from one `elementor-build-page` call, and a three-page Pro site planned, built, published and rendered. Full history: [CHANGELOG.txt](CHANGELOG.txt).
 
 ## What GoBuildWP does
 
@@ -81,7 +90,7 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 
 ## What the free plugin can do
 
-232 registered abilities, plus one MCP prompt per skill you save. The WooCommerce, SEO, form, backup, security and Site Kit abilities register only while their plugin is active, and developer abilities only under Developer Full Access, so a fresh install with none of those plugins registers 167 on the default profile. Each ability can be switched off individually on the Abilities screen.
+233 registered abilities, plus one MCP prompt per skill you save. The WooCommerce, SEO, form, backup, security and Site Kit abilities register only while their plugin is active, and developer abilities only under Developer Full Access, so a fresh install with none of those plugins registers 167 on the default profile. Each ability can be switched off individually on the Abilities screen.
 
 <details>
 <summary><strong>Full table of free abilities by domain</strong></summary>
@@ -98,7 +107,7 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 | **Site** | `2` | Site information and an explicit settings allowlist. |
 | **Plugins and themes** | `12` | Search the WordPress.org plugin directory and read one extension in detail. Activate, deactivate, update and switch themes with explicit confirmation. Install and delete are Developer Full Access only: they write executable code to the server. |
 | **Gutenberg** | `11` | Block-editor content, staged pending changes and browser finalization for native blocks. |
-| **Elementor** | `17` | Read a document, inspect the widgets and style properties this install offers, and edit the element tree: add, edit, move, duplicate, reorder and delete. Page settings included. [Detail below.](#elementor-mcp-free-elementor-editing) |
+| **Elementor** | `18` | Read a document, inspect the widgets and style properties this install offers, build a whole page from one description, and edit the element tree: add, edit, move, duplicate, reorder and delete. Page settings included. [Detail below.](#elementor-mcp-free-elementor-editing) |
 | **Design system** | `19` | Typed design tokens, saved designs and activation, plus the checks that grade a built page against them: contrast, composition, layout grammars and a rendered-page verification pass. |
 | **Preview** | `8` | Compute what a write would change without performing it, then apply the reviewed result. Plus a view link, so an agent with a browser can look at the page it built, including a draft, and a capture store that compares two screenshots of a page and reports which regions moved. |
 | **Skills** | `4` + prompts | Reusable skills and site-wide instructions. Each saved skill also registers one MCP prompt, so this grows with the skills you write. |
@@ -219,9 +228,9 @@ GoBuildWP serves both protocol revisions during the migration window: the statel
 
 | Capability | Free | Pro | Cloud |
 | --- | --- | --- | --- |
-| **Full website creation and editing** | **Free**: pages, posts, Gutenberg blocks, menus, front page, media, taxonomies, design system, block-theme templates and parts, site-wide header | **Pro**: whole-page composition in one call (Elementor), Elementor Theme Builder templates and display conditions, page builder and theme modules | **Cloud**: the same site tools for many sites through one link |
-| **Landing pages** | **Free**: 10 industry landing-page briefs, built in Elementor or the block editor | **Pro**: 300 more industry briefs; `wppilot/elementor-build-page` builds a page from one description | — |
-| **Elementor editing** | **Free**: 17 editing abilities (Elementor 3.6+; Elementor Pro not required) | **Pro**: 52 more: composition, templates, popups, forms, dynamic tags, global classes and variables. Theme Builder and form features need Elementor Pro, Elementor's own paid plugin | — |
+| **Full website creation and editing** | **Free**: pages, posts, Gutenberg blocks, menus, front page, media, taxonomies, design system, block-theme templates and parts, site-wide header, a whole Elementor page in one call | **Pro**: whole multi-page Elementor websites planned, built, published and undone as one job, Elementor Theme Builder templates and display conditions, page builder and theme modules | **Cloud**: the same site tools for many sites through one link |
+| **Landing pages** | **Free**: 10 industry landing-page briefs, built in Elementor or the block editor | **Pro**: 300 more industry briefs, built with design-spec roles and section grammars | — |
+| **Elementor editing** | **Free**: 18 editing abilities, whole-page build included (Elementor 3.6+; Elementor Pro not required) | **Pro**: 52 more: composition, templates, popups, forms, dynamic tags, global classes and variables. Theme Builder and form features need Elementor Pro, Elementor's own paid plugin | — |
 | **Gutenberg and blocks** | **Free**: block content, staged block batches, block themes (global styles, templates, patterns, navigation), Block Notes | **Pro**: GenerateBlocks, Kadence Blocks, Spectra and Spectra One modules (each needs that plugin) | — |
 | **Other page builders** | — (Free refuses writes that a builder would ignore, instead of reporting a false success) | **Pro**: Bricks, Divi, Oxygen, Beaver Builder, Breakdance, WPBakery, Etch, Mosaic, Flatsome UX Builder (each needs that builder) | — |
 | **WooCommerce** | **Free**: 13 abilities: catalogue, store, order and customer reads, and one product's name, description, prices and stock with undo (WooCommerce 9.0+) | **Pro**: 50 more: create and delete products, full product editing, bulk prices and stock, orders, refunds, coupons, store settings, sales reports | — |
@@ -255,6 +264,7 @@ Writing generated HTML into `post_content` does not change an Elementor page. Th
 | `wppilot/elementor-get-content` | Read the element tree of a document, as structure or in full. |
 | `wppilot/elementor-find-elements` | Locate elements by type, widget, id or the text they contain. |
 | `wppilot/elementor-set-content` | Replace a document's tree in one call. Invalid properties are dropped and reported; pass `strict` to refuse instead. |
+| `wppilot/elementor-build-page` | Build a whole page from one nested description in one call, validated before anything is written; `dry_run` checks it without touching the page. |
 | `wppilot/elementor-add-element` | Insert a widget, a container or a whole subtree at a chosen position, validated against the schema first. |
 | `wppilot/elementor-edit-element` | Change one element's settings or styles in place. |
 | `wppilot/elementor-move-element` | Move an element to a new parent or position. |
@@ -266,7 +276,7 @@ Writing generated HTML into `post_content` does not change an Elementor page. Th
 
 Both element models are supported: Elementor v4 atomic elements (`e-div-block`, `e-heading`, `e-paragraph`, `e-button`, `e-image` and the rest) and classic v3 widgets and containers. The free plugin also includes `wppilot/elementor-audit-atomic-readiness`, which reports how much of the site uses v4 atomic elements, and `wppilot/elementor-audit-output`, which scores how editable a page is. Full detail: [`docs/elementor-mcp.md`](docs/elementor-mcp.md).
 
-**What Pro adds on top.** Composition: `elementor-build-page` builds a whole page from one compact description, and `elementor-compile-spec` and `elementor-build-from-spec` turn a reproduction spec into global classes and a matching tree. Reuse: templates, theme parts and display conditions, popups, global classes, v4 variables, and v3 global colours and typography. Content: Elementor Pro forms and submissions, dynamic tags, interactions and site-wide custom code. Free can **edit** an Elementor page; Pro can **compose** one. [MCP for Elementor](https://gobuildwp.com/mcp-for-elementor)
+**What Pro adds on top.** Composition: whole multi-page websites (`elementor-plan-site`, `elementor-build-site`, `elementor-publish-site`) undone as one change, design-spec roles and section grammars inside `elementor-build-page`, and `elementor-compile-spec` and `elementor-build-from-spec` turn a reproduction spec into global classes and a matching tree. Reuse: templates, theme parts and display conditions, popups, global classes, v4 variables, and v3 global colours and typography. Content: Elementor Pro forms and submissions, dynamic tags, interactions and site-wide custom code. Free can build and edit an Elementor page; Pro builds the whole website. [MCP for Elementor](https://gobuildwp.com/mcp-for-elementor)
 
 ## WooCommerce MCP
 
@@ -288,7 +298,7 @@ One endpoint covers every builder below, and each builder registers only when it
 
 | Builder | Abilities | Edition | Guide |
 | --- | --- | --- | --- |
-| **Elementor** | **17 free** + 52 Pro | Free and Pro | [MCP for Elementor](https://gobuildwp.com/mcp-for-elementor) |
+| **Elementor** | **18 free** + 52 Pro | Free and Pro | [MCP for Elementor](https://gobuildwp.com/mcp-for-elementor) |
 | Etch | 60 | Pro | [MCP for Etch](https://gobuildwp.com/mcp-for-etch) |
 | Bricks | 49 | Pro | [MCP for Bricks](https://gobuildwp.com/mcp-for-bricks) |
 | Divi | 47 | Pro | [MCP for Divi](https://gobuildwp.com/mcp-for-divi) |
@@ -425,7 +435,7 @@ A server. Your site exposes typed WordPress abilities over MCP at `https://examp
 No. Claude, ChatGPT, Cursor and the other clients use their own model access. Only the optional in-admin GoBuildWP Chat uses an AI provider configured on your WordPress site.
 
 **Is there a free Elementor MCP server?**
-Yes. This plugin registers 17 Elementor editing abilities as soon as Elementor 3.6 or newer is active, with no licence and no Pro install. Pro adds whole-page composition, templates and theme parts, popups, forms, dynamic tags, global classes and variables.
+Yes. This plugin registers 18 Elementor editing abilities as soon as Elementor 3.6 or newer is active, with no licence and no Pro install. Pro adds whole-page composition, templates and theme parts, popups, forms, dynamic tags, global classes and variables.
 
 **Can an agent build a whole Elementor page with the free plugin?**
 Yes, one element at a time with `elementor-add-element`, `elementor-edit-element` and `elementor-set-content`, against the palette, type scale and spacing from the free design system. The single-call page builders, `elementor-build-page` and `elementor-build-from-spec`, are Pro.
@@ -440,7 +450,7 @@ Yes. Free reads the catalogue, store settings, orders and customers and edits on
 That is what the safety model is for. Start on Read Only and verify one call before allowing writes. Production Safe blocks raw PHP, WP-CLI, filesystem, database and extension installation; destructive calls need confirmation, optionally from a person; WordPress capabilities still apply; and supported changes can be undone.
 
 **Do I need Pro or Cloud?**
-No. The free plugin is a complete WordPress MCP server with 232 abilities and needs no licence, activation key or account. Pro and Cloud are optional.
+No. The free plugin is a complete WordPress MCP server with 233 abilities and needs no licence, activation key or account. Pro and Cloud are optional.
 
 **How does it relate to the WordPress Abilities API and the MCP Adapter?**
 It is built on both. Abilities are registered through the Abilities API, and the MCP Adapter is bundled to serve the legacy protocol revision. GoBuildWP adds authentication, safety profiles, confirmation gates, rate limiting, the change ledger with undo, and the abilities themselves.

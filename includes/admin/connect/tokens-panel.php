@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * Configuration page: the Access token connection method.
  *
@@ -90,6 +88,7 @@ function wppilot_token_scope_category_choices(): array
  */
 function wppilot_token_posted_policy(string $prefix): array
 {
+    // phpcs:disable WordPress.Security.NonceVerification.Missing -- Called only by wppilot_handle_create_token() and wppilot_handle_update_token(), each after its own check_admin_referer(); the sniff cannot follow the call.
     $mode = is_string($_POST[$prefix . '_scope_mode'] ?? null) ? sanitize_key(wp_unslash($_POST[$prefix . '_scope_mode'])) : 'all';
     $ceiling = is_string($_POST[$prefix . '_ceiling'] ?? null) ? sanitize_key(wp_unslash($_POST[$prefix . '_ceiling'])) : '';
 
@@ -97,14 +96,15 @@ function wppilot_token_posted_policy(string $prefix): array
         return ['scope' => null, 'ceiling' => $ceiling];
     }
 
-    $raw_abilities = is_string($_POST[$prefix . '_abilities'] ?? null) ? wp_unslash($_POST[$prefix . '_abilities']) : '';
+    $raw_abilities = is_string($_POST[$prefix . '_abilities'] ?? null) ? sanitize_textarea_field(wp_unslash($_POST[$prefix . '_abilities'])) : '';
     $lines = preg_split('/[\s,]+/', $raw_abilities);
     $categories = [];
-    foreach (is_array($_POST[$prefix . '_categories'] ?? null) ? $_POST[$prefix . '_categories'] : [] as $category) {
+    foreach (is_array($_POST[$prefix . '_categories'] ?? null) ? map_deep(wp_unslash($_POST[$prefix . '_categories']), 'sanitize_key') : [] as $category) {
         if (is_string($category)) {
-            $categories[] = sanitize_key(wp_unslash($category));
+            $categories[] = $category;
         }
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Missing
 
     $scope = wppilot_token_normalize_scope([
         'abilities' => $lines === false ? [] : array_map('sanitize_text_field', $lines),
@@ -124,7 +124,7 @@ function wppilot_token_posted_policy(string $prefix): array
  */
 function wppilot_handle_create_token()
 {
-    if (($_POST['wppilot_create_token'] ?? null) === null) {
+    if (!isset($_POST['wppilot_create_token'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presence check only; check_admin_referer('wppilot_create_token') below runs before any value is read.
         return null;
     }
 
@@ -134,15 +134,18 @@ function wppilot_handle_create_token()
 
     check_admin_referer('wppilot_create_token');
 
-    $raw_name = $_POST['wppilot_token_name'] ?? '';
-    $name = is_string($raw_name) ? trim($raw_name) : '';
+    $name = isset($_POST['wppilot_token_name']) && is_string($_POST['wppilot_token_name'])
+        ? trim(wp_strip_all_tags(wp_unslash($_POST['wppilot_token_name'])))
+        : '';
 
-    $raw_ttl = $_POST['wppilot_token_ttl'] ?? '';
+    $raw_ttl = isset($_POST['wppilot_token_ttl']) && is_string($_POST['wppilot_token_ttl'])
+        ? sanitize_text_field(wp_unslash($_POST['wppilot_token_ttl']))
+        : '';
     // Whitelisted rather than clamped: an arbitrary posted number would let the
     // form mint a token with a lifetime the screen never offered. A missing
     // choice is refused rather than defaulted, because the lifetime is the one
     // thing about a token nobody should get without having picked it.
-    if (!is_string($raw_ttl) || $raw_ttl === '' || !ctype_digit($raw_ttl)
+    if ($raw_ttl === '' || !ctype_digit($raw_ttl)
         || !array_key_exists((int) $raw_ttl, wppilot_token_expiry_choices())) {
         return new WP_Error('wppilot_token_ttl', __('Choose when the token expires.', domain: 'wppilot'));
     }
@@ -165,7 +168,7 @@ function wppilot_handle_create_token()
  */
 function wppilot_handle_revoke_token(): void
 {
-    if (($_POST['wppilot_revoke_token'] ?? null) === null) {
+    if (!isset($_POST['wppilot_revoke_token'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presence check only; check_admin_referer() below runs before anything is revoked.
         return;
     }
 
@@ -173,8 +176,7 @@ function wppilot_handle_revoke_token(): void
         return;
     }
 
-    $raw_id = $_POST['wppilot_revoke_token_id'] ?? '';
-    $token_id = is_string($raw_id) || is_int($raw_id) ? (int) $raw_id : 0;
+    $token_id = isset($_POST['wppilot_revoke_token_id']) && is_string($_POST['wppilot_revoke_token_id']) ? (int) $_POST['wppilot_revoke_token_id'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by check_admin_referer() below, whose action is built from this id.
     if ($token_id <= 0) {
         return;
     }
@@ -202,12 +204,11 @@ function wppilot_handle_revoke_token(): void
  */
 function wppilot_handle_update_token(): void
 {
-    if (($_POST['wppilot_update_token'] ?? null) === null || !wppilot_current_user_can_manage()) {
+    if (!isset($_POST['wppilot_update_token']) || !wppilot_current_user_can_manage()) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presence check only; check_admin_referer() below runs before anything is saved.
         return;
     }
 
-    $raw_id = $_POST['wppilot_update_token_id'] ?? '';
-    $token_id = is_string($raw_id) || is_int($raw_id) ? (int) $raw_id : 0;
+    $token_id = isset($_POST['wppilot_update_token_id']) && is_string($_POST['wppilot_update_token_id']) ? (int) $_POST['wppilot_update_token_id'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by check_admin_referer() below, whose action is built from this id.
     if ($token_id <= 0) {
         return;
     }
@@ -222,8 +223,9 @@ function wppilot_handle_update_token(): void
         exit();
     }
 
-    $raw_name = $_POST['wppilot_edit_token_name'] ?? '';
-    $name = is_string($raw_name) ? trim(wp_unslash($raw_name)) : '';
+    $name = isset($_POST['wppilot_edit_token_name']) && is_string($_POST['wppilot_edit_token_name'])
+        ? trim(wp_strip_all_tags(wp_unslash($_POST['wppilot_edit_token_name'])))
+        : '';
     $policy = wppilot_token_posted_policy('wppilot_edit_token');
 
     $updated = wppilot_token_update_policy($token_id, get_current_user_id(), $name, $policy['scope'], $policy['ceiling']);
@@ -599,148 +601,25 @@ function wppilot_render_token_config_section(string $url, ?string $token): void
         </p>
     </div>
 
-    <?php // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Every value emitted in this block goes through wppilot_script_json(), which hex-escapes <, >, & and quotes for <script> context. ?>
-    <script>
-    (function () {
-        var configs = <?php echo wppilot_script_json($configs); ?>;
-        var namePlaceholder = <?php echo wppilot_script_json($name_placeholder); ?>;
-        var defaultName = <?php echo wppilot_script_json($default_name); ?>;
-        var placeholderToken = <?php echo wppilot_script_json(WPPILOT_TOKEN_PLACEHOLDER); ?>;
-        var isPlaceholder = <?php echo wppilot_script_json($token_is_placeholder); ?>;
-        var mcpName = defaultName;
-        var client = '';
-        var labels = <?php echo wppilot_script_json($labels); ?>;
-        var endpointUrl = <?php echo wppilot_script_json($url); ?>;
-        var authLine = <?php echo wppilot_script_json(wppilot_agent_prompt_auth_line('token')); ?>;
-        var tokenNotes = <?php echo wppilot_script_json(wppilot_agent_prompt_token_notes()); ?>;
-
-        function renderSteps(steps) {
-            var list = document.getElementById('wppilot-token-config-steps');
-            list.innerHTML = '';
-            steps.forEach(function (step) {
-                var li = document.createElement('li');
-                li.style.margin = '0 0 6px';
-                // A step that is nothing but a URL, a token or a header value is
-                // something to copy rather than something to read, so it is set
-                // as code — which also stops a long token wrapping mid-word.
-                if (/^(https?:\/\/|wpp_|Bearer )/.test(step)) {
-                    var code = document.createElement('code');
-                    code.style.wordBreak = 'break-all';
-                    code.textContent = step;
-                    li.appendChild(code);
-                } else {
-                    li.textContent = step;
-                }
-                list.appendChild(li);
-            });
-            list.style.display = '';
-        }
-
-        function render() {
-            if (!client || !configs[client]) { return; }
-            var cfg = configs[client];
-
-            // A hosted web UI has no file to write, so it shows the click-through
-            // steps instead of a snippet. Everything below the fork — the hint,
-            // the agent prompt — is common to both.
-            var hasSteps = !!(cfg.steps && cfg.steps.length);
-            document.getElementById('wppilot-token-config-tab').style.display = hasSteps ? 'none' : '';
-            document.getElementById('wppilot-token-config-steps').style.display = hasSteps ? '' : 'none';
-            if (hasSteps) {
-                renderSteps(cfg.steps);
-                document.getElementById('wppilot-token-config-hint').innerHTML = cfg.hint;
-                window.wppilotAgentPrompt('wppilot-token', {
-                    clientLabel: labels[client] || client,
-                    serverName: mcpName,
-                    url: endpointUrl,
-                    authLine: authLine,
-                    code: '',
-                    paths: {},
-                    isShell: false,
-                    steps: cfg.steps,
-                    hasSecret: true,
-                    notes: tokenNotes
-                });
-                return;
-            }
-
-            var codeEl = document.getElementById('wppilot-token-config-code');
-            codeEl.textContent = cfg.code.split(namePlaceholder).join(mcpName);
-            if (isPlaceholder) {
-                codeEl.innerHTML = codeEl.innerHTML.split(placeholderToken).join(
-                    '<span class="wppilot-placeholder">' + placeholderToken + '</span>'
-                );
-            }
-            document.getElementById('wppilot-token-config-hint').innerHTML = cfg.hint;
-
-            var mergeNote = document.getElementById('wppilot-token-config-merge-note');
-            if (mergeNote) { mergeNote.style.display = cfg.isShell ? 'none' : ''; }
-
-            // Same values the snippet above was just built from, so the prompt
-            // cannot describe a different client than the one on screen.
-            window.wppilotAgentPrompt('wppilot-token', {
-                clientLabel: labels[client] || client,
-                serverName: mcpName,
-                url: endpointUrl,
-                authLine: authLine,
-                code: cfg.code.split(namePlaceholder).join(mcpName),
-                paths: cfg.paths,
-                isShell: cfg.isShell,
-                hasSecret: true,
-                notes: tokenNotes
-            });
-
-            var pathsEl = document.getElementById('wppilot-token-config-paths');
-            var keys = Object.keys(cfg.paths);
-            if (keys.length === 0) {
-                pathsEl.innerHTML = '';
-                pathsEl.style.display = 'none';
-                return;
-            }
-            var html = '<ul style="margin:4px 0 0; padding-left:20px;">';
-            keys.forEach(function (label) {
-                html += '<li><strong>' + label + '</strong>: <code>' + cfg.paths[label] + '</code></li>';
-            });
-            pathsEl.innerHTML = html + '</ul>';
-            pathsEl.style.display = '';
-        }
-
-        window.wppilotSetTokenClient = function (key, btn) {
-            client = key;
-            document.querySelectorAll('.wppilot-token-client-tab').forEach(function (tab) {
-                tab.classList.remove('active');
-            });
-            btn.classList.add('active');
-            var content = document.getElementById('wppilot-token-connect-content');
-            if (content) { content.style.display = ''; }
-            render();
-        };
-
-        window.wppilotUpdateTokenName = function (value) {
-            mcpName = value.trim() || defaultName;
-            render();
-        };
-
-        // Open the snippet area on the first client rather than waiting for a
-        // click. An empty panel under a "Connect Your AI Client" heading reads as
-        // "nothing here", which is how the configuration went unnoticed.
-        var first = document.querySelector('.wppilot-token-client-tab');
-        if (first) {
-            window.wppilotSetTokenClient(first.getAttribute('data-client'), first);
-        }
-
-        // Called from the reveal box above, which is rendered in a different
-        // container and cannot reach this scope any other way.
-        window.wppilotJumpToTokenSnippets = function () {
-            var heading = document.getElementById('wppilot-token-snippets');
-            if (heading) {
-                heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        };
-    }());
-    </script>
-    <?php // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped ?>
     <?php
+    wppilot_enqueue_agent_prompt_script();
+    wppilot_enqueue_admin_script(
+        'wppilot-connect-tokens',
+        'connect-tokens.js',
+        ['wppilot-agent-prompt'],
+        'wppilotConnectTokens',
+        [
+            'configs' => $configs,
+            'namePlaceholder' => $name_placeholder,
+            'defaultName' => $default_name,
+            'placeholderToken' => WPPILOT_TOKEN_PLACEHOLDER,
+            'isPlaceholder' => $token_is_placeholder,
+            'labels' => $labels,
+            'endpointUrl' => $url,
+            'authLine' => wppilot_agent_prompt_auth_line('token'),
+            'notes' => wppilot_agent_prompt_token_notes(),
+        ],
+    );
 }
 
 /**

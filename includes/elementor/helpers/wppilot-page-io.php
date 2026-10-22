@@ -314,9 +314,11 @@ function el_clear_css_cache(int $post_id): void
     // Invalidate the v4 atomic styles cache (per-element styles + global
     // classes CSS). Without this, changes to `styles` fields in atomic
     // elements are not reflected on the frontend.
+    // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Elementor's own cache-clearing action, fired as Elementor fires it after a save.
     do_action('elementor/atomic-widgets/styles/clear', ['local', $post_id]);
     do_action('elementor/atomic-widgets/styles/clear', ['local', $post_id, 'frontend']);
     do_action('elementor/atomic-widgets/styles/clear', ['local', $post_id, 'preview']);
+    // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 
     // Elementor Pro caches rendered element HTML in its own post meta, and it
     // checks that cache BEFORE applying render filters. A write that leaves it

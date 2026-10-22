@@ -116,11 +116,13 @@ function register_nav(mixed $map): mixed
  */
 function redirect_legacy_page(): void
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Routing only: an old bookmarked page slug is redirected to the current page; nothing is changed.
     $page = sanitize_key((string) wp_unslash($_GET['page'] ?? ''));
     if ($page !== LEGACY_PAGE_SLUG || !\wppilot_current_user_can_manage()) {
         return;
     }
     $args = ['page' => PAGE_SLUG];
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Carried into the redirect only, to keep the same routine selected.
     $routine = sanitize_key((string) wp_unslash($_GET['routine'] ?? ''));
     if ($routine !== '') {
         $args['routine'] = $routine;
@@ -168,9 +170,11 @@ function render(): void
         wp_die(esc_html__('You are not allowed to view GoBuildWP routines.', domain: 'wppilot'));
     }
     $routines = ScheduledAudits\all_routines();
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Display-only: the selected routine and the outcome codes from this page's own run-now redirect; running a routine is the nonce-checked POST in handle_run_now().
     $selected = sanitize_key((string) wp_unslash($_GET['routine'] ?? ''));
     $queued = isset($_GET['routines_queued']);
     $error = sanitize_key((string) wp_unslash($_GET['routines_error'] ?? ''));
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
     \wppilot_render_admin_header();
     ?>

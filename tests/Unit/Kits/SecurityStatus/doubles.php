@@ -80,13 +80,29 @@ namespace WPPilot\Tests\Unit\Kits\SecurityStatus {
             return $this->blocks;
         }
 
-        /** @param list<int> $args */
-        public function prepare(string $sql, array $args): string
+        /**
+         * wpdb::prepare() for the placeholders the reader uses: values passed variadically or as one
+         * array, %i quoted as a backtick identifier (backticks doubled, as WordPress 6.2+ does), %d
+         * cast to int, %s quoted, %% a literal percent.
+         */
+        public function prepare(string $sql, mixed ...$args): string
         {
-            foreach ($args as $arg) {
-                $sql = (string) preg_replace('/%d/', (string) (int) $arg, $sql, 1);
+            if (count($args) === 1 && is_array($args[0])) {
+                $args = $args[0];
             }
-            return $sql;
+            $args = array_values($args);
+            $index = 0;
+            return (string) preg_replace_callback('/%(%|i|d|s)/', static function (array $m) use (&$index, $args): string {
+                if ($m[1] === '%') {
+                    return '%';
+                }
+                $value = $args[$index++] ?? '';
+                return match ($m[1]) {
+                    'i' => '`' . str_replace('`', '``', (string) $value) . '`',
+                    'd' => (string) (int) $value,
+                    default => "'" . addslashes((string) $value) . "'",
+                };
+            }, $sql);
         }
     }
 

@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended, WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\Consent;
 
 use League\OAuth2\Server\Exception\OAuthServerException;
@@ -47,7 +45,7 @@ function register(): void
  */
 function handle_load(): void
 {
-    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
         return;
     }
     $ctx = resolve_pending();
@@ -91,8 +89,8 @@ function resolve_pending(): ?array
         return null;
     }
 
-    $raw_token = $_GET['token'] ?? '';
-    $token = is_string($raw_token) ? sanitize_text_field($raw_token) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The token only looks up a pending grant that is bound to the current user (checked below); the Approve/Deny POST is nonce-checked in render_post() with an action that includes this token.
+    $token = is_string($_GET['token'] ?? null) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
     if ($token === '') {
         wp_die('Missing consent token.', title: '', args: ['response' => 400]);
         return null;
@@ -160,6 +158,7 @@ function render_post(string $token, array $pending, string $redirect_uri, string
 
     if (array_key_exists('deny', $_POST)) {
         delete_transient(Authorize\PENDING_PREFIX . $token);
+        // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- OAuth authorization response: it must go to the client's own redirect_uri, normally on another host, which /authorize validated against the client's registered URIs before storing it in the pending grant.
         wp_redirect(with_issuer(add_query_arg(['error' => 'access_denied', 'state' => $state], $redirect_uri)));
         exit();
     }
@@ -191,10 +190,12 @@ function render_post(string $token, array $pending, string $redirect_uri, string
         delete_transient(Authorize\PENDING_PREFIX . $token);
         $psr7Response = $server->completeAuthorizationRequest($authRequest, Bridge\new_psr7_response());
 
+        // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- OAuth authorization response: it must go to the client's own redirect_uri, normally on another host, which /authorize validated against the client's registered URIs before storing it in the pending grant.
         wp_redirect(with_issuer($psr7Response->getHeaderLine('Location')));
         exit();
     } catch (OAuthServerException $e) {
         delete_transient(Authorize\PENDING_PREFIX . $token);
+        // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- OAuth authorization response: it must go to the client's own redirect_uri, normally on another host, which /authorize validated against the client's registered URIs before storing it in the pending grant.
         wp_redirect(with_issuer(add_query_arg([
             'error' => $e->getErrorType(),
             'error_description' => $e->getMessage(),
@@ -291,21 +292,31 @@ function render_form(string $token, string $client_name, string $redirect_uri, s
 /**
  * @return array{label: string, description: string, risks: list<string>}
  */
-function consent_grant_details(string $scope): array
+function consent_grant_details(string $scope, ?bool $directory_edition = null): array
 {
+    $directory_edition ??= \wppilot_is_wordpress_org_edition();
+
     return [
         'label' => __('full access to your WordPress site', domain: 'wppilot'),
         'description' => __(
             'Full access permits execution of GoBuildWP capabilities through MCP and REST, including REST-visible abilities registered by compatible third-party plugins.',
             domain: 'wppilot',
         ),
-        'risks' => [
-            __('Execute PHP and WP-CLI.', domain: 'wppilot'),
-            __('Read, write, and delete server files.', domain: 'wppilot'),
-            __('Change WordPress content and settings.', domain: 'wppilot'),
-            __('Create temporary administrator access.', domain: 'wppilot'),
-            __('Execute REST-visible abilities registered by compatible plugins.', domain: 'wppilot'),
-        ],
+        // The WordPress.org edition has no PHP, WP-CLI, server-file or temporary-login
+        // abilities, so its consent screen names the most powerful ones it does have.
+        'risks' => $directory_edition
+            ? [
+                __('Install and delete plugins and themes from WordPress.org, and change user accounts, when the safety profile allows it.', domain: 'wppilot'),
+                __('Change WordPress content and settings.', domain: 'wppilot'),
+                __('Execute REST-visible abilities registered by compatible plugins.', domain: 'wppilot'),
+            ]
+            : [
+                __('Execute PHP and WP-CLI.', domain: 'wppilot'),
+                __('Read, write, and delete server files.', domain: 'wppilot'),
+                __('Change WordPress content and settings.', domain: 'wppilot'),
+                __('Create temporary administrator access.', domain: 'wppilot'),
+                __('Execute REST-visible abilities registered by compatible plugins.', domain: 'wppilot'),
+            ],
     ];
 }
 

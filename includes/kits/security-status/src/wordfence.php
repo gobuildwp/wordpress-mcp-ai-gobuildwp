@@ -126,7 +126,8 @@ function wordfence_active_block_count(): int
 {
     global $wpdb;
     $table = (string) \wfBlock::blocksTable();
-    return (int) $wpdb->get_var("SELECT COUNT(*) FROM `{$table}` WHERE `expiration` = 0 OR `expiration` > UNIX_TIMESTAMP()");
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Wordfence's own blocks table has no WordPress API; counted live so the status reflects blocks added or expired moments ago.
+    return (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE `expiration` = 0 OR `expiration` > UNIX_TIMESTAMP()', $table));
 }
 
 function wordfence_last_scan_result(): string
@@ -149,7 +150,8 @@ function wordfence_issue_counts(): array
         return $counts;
     }
     $table = wordfence_issues_table();
-    $rows = $wpdb->get_results("SELECT `severity`, COUNT(*) AS `n` FROM `{$table}` WHERE `status` = 'new' GROUP BY `severity`", ARRAY_A);
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Wordfence's own issues table has no WordPress API; counted live so a scan that just finished is reflected.
+    $rows = $wpdb->get_results($wpdb->prepare("SELECT `severity`, COUNT(*) AS `n` FROM %i WHERE `status` = 'new' GROUP BY `severity`", $table), ARRAY_A);
     foreach (is_array($rows) ? $rows : [] as $row) {
         $counts[wordfence_severity((int) $row['severity'])] += (int) $row['n'];
     }
@@ -185,9 +187,12 @@ function wordfence_findings(array $severities, int $limit): array
         $where .= ' AND (' . implode(' OR ', $ranges) . ')';
     }
     $args[] = $limit + 1;
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Wordfence's own issues table has no WordPress API, read live so a scan that just finished is reflected. $where holds only the fixed SQL fragments built above; their values are bound as %d.
     $rows = $wpdb->get_results($wpdb->prepare(
-        "SELECT `id`, `time`, `lastUpdated`, `type`, `severity`, `shortMsg`, `data` FROM `{$table}` WHERE {$where} ORDER BY `severity` DESC, `time` DESC LIMIT %d",
-        $args,
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where is built above only from fixed SQL fragments with %d placeholders; the table is bound as %i and every value through $args.
+        "SELECT `id`, `time`, `lastUpdated`, `type`, `severity`, `shortMsg`, `data` FROM %i WHERE {$where} ORDER BY `severity` DESC, `time` DESC LIMIT %d",
+        $table,
+        ...$args,
     ), ARRAY_A);
     $rows = is_array($rows) ? $rows : [];
 

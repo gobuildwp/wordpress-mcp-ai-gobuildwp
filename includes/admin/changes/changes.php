@@ -388,9 +388,8 @@ function summary_notice_type(array $result): string
 
 function posted(string $key): string
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Every caller checks the nonce first.
-    $raw = $_POST[$key] ?? '';
-    return is_string($raw) ? sanitize_text_field(wp_unslash($raw)) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Every caller runs require_capability_and_nonce() first.
+    return is_string($_POST[$key] ?? null) ? sanitize_text_field(wp_unslash($_POST[$key])) : '';
 }
 
 function require_capability_and_nonce(string $nonce_action): void

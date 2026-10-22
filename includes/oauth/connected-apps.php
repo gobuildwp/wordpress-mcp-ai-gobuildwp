@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\ConnectedApps;
 
 if (!defined('ABSPATH')) {
@@ -38,7 +36,7 @@ function register(): void
  */
 function handle_load(): void
 {
-    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
         return;
     }
     if (!is_user_logged_in() || !\wppilot_current_user_can_manage()) {
@@ -63,29 +61,27 @@ function render(): void
 
 function handle_post(int $user_id): void
 {
-    $action = $_POST['wppilot_action'] ?? '';
+    $action = is_string($_POST['wppilot_action'] ?? null) ? sanitize_text_field(wp_unslash($_POST['wppilot_action'])) : '';
     if ($action === 'delete_admin_client') {
         check_admin_referer('wppilot_connected_apps_delete');
-        $raw = $_POST['client_id'] ?? null;
-        $client_id = is_string($raw) ? sanitize_key($raw) : '';
+        $client_id = is_string($_POST['client_id'] ?? null) ? sanitize_key(wp_unslash($_POST['client_id'])) : '';
         if ($client_id !== '') {
             // Belt and braces: revoke any tokens the row may have picked up, then drop it.
             revoke_client_access($client_id, $user_id);
             (new \WPPilot\OAuth\Repositories\ClientRepository())->revoke($client_id);
         }
-        wp_redirect(add_query_arg(['deleted' => '1'], admin_url('admin.php?page=wppilot-connected-apps')));
+        wp_safe_redirect(add_query_arg(['deleted' => '1'], admin_url('admin.php?page=wppilot-connected-apps')));
         exit();
     }
 
     check_admin_referer('wppilot_connected_apps_revoke');
 
-    $raw = $_POST['client_id'] ?? null;
-    $client_id = is_string($raw) ? sanitize_key($raw) : '';
+    $client_id = is_string($_POST['client_id'] ?? null) ? sanitize_key(wp_unslash($_POST['client_id'])) : '';
     if ($client_id !== '') {
         revoke_client_access($client_id, $user_id);
     }
 
-    wp_redirect(add_query_arg(['revoked' => '1'], admin_url('admin.php?page=wppilot-connected-apps')));
+    wp_safe_redirect(add_query_arg(['revoked' => '1'], admin_url('admin.php?page=wppilot-connected-apps')));
     exit();
 }
 
@@ -100,17 +96,20 @@ function revoke_client_access(string $client_id, int $user_id): void
     // Revoke refresh tokens linked to this client's access tokens.
     // @mago-expect analysis:possibly-invalid-argument
     // @mago-expect analysis:possibly-invalid-argument
-    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Values are bound by the inline $wpdb->prepare(). The only interpolation is the table name, which prepare() has no placeholder for. Not cached: this reads live per-request state.
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The OAuth token tables have no WordPress API; a revocation must take effect on the very next request, so nothing is cached.
     $wpdb->query($wpdb->prepare(
-        "UPDATE `{$r}` rt
-         JOIN `{$t}` at ON at.identifier_hash = rt.access_token_hash
+        'UPDATE %i rt
+         JOIN %i at ON at.identifier_hash = rt.access_token_hash
          SET rt.revoked = 1
-         WHERE at.client_id = %s AND at.user_id = %d",
+         WHERE at.client_id = %s AND at.user_id = %d',
+        $r,
+        $t,
         $client_id,
         $user_id,
     ));
 
     // Revoke all access tokens for this client and user.
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- As above: the token table has no WordPress API and a revocation must not be served from a cache.
     $wpdb->update($t, ['revoked' => 1], ['client_id' => $client_id, 'user_id' => $user_id]);
 
     // Hand the connection slot back now. Slot accounting reads the client's last use, so without
@@ -135,16 +134,19 @@ function render_page(int $user_id): void
     // each use) is the real connection lifetime, so its expiry is what we surface.
     // @mago-expect analysis:possibly-invalid-argument
     // @mago-expect analysis:possibly-invalid-argument
-    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Values are bound by the inline $wpdb->prepare(). The only interpolation is the table name, which prepare() has no placeholder for. Not cached: this reads live per-request state.
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The OAuth token tables have no WordPress API. Not cached: the list must show a revocation made a moment ago.
     $rows = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT c.client_name, at.client_id, at.scopes, MAX(rt.expires_at) AS expires_at
-         FROM `{$r}` rt
-         JOIN `{$t}` at ON at.identifier_hash = rt.access_token_hash
-         JOIN `{$c}` c ON c.client_id = at.client_id
+            'SELECT c.client_name, at.client_id, at.scopes, MAX(rt.expires_at) AS expires_at
+         FROM %i rt
+         JOIN %i at ON at.identifier_hash = rt.access_token_hash
+         JOIN %i c ON c.client_id = at.client_id
          WHERE at.user_id = %d AND rt.revoked = 0 AND rt.expires_at > %s
          GROUP BY at.client_id, c.client_name, at.scopes
-         ORDER BY expires_at DESC",
+         ORDER BY expires_at DESC',
+            $r,
+            $t,
+            $c,
             $user_id,
             $now,
         ),
@@ -153,8 +155,8 @@ function render_page(int $user_id): void
 
     $apps = is_array($rows) ? $rows : [];
 
-    $raw_revoked = $_GET['revoked'] ?? null;
-    $was_revoked = is_string($raw_revoked) && $raw_revoked === '1';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only: the flag from this page's own post-revoke redirect shows a fixed notice.
+    $was_revoked = isset($_GET['revoked']) && $_GET['revoked'] === '1';
 
     echo '<div class="wrap">';
     echo '<h1>' . esc_html__('Connected Apps', domain: 'wppilot') . '</h1>';
@@ -229,8 +231,8 @@ function render_admin_clients_section(): void
 {
     $clients = (new \WPPilot\OAuth\Repositories\ClientRepository())->list_admin_clients();
 
-    $raw_deleted = $_GET['deleted'] ?? null;
-    if (is_string($raw_deleted) && $raw_deleted === '1') {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only: the flag from this page's own post-delete redirect shows a fixed notice.
+    if (isset($_GET['deleted']) && $_GET['deleted'] === '1') {
         echo
             '<div class="notice notice-success is-dismissible"><p>'
                 . esc_html__('Client ID deleted.', domain: 'wppilot')

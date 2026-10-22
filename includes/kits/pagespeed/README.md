@@ -20,6 +20,9 @@ owner. Read-only.
    call unsigned. No `Authorization` header is ever sent (the proxy refuses one). The unsigned base
    URL is the host's `cloud-url` extension (none standalone); both pass the
    `wppilot_kit_pagespeed_proxy_url` filter, where '' skips the source. Client timeout 110 s.
+   A host whose `cloud-unpaired` extension answers `false` (GoBuildWP's WordPress.org edition)
+   never sends the unsigned call: an unpaired site, or one the Cloud no longer knows, skips this
+   source with `cloud_not_connected` and Google is asked directly.
 3. **google-api-key**: Google's v5 API with the key in the `wppilot_kit_pagespeed_api_key` option
    (or the filter of the same name). The key is never returned or logged.
 4. **google-keyless**: Google's v5 API with no key; shared global quota, so last.

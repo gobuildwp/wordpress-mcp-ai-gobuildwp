@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 namespace WPPilot\Troubleshoot\Notice;
 
 if (!defined('ABSPATH')) {
@@ -61,7 +59,7 @@ function maybe_render(): void
     // is built from the current URL — which does not exist under WP-CLI or
     // WP-Cron. Calling add_query_arg() there makes it fall back to an undefined
     // $_SERVER['REQUEST_URI'] and emit a run of PHP deprecation notices.
-    if (($_SERVER['REQUEST_URI'] ?? null) === null) {
+    if (!isset($_SERVER['REQUEST_URI'])) {
         return;
     }
     if (defined('WP_CLI') && constant('WP_CLI') === true) {
@@ -111,15 +109,15 @@ function maybe_render(): void
  */
 function handle_dismiss(): void
 {
-    $raw = $_GET['wppilot_troubleshoot_dismiss'] ?? null;
-    if (!is_string($raw) || $raw === '') {
+    $raw = is_string($_GET['wppilot_troubleshoot_dismiss'] ?? null) ? sanitize_key(wp_unslash($_GET['wppilot_troubleshoot_dismiss'])) : '';
+    if ($raw === '') {
         return;
     }
     check_admin_referer('wppilot_troubleshoot_dismiss');
     if (!\wppilot_current_user_can_manage()) {
         return;
     }
-    update_user_meta(get_current_user_id(), DISMISS_META, sanitize_key($raw));
+    update_user_meta(get_current_user_id(), DISMISS_META, $raw);
     wp_safe_redirect(remove_query_arg(['wppilot_troubleshoot_dismiss', '_wpnonce']));
     exit();
 }

@@ -319,6 +319,7 @@ function wppilot_token_anthropic_api_snippet(string $name, string $url, string $
     ]);
 
     return implode("\n", [
+        // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration -- Text of an example command shown to the site owner for their own use; the plugin sends nothing to this host.
         'curl https://api.anthropic.com/v1/messages \\',
         '  -H "content-type: application/json" \\',
         '  -H "x-api-key: $ANTHROPIC_API_KEY" \\',
@@ -350,6 +351,7 @@ function wppilot_token_openai_api_snippet(string $name, string $url, string $tok
     ]);
 
     return implode("\n", [
+        // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration -- Text of an example command shown to the site owner for their own use; the plugin sends nothing to this host.
         'curl https://api.openai.com/v1/responses \\',
         '  -H "content-type: application/json" \\',
         '  -H "authorization: Bearer $OPENAI_API_KEY" \\',

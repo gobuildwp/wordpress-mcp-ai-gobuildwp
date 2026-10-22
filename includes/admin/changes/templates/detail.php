@@ -5,6 +5,8 @@
 
 declare(strict_types=1);
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This file is require()d inside render_page() in changes.php, so its variables are local to that function, not globals.
+
 namespace WPPilot\Admin\Changes;
 
 if (!defined('ABSPATH')) {

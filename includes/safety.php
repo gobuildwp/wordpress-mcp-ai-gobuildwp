@@ -46,17 +46,25 @@ function wppilot_is_safety_profile(mixed $profile): bool
  * validates a stored value must use wppilot_is_safety_profile() instead, so it
  * does not pull in translations before `init`.
  *
+ * @param bool|null $directory_edition Defaults to the running edition.
  * @return array<string, array{label: string, description: string}>
  */
-function wppilot_safety_profiles(): array
+function wppilot_safety_profiles(?bool $directory_edition = null): array
 {
+    $directory_edition ??= wppilot_is_wordpress_org_edition();
+
     return [
         'production' => [
             'label' => __('Production Safe', domain: 'wppilot'),
-            'description' => __(
-                'Allows normal content, design, SEO, form, and commerce work while blocking raw code execution, server filesystem access, WP-CLI, temporary administrator access, and similarly critical operations.',
-                domain: 'wppilot',
-            ),
+            'description' => $directory_edition
+                ? __(
+                    'Allows normal content, design, SEO, form, and commerce work while blocking plugin and theme installation and deletion, user account changes, and similarly critical operations.',
+                    domain: 'wppilot',
+                )
+                : __(
+                    'Allows normal content, design, SEO, form, and commerce work while blocking raw code execution, server filesystem access, WP-CLI, temporary administrator access, and similarly critical operations.',
+                    domain: 'wppilot',
+                ),
         ],
         'readonly' => [
             'label' => __('Read Only', domain: 'wppilot'),
@@ -67,10 +75,17 @@ function wppilot_safety_profiles(): array
         ],
         'developer' => [
             'label' => __('Developer Full Access', domain: 'wppilot'),
-            'description' => __(
-                'Allows every enabled ability, including PHP execution, WP-CLI, filesystem operations, and administrator access. Critical calls still require an explicit confirmation flag.',
-                domain: 'wppilot',
-            ),
+            // The WordPress.org edition ships no PHP execution, WP-CLI, server file or
+            // temporary-login abilities, so it describes what this profile adds there.
+            'description' => $directory_edition
+                ? __(
+                    'Allows every enabled ability, including installing and deleting plugins and themes from WordPress.org, creating and editing user accounts, and reading raw rows of the options table. Critical calls still require an explicit confirmation flag.',
+                    domain: 'wppilot',
+                )
+                : __(
+                    'Allows every enabled ability, including PHP execution, WP-CLI, filesystem operations, and administrator access. Critical calls still require an explicit confirmation flag.',
+                    domain: 'wppilot',
+                ),
         ],
     ];
 }

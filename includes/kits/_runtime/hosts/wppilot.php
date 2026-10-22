@@ -88,6 +88,11 @@ final class WPPilotHost implements Host, ProfileGate
         if ($point === 'cloud-sign') {
             return [$this, 'sign_cloud_payload'];
         }
+        if ($point === 'cloud-unpaired') {
+            // Whether a site not connected to GoBuildWP Cloud may still use its PageSpeed proxy.
+            // The WordPress.org edition contacts the Cloud only once an administrator connects it.
+            return function_exists('wppilot_is_wordpress_org_edition') ? !\wppilot_is_wordpress_org_edition() : null;
+        }
         return apply_filters('wppilot_kit_extension', null, $point);
     }
 

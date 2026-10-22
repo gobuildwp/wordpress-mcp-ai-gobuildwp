@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\Endpoints\Authorize;
 
 use League\OAuth2\Server\RedirectUriValidators\RedirectUriValidator;
@@ -173,16 +171,21 @@ function render(): void
 }
 
 /**
- * Read a query parameter as a sanitized string. The authorization endpoint is entered
- * cross-site by the OAuth client without a WordPress nonce (by design), so nonce
- * verification does not apply; the request is validated by PKCE, the registered
- * redirect_uri allowlist, and the nonce-protected consent step.
+ * Read an OAuth query parameter exactly as the client sent it. The authorization endpoint is
+ * entered cross-site by the OAuth client without a WordPress nonce (by design), so nonce
+ * verification does not apply; the request is validated by PKCE, the registered redirect_uri
+ * allowlist, and the nonce-protected consent step.
+ *
+ * Only unslashed, never text-sanitized: these are protocol values. redirect_uri must match the
+ * client's registered URI byte for byte, state must be returned to the client unchanged, and
+ * the code challenge is hashed against the verifier; sanitize_text_field() would strip
+ * percent-encoded octets and collapse whitespace in them. Each caller validates its value.
  */
 function get_param(string $key): string
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-    $raw = $_GET[$key] ?? '';
-    return is_string($raw) ? sanitize_text_field($raw) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Cross-site OAuth entry point, so no nonce can exist; protocol values (redirect_uri, state, PKCE challenge) must reach their validators byte for byte.
+    $raw = isset($_GET[$key]) ? wp_unslash($_GET[$key]) : '';
+    return is_string($raw) ? $raw : '';
 }
 
 /**
@@ -196,7 +199,7 @@ function get_param(string $key): string
  */
 function repair_folded_request(): void
 {
-    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Runs on plugins_loaded, before wp_magic_quotes() slashes the superglobals: the folded slug is only split and written back for WordPress to slash and route as usual; nothing here acts on it.
     $page = $_GET['page'] ?? null;
     if (!is_admin() || !is_string($page) || !str_starts_with($page, PAGE_SLUG . '?')) {
         return;
@@ -208,6 +211,7 @@ function repair_folded_request(): void
     $recovered = [];
     parse_str($parts[1] ?? '', $recovered);
     foreach ($recovered as $key => $value) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Presence check only, so a real parameter is never overwritten by a recovered one.
         if (array_key_exists($key, $_GET)) {
             continue;
         }
@@ -216,6 +220,7 @@ function repair_folded_request(): void
 
     // Keep the raw request line consistent so auth_redirect()'s post-login return URL is clean too.
     foreach (['REQUEST_URI', 'QUERY_STRING'] as $server_key) {
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Rewritten in place (one '?' to '&') and written back unchanged otherwise; still unslashed at plugins_loaded.
         $raw = $_SERVER[$server_key] ?? '';
         if ($raw !== '') {
             $_SERVER[$server_key] = str_replace(PAGE_SLUG . '?', PAGE_SLUG . '&', $raw);

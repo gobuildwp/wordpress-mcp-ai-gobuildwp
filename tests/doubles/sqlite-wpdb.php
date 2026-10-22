@@ -68,12 +68,14 @@ final class WPPilot_Test_Sqlite_Wpdb
         $args = array_values($args);
         $index = 0;
 
-        return (string) preg_replace_callback('/%(%|d|s|f)/', function (array $match) use (&$index, $args): string {
+        return (string) preg_replace_callback('/%(%|i|d|s|f)/', function (array $match) use (&$index, $args): string {
             if ($match[1] === '%') {
                 return '%';
             }
             $value = $args[$index++] ?? '';
             return match ($match[1]) {
+                // WordPress 6.2+ quotes a %i identifier in backticks, doubling any backtick inside it.
+                'i' => '`' . str_replace('`', '``', (string) $value) . '`',
                 'd' => (string) (int) $value,
                 'f' => (string) (float) $value,
                 default => (string) $this->pdo->quote((string) $value),

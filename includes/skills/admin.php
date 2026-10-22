@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 namespace WPPilot\Skills\Admin;
 
 use WPPilot\Skills\Abilities\SkillWrite;
@@ -54,7 +52,8 @@ function render_page(): void
     if (!current_user_can_manage()) {
         wp_die(esc_html__('You do not have permission to manage skills.', domain: 'wppilot'));
     }
-    $view = ($_GET['skill'] ?? null) !== null ? 'edit' : 'list';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Routing only: the presence of a skill id picks the editor template; changes post to nonce-checked handlers.
+    $view = isset($_GET['skill']) ? 'edit' : 'list';
     if ($view === 'edit') {
         require __DIR__ . '/templates/edit.php';
         return;
@@ -102,7 +101,8 @@ function enqueue_assets(string $hook): void
 
     // CodeMirror with markdown syntax highlighting on the body textarea.
     // Only on the edit view — list page has no editor.
-    if (($_GET['skill'] ?? null) === null) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only decides whether the editor view needs the code editor assets; nothing is changed.
+    if (!isset($_GET['skill'])) {
         return;
     }
     $settings = wp_enqueue_code_editor(['type' => 'text/markdown']);
@@ -119,13 +119,14 @@ function handle_create(): void
 {
     require_capability_and_nonce('wppilot_skill_create');
     $input = collect_input_from_post();
-    $status_raw = $_POST['status'] ?? 'publish';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by require_capability_and_nonce() at the top of this handler.
+    $is_draft = isset($_POST['status']) && $_POST['status'] === 'draft';
     $result = SkillWrite\execute($input + [
         'on_conflict' => 'fail',
         // A body typed into this form is literal, not a double-encoded tool
         // argument, and the form's Enabled/Disabled select must be honoured.
         'literal_content' => true,
-        'status' => is_string($status_raw) && $status_raw === 'draft' ? 'draft' : 'publish',
+        'status' => $is_draft ? 'draft' : 'publish',
     ]);
     if (is_wp_error($result)) {
         redirect_with_notice('error', $result->get_error_message());
@@ -197,8 +198,8 @@ function handle_update(): void
         }
     }
 
-    $status_raw = $_POST['status'] ?? 'publish';
-    $status = is_string($status_raw) && $status_raw === 'draft' ? 'draft' : 'publish';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by require_capability_and_nonce() at the top of this handler.
+    $status = isset($_POST['status']) && $_POST['status'] === 'draft' ? 'draft' : 'publish';
 
     // wp_update_post() unslashes internally, so hand it slashed data.
     wp_update_post(wp_slash([
@@ -268,8 +269,8 @@ function handle_toggle_status(): void
 function handle_toggle_activation(): void
 {
     $post_id = read_post_id();
-    $field_raw = $_POST['field'] ?? '';
-    $field = is_string($field_raw) ? $field_raw : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by require_capability_and_nonce() on the next line, before the value is used.
+    $field = is_string($_POST['field'] ?? null) ? sanitize_text_field(wp_unslash($_POST['field'])) : '';
     require_capability_and_nonce('wppilot_skill_toggle_activation_' . $post_id);
     if (!in_array($field, ['enable_prompt', 'enable_agentic'], strict: true)) {
         wp_die(esc_html__('Invalid field.', domain: 'wppilot'));
@@ -288,6 +289,7 @@ function handle_upload(): void
 {
     require_capability_and_nonce('wppilot_skill_upload');
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified on the first line of this handler. normalize_uploaded_files() keeps only the name, PHP-provided tmp_name, error and size; process_one_upload() checks the error, the .md extension and the size before reading the file.
     $files = normalize_uploaded_files($_FILES['skill_file'] ?? null);
     if ($files === []) {
         redirect_with_notice('error', __('No files uploaded.', domain: 'wppilot'));
@@ -302,8 +304,8 @@ function handle_upload(): void
         return;
     }
 
-    $on_conflict_raw = $_POST['on_conflict'] ?? null;
-    $on_conflict = is_string($on_conflict_raw) ? $on_conflict_raw : 'fail';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by require_capability_and_nonce() at the top of this handler.
+    $on_conflict = is_string($_POST['on_conflict'] ?? null) ? sanitize_key(wp_unslash($_POST['on_conflict'])) : 'fail';
 
     $imported = [];
     $failed = [];
@@ -568,8 +570,12 @@ function load_skill_post(int $post_id): \WP_Post
 
 function read_post_id(): int
 {
-    $raw = $_POST['post_id'] ?? $_GET['post_id'] ?? null;
-    return is_scalar($raw) ? (int) $raw : 0;
+    // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- The id names the nonce action: every handler passes it straight to require_capability_and_nonce('wppilot_skill_*_' . $id) before acting on it.
+    if (isset($_POST['post_id'])) {
+        return is_scalar($_POST['post_id']) ? absint($_POST['post_id']) : 0;
+    }
+    return isset($_GET['post_id']) && is_scalar($_GET['post_id']) ? absint($_GET['post_id']) : 0;
+    // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
 }
 
 /**
@@ -577,16 +583,23 @@ function read_post_id(): int
  */
 function collect_input_from_post(): array
 {
-    $title_raw = $_POST['title'] ?? '';
-    $description_raw = $_POST['description'] ?? '';
-    $content_raw = $_POST['content'] ?? '';
-    return [
-        'title' => is_string($title_raw) ? wp_unslash($title_raw) : '',
-        'description' => is_string($description_raw) ? wp_unslash($description_raw) : '',
-        'content' => is_string($content_raw) ? wp_unslash($content_raw) : '',
-        'enable_prompt' => ($_POST['enable_prompt'] ?? null) !== null,
-        'enable_agentic' => ($_POST['enable_agentic'] ?? null) !== null,
+    // phpcs:disable WordPress.Security.NonceVerification.Missing -- Only called from handle_create() and handle_update(), after require_capability_and_nonce().
+    // The title becomes the skill's slug, so it is sanitized as one (the handlers apply
+    // sanitize_title() again, which leaves it unchanged).
+    $title = is_string($_POST['title'] ?? null) ? sanitize_title(wp_unslash($_POST['title'])) : '';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The description is multi-line plain-text guidance for agents, saved as the post excerpt through wp_insert_post()/wp_update_post() (core's excerpt filters apply) and esc_textarea()'d on output; sanitize_text_field() would strip its newlines and any literal tag it names.
+    $description = is_string($_POST['description'] ?? null) ? wp_unslash($_POST['description']) : '';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The skill body is a Markdown document kept verbatim (size-limited by the handlers, saved through wp_insert_post()/wp_update_post(), esc_textarea()'d on output); sanitizing would strip its newlines and code samples.
+    $content = is_string($_POST['content'] ?? null) ? wp_unslash($_POST['content']) : '';
+    $input = [
+        'title' => $title,
+        'description' => $description,
+        'content' => $content,
+        'enable_prompt' => isset($_POST['enable_prompt']),
+        'enable_agentic' => isset($_POST['enable_agentic']),
     ];
+    // phpcs:enable WordPress.Security.NonceVerification.Missing
+    return $input;
 }
 
 /**

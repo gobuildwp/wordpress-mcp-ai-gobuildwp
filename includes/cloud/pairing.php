@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.NonceVerification.Recommended -- The return leg (§2) is a GET redirect from app.gobuildwp.com and cannot carry a WordPress nonce. It is bound instead to a 256-bit state held in a transient for the current user, and it only reads; the state-changing Confirm is a nonce-checked POST.
-
 /**
  * Pairing, §1-§3 of the protocol, plus the link record and the HTTP client
  * every Cloud call goes through.
@@ -697,11 +695,14 @@ function wppilot_cloud_handle_return(): void
 {
     wppilot_cloud_require_manager();
 
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET redirect back from GoBuildWP Cloud, which cannot carry a WordPress nonce. CSRF is prevented by the 256-bit state, which must match a pending transient created for this user by the nonce-checked start; only that pending record is updated, and nothing is connected until the nonce-checked Confirm POST.
     $state = is_string($_GET['state'] ?? null) ? sanitize_text_field(wp_unslash($_GET['state'])) : '';
     $code = is_string($_GET['code'] ?? null) ? sanitize_text_field(wp_unslash($_GET['code'])) : '';
+    $declined = isset($_GET['error']);
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
     // Declined on the Cloud side, if it says so: nothing to ask it about.
-    if ($code === '' && isset($_GET['error'])) {
+    if ($code === '' && $declined) {
         if (wppilot_cloud_pending($state, get_current_user_id()) !== null) {
             wppilot_cloud_forget_pending($state);
         }

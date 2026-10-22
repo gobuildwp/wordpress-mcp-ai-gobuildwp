@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * Configuration page: generated client configuration.
  *
@@ -663,8 +661,9 @@ function wppilot_handle_download_mcpb(): void
         ));
     }
 
-    $raw_password = $_POST['wppilot_mcpb_password'] ?? '';
-    $password = is_string($raw_password) ? (string) preg_replace('/\s+/', replacement: '', subject: $raw_password) : '';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Application password is written byte-for-byte into the downloaded bundle for the client to authenticate with; only whitespace is stripped below, and sanitize_text_field() must not rewrite a credential.
+    $raw_password = is_string($_POST['wppilot_mcpb_password'] ?? null) ? wp_unslash($_POST['wppilot_mcpb_password']) : '';
+    $password = (string) preg_replace('/\s+/', replacement: '', subject: $raw_password);
     if ($password === '') {
         wp_die(esc_html__('Missing application password for the bundle.', domain: 'wppilot'));
     }
@@ -672,9 +671,8 @@ function wppilot_handle_download_mcpb(): void
     $username = wp_get_current_user()->user_login;
     $rest_url = rest_url('mcp/wppilot');
 
-    $raw_name = $_POST['wppilot_mcpb_name'] ?? '';
-    $mcp_name = is_string($raw_name)
-        ? (string) preg_replace('/[^a-z0-9-]/', replacement: '', subject: strtolower($raw_name))
+    $mcp_name = is_string($_POST['wppilot_mcpb_name'] ?? null)
+        ? (string) preg_replace('/[^a-z0-9-]/', replacement: '', subject: sanitize_key(wp_unslash($_POST['wppilot_mcpb_name'])))
         : '';
     if ($mcp_name === '' || strlen($mcp_name) > 25) {
         $mcp_name = wppilot_get_mcp_server_name_default();

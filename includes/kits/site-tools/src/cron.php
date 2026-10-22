@@ -251,6 +251,7 @@ function run(array $input): array|WP_Error
         add_filter('wp_doing_cron', $doing_cron);
         ob_start();
         try {
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Runs one existing WP-Cron event by its own hook name, as wp-cron.php does.
             do_action_ref_array($event['hook'], $event['args']);
         } catch (\Throwable $thrown) {
             $error = get_class($thrown) . ': ' . $thrown->getMessage();

@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * The Dashboard: what GoBuildWP is currently exposing, and who is using it.
  *
@@ -41,12 +39,12 @@ const WPPILOT_FORGET_CLIENT_NONCE = 'wppilot_forget_client';
  */
 function wppilot_dashboard_handle_forget(): ?array
 {
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
         return null;
     }
 
     $sweep = array_key_exists('wppilot_forget_stale', $_POST);
-    $raw = is_string($_POST['wppilot_forget_client'] ?? null) ? $_POST['wppilot_forget_client'] : '';
+    $raw = is_string($_POST['wppilot_forget_client'] ?? null) ? sanitize_text_field(wp_unslash($_POST['wppilot_forget_client'])) : '';
     if (!$sweep && $raw === '') {
         return null;
     }
@@ -116,11 +114,11 @@ function wppilot_dashboard_oauth_clients(int $limit = 25): array
     $table = $wpdb->prefix . 'wppilot_oauth_clients';
 
     // @mago-expect analysis:possibly-invalid-argument
-    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Values are bound by the inline $wpdb->prepare(). The only interpolation is the table name, which prepare() has no placeholder for. Not cached: this reads live per-request state.
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The OAuth clients table has no WordPress API. Not cached: the dashboard shows live last-used times.
     $rows = $wpdb->get_results(
         // @mago-expect analysis:possibly-invalid-argument
         $wpdb->prepare("SELECT client_id, client_name, created_at, last_used_at, admin_created
-             FROM `{$table}` ORDER BY (last_used_at IS NULL), last_used_at DESC, created_at DESC LIMIT %d", $limit),
+             FROM %i ORDER BY (last_used_at IS NULL), last_used_at DESC, created_at DESC LIMIT %d", $table, $limit),
         ARRAY_A,
     );
 
@@ -969,7 +967,8 @@ function wppilot_dashboard_endpoint_rows(): array
 // there never runs — the user gets "you are not allowed to access this page" for
 // a link that used to work.
 add_action('init', static function (): void {
-    if (!is_admin() || ($_GET['page'] ?? null) !== WPPILOT_DASHBOARD_PAGE) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Routing only: a bookmarked link to the retired screen is redirected to its replacement; nothing is changed.
+    if (!is_admin() || !isset($_GET['page']) || $_GET['page'] !== WPPILOT_DASHBOARD_PAGE) {
         return;
     }
 

@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- $_SERVER is read only to report which authorization variable PHP received and whether this request arrived over HTTPS; nothing read is stored, echoed or used for a decision beyond that.
-
 namespace WPPilot\Troubleshoot\Doctor;
 
 use WP_REST_Request;
@@ -761,14 +759,15 @@ function run(?callable $request = null): array
     $all_headers[] = $anonymous_class['headers'];
 
     // Stack first in the report, but it reads the Server header the first probe brought back.
-    $stack = detect_stack((string) ($_SERVER['SERVER_SOFTWARE'] ?? ''), $anonymous_class['headers']['server'] ?? '');
+    $server_software = isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : '';
+    $stack = detect_stack($server_software, $anonymous_class['headers']['server'] ?? '');
     $checks[] = check('server_stack', 'info', __('Web server', domain: 'wppilot'), sprintf(
         /* translators: 1: web server family, 2: PHP SAPI name */
         __('Web server: %1$s. PHP runs as: %2$s.', domain: 'wppilot'),
         $stack,
         PHP_SAPI,
     ), array_values(array_filter([
-        'SERVER_SOFTWARE: ' . (string) ($_SERVER['SERVER_SOFTWARE'] ?? ''),
+        'SERVER_SOFTWARE: ' . $server_software,
         isset($anonymous_class['headers']['server']) ? 'Server header: ' . $anonymous_class['headers']['server'] : '',
     ])), $stack === 'litespeed' ? __('OpenLiteSpeed does not apply .htaccess changes by itself: rules must be added in WebAdmin and loaded with a graceful restart.', domain: 'wppilot') : '');
 

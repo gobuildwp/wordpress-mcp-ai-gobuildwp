@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 if (!defined('ABSPATH')) {
     exit();
 }
@@ -57,7 +55,8 @@ function wppilot_guard_rest_host(mixed $result, WP_REST_Server $server, WP_REST_
     if ($result !== null || !wppilot_is_sensitive_rest_route($request->get_route())) {
         return $result;
     }
-    $host_header = $_SERVER['HTTP_HOST'] ?? '';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The Host header is normalised by wppilot_normalize_request_host() and must then match an allowed host exactly; sanitizing first could turn a rejected value into an accepted one.
+    $host_header = isset($_SERVER['HTTP_HOST']) ? (string) wp_unslash($_SERVER['HTTP_HOST']) : '';
     if ($host_header === '') {
         return new WP_Error('wppilot_host_missing', __('The request Host header is required.', domain: 'wppilot'), [
             'status' => 400,

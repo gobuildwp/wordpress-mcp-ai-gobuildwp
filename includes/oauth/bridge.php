@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\Bridge;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -66,13 +64,12 @@ function new_psr7_response(): ResponseInterface
  */
 function psr7_from_globals(): ServerRequestInterface
 {
-    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-    $isHttps = ($_SERVER['HTTPS'] ?? '') !== '';
-    $uri =
-        ($isHttps ? 'https' : 'http')
-        . '://'
-        . ($_SERVER['HTTP_HOST'] ?? 'localhost')
-        . ($_SERVER['REQUEST_URI'] ?? '/');
+    $method = isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : 'GET';
+    $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '';
+    $host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : 'localhost';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The request URI is handed unchanged to the OAuth library's PSR-7 request; sanitize_text_field() would strip its percent-encoded octets and change the query parameters it carries.
+    $path = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/';
+    $uri = ($isHttps ? 'https' : 'http') . '://' . $host . $path;
 
     $headers = [];
     foreach ($_SERVER as $key => $value) {

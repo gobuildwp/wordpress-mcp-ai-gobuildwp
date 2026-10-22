@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * Configuration page: the top-level render and its shared sections.
  *
@@ -47,7 +45,8 @@ function wppilot_render_connect_page(): void
     $token_error = is_wp_error($token_result) ? $token_result : null;
     $new_token = is_string($token_result) ? $token_result : null;
 
-    $result_message = match ($_GET['wppilot_result'] ?? null) {
+    $result = isset($_GET['wppilot_result']) && is_string($_GET['wppilot_result']) ? sanitize_text_field(wp_unslash($_GET['wppilot_result'])) : null; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: picks one of the fixed result messages below after a redirect; nothing is changed.
+    $result_message = match ($result) {
         'revoked' => __('Application password revoked.', domain: 'wppilot'),
         'token_revoked' => __('Access token revoked.', domain: 'wppilot'),
         'token_updated' => __('Access token limits saved.', domain: 'wppilot'),
@@ -168,73 +167,13 @@ function wppilot_render_connect_page(): void
         <?php endif; ?>
 
     </div>
-
-    <script>
-    // navigator.clipboard exists only in a secure context (HTTPS, or http://localhost). On a local
-    // site served over plain HTTP on a non-localhost host it is undefined, so fall back to a hidden
-    // textarea + execCommand('copy'), which needs no secure context.
-    window.wppilotClipboardCopy = function (text) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            return navigator.clipboard.writeText(text);
-        }
-        return new Promise(function (resolve, reject) {
-            var ta = document.createElement('textarea');
-            ta.value = text;
-            ta.setAttribute('readonly', '');
-            ta.style.position = 'fixed';
-            ta.style.top = '-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            var ok = false;
-            try {
-                ok = document.execCommand('copy');
-            } catch (e) {
-                ok = false;
-            }
-            document.body.removeChild(ta);
-            ok ? resolve() : reject(new Error('copy command was rejected'));
-        });
-    };
-    function wppilotCopy(id, btn) {
-        var text = document.getElementById(id).textContent;
-        window.wppilotClipboardCopy(text).then(function() {
-            var orig = btn.textContent;
-            btn.textContent = '<?php echo esc_js($copied_label); ?>';
-            setTimeout(function() { btn.textContent = orig; }, 1500);
-        });
-    }
-    function wppilotTogglePasswordName(btn) {
-        var field = document.getElementById('wppilot-password-name-field');
-        var expanded = btn.getAttribute('aria-expanded') === 'true';
-        if (expanded) {
-            field.style.display = 'none';
-            field.hidden = true;
-            btn.setAttribute('aria-expanded', 'false');
-        } else {
-            field.style.display = 'block';
-            field.hidden = false;
-            btn.setAttribute('aria-expanded', 'true');
-            var input = document.getElementById('wppilot-password-name');
-            if (input) { input.focus(); }
-        }
-    }
-    function wppilotToggleUseExisting(btn) {
-        var field = document.getElementById('wppilot-use-existing-field');
-        var expanded = btn.getAttribute('aria-expanded') === 'true';
-        if (expanded) {
-            field.style.display = 'none';
-            field.hidden = true;
-            btn.setAttribute('aria-expanded', 'false');
-        } else {
-            field.style.display = 'block';
-            field.hidden = false;
-            btn.setAttribute('aria-expanded', 'true');
-            var input = document.getElementById('wppilot-existing-password');
-            if (input) { input.focus(); }
-        }
-    }
-    </script>
     <?php
+    wppilot_enqueue_admin_script(
+        'wppilot-connect-page',
+        'connect-page.js',
+        data_var: 'wppilotConnectPage',
+        data: ['copied' => $copied_label],
+    );
 }
 
 /**
@@ -325,94 +264,25 @@ function wppilot_render_method_chooser(
     </div>
     <?php endif; ?>
 
-    <noscript>
-        <style>.wppilot-method-panel[hidden], #wppilot-step3[hidden] { display: block; }</style>
-    </noscript>
-
-    <script>
-    (function () {
-        var hasPassword = <?php echo $has_password ? 'true' : 'false'; ?>;
-        var oauthAvailable = <?php echo $oauth_available ? 'true' : 'false'; ?>;
-        var defaultMethod = <?php echo wppilot_script_json($default_method); ?>;
-        // Re-query on every click so panels rendered in later containers (the step 3 section) are
-        // toggled too. Step 3 opens for OAuth and for the access token immediately — both render a
-        // usable snippet with a labelled placeholder — and for the password method only once a
-        // password exists (otherwise the whole step 3 section stays hidden).
-        function apply(method) {
-            document.querySelectorAll('.wppilot-method-card').forEach(function (c) {
-                c.classList.toggle('is-active', c.getAttribute('data-method') === method);
-            });
-            document.querySelectorAll('.wppilot-method-panel').forEach(function (p) {
-                p.hidden = p.getAttribute('data-panel') !== method;
-            });
-            var step3 = document.getElementById('wppilot-step3');
-            var visible = method === 'oauth'
-                || method === 'token'
-                || method === 'webapps'
-                || (method === 'password' && hasPassword);
-            if (step3) { step3.hidden = !visible; }
-        }
-        document.querySelectorAll('.wppilot-method-card').forEach(function (card) {
-            card.addEventListener('click', function () { apply(card.getAttribute('data-method')); });
-        });
-
-        // Open on a method rather than on nothing. With no selection the whole of
-        // step 2 stayed hidden, so the page read 1, 3, 4 — a numbered sequence
-        // with a hole in it, which looks like a bug and hides the part that
-        // actually connects a client. The application-password panel has nothing
-        // to show until a password exists, so it is not used as the opening
-        // choice in that state.
-        // Deferred to DOM ready on purpose. This script is inline and runs while
-        // the document is still parsing, and the section it has to reveal —
-        // step 2 — is further down the page. Running now would call
-        // getElementById on an element the parser has not reached, silently do
-        // nothing, and leave the page reading 1, 3, 4 exactly as before.
-        function selectInitialMethod() {
-            var initial = defaultMethod;
-            if (initial === 'password' && !hasPassword) {
-                initial = oauthAvailable ? 'oauth' : 'token';
-            }
-            apply(initial);
-
-            // The Overview links here with a method already chosen. Without this
-            // the link lands on whichever panel the server picked, which for a
-            // visitor who clicked "Create an access token" is the wrong one.
-            var requested = (window.location.hash || '').replace('#wppilot-', '').replace('-method', '');
-                if (['oauth', 'password', 'token', 'webapps', 'cloud'].indexOf(requested) !== -1) {
-                var card = document.querySelector('.wppilot-method-card[data-method="' + requested + '"]');
-                if (card && !card.disabled) {
-                    apply(requested);
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', selectInitialMethod);
-        } else {
-            selectInitialMethod();
-        }
-    })();
-    </script>
-
-    <?php if ($new_token !== null): ?>
-    <script>
-    (function () {
-        // Creating a token posts the page back, and the browser restores the top
-        // of the document — but the token is revealed several screens down, shown
-        // once, and never recoverable. Landing above it is how someone loses the
-        // only copy. Focus as well as scroll, so a screen reader lands there too.
-        var box = document.getElementById('wppilot-token-created');
-        if (!box) { return; }
-        box.setAttribute('tabindex', '-1');
-        window.requestAnimationFrame(function () {
-            box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            box.focus({ preventScroll: true });
-        });
-    }());
-    </script>
-    <?php endif; ?>
     <?php
+    // Without JavaScript every method panel and step 3 stay visible. The admin <body> carries
+    // `no-js` until WordPress' own inline script swaps it for `js`, so this rule applies only
+    // when scripts do not run, as the <noscript> block it replaced did.
+    wp_register_style('wppilot-connect-no-js', false, [], WPPILOT_VERSION);
+    wp_enqueue_style('wppilot-connect-no-js');
+    wp_add_inline_style('wppilot-connect-no-js', '.no-js .wppilot-method-panel[hidden], .no-js #wppilot-step3[hidden] { display: block; }');
+
+    wppilot_enqueue_admin_script(
+        'wppilot-connect-method-chooser',
+        'connect-method-chooser.js',
+        data_var: 'wppilotMethodChooser',
+        data: [
+            'hasPassword' => $has_password,
+            'oauthAvailable' => $oauth_available,
+            'defaultMethod' => $default_method,
+            'focusTokenCreated' => $new_token !== null,
+        ],
+    );
 }
 
 /**
@@ -608,8 +478,6 @@ function wppilot_render_config_section(string $rest_url, string $username, strin
     $pw_slot = '__WPPILOT_PW_SLOT__';
     $password_is_placeholder = hash_equals('YOUR-APP-PASSWORD', $display_password);
     $configs = wppilot_build_configs($rest_url, $username, $display_password, $name_placeholder);
-    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wppilot_script_json() hex-escapes for script context.
-    $configs_json = (string) wppilot_script_json($configs);
 
     // Taken from the client registry rather than restated here, so adding a
     // client in one place reaches the Overview screen and this list together.
@@ -833,388 +701,38 @@ function wppilot_render_config_section(string $rest_url, string $username, strin
 
     </div><!-- #wppilot-connect-content -->
 
-    <?php // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Every value emitted in this block goes through wppilot_script_json(), which hex-escapes <, >, & and quotes for <script> context. Plugin Check cannot recognise a project-local escaper. ?>
-    <script>
-    (function () {
-        var configs = <?php
-
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wppilot_script_json() hex-escapes for script context.
-        echo $configs_json; ?>;
-        var clientLabels = <?php
-
-        echo wppilot_script_json($clients); ?>;
-        var client = '';
-        var defaultName = <?php
-
-        echo wppilot_script_json($default_name); ?>;
-        var pasteTemplate = <?php
-
-        echo wppilot_script_json($paste_paragraph_template); ?>;
-        var mcpName = <?php
-
-        echo wppilot_script_json($default_name); ?>;
-        var npxlessClient = 'claude';
-        var namePlaceholder = <?php
-
-        echo wppilot_script_json($name_placeholder); ?>;
-        var passwordSentinel = <?php
-
-        echo wppilot_script_json($pw_slot); ?>;
-        var passwordValue = <?php
-
-        echo wppilot_script_json($display_password); ?>;
-        var passwordIsPlaceholder = <?php
-
-        echo wppilot_script_json($password_is_placeholder); ?>;
-        var usernameValue = <?php
-
-        echo wppilot_script_json($username); ?>;
-        var passwordEndpointUrl = <?php
-
-        echo wppilot_script_json($rest_url); ?>;
-        var passwordAuthLine = <?php
-
-        echo wppilot_script_json(wppilot_agent_prompt_auth_line('password')); ?>;
-        var passwordNotes = <?php
-
-        echo wppilot_script_json(wppilot_agent_prompt_password_notes()); ?>;
-
-        function renderPaste() {
-            var text = pasteTemplate.split(namePlaceholder).join(mcpName);
-            var container = document.getElementById('wppilot-paste-text');
-            container.textContent = '';
-            var idx = text.indexOf(passwordSentinel);
-            if (idx === -1) {
-                container.appendChild(document.createTextNode(text));
-                return;
-            }
-            container.appendChild(document.createTextNode(text.substring(0, idx)));
-            if (passwordIsPlaceholder) {
-                var span = document.createElement('span');
-                span.className = 'wppilot-placeholder';
-                span.textContent = 'YOUR-APP-PASSWORD';
-                container.appendChild(span);
-            } else {
-                container.appendChild(document.createTextNode(passwordValue));
-            }
-            container.appendChild(document.createTextNode(text.substring(idx + passwordSentinel.length)));
-        }
-
-        function render() {
-            renderConfig();
-            renderPaste();
-            renderNpxlessConfig();
-        }
-
-        function renderConfig() {
-            if (!client) { return; }
-            var cfg = configs[client];
-            if (!cfg) { return; }
-
-            var code = cfg.code.split(namePlaceholder).join(mcpName);
-            var codeEl = document.getElementById('wppilot-config-code');
-            codeEl.textContent = code;
-            if (code.indexOf('YOUR-APP-PASSWORD') !== -1) {
-                codeEl.innerHTML = codeEl.innerHTML.replace(
-                    /YOUR-APP-PASSWORD/g,
-                    '<span class="wppilot-placeholder">YOUR-APP-PASSWORD</span>'
-                );
-            }
-            document.getElementById('wppilot-config-hint').innerHTML = cfg.hint;
-
-            // Built from the same cfg the snippet above came from, so the prompt
-            // can never describe a client other than the selected tab.
-            window.wppilotAgentPrompt('wppilot-password', {
-                clientLabel: clientLabels[client] || client,
-                serverName: mcpName,
-                url: passwordEndpointUrl,
-                authLine: passwordAuthLine,
-                code: code,
-                paths: cfg.paths,
-                isShell: cfg.isShell,
-                hasSecret: true,
-                notes: passwordNotes
-            });
-
-            var mergeNote = document.getElementById('wppilot-config-merge-note');
-            if (mergeNote) { mergeNote.style.display = cfg.isShell ? 'none' : ''; }
-
-            var isDesktop = client === 'claude-desktop';
-            var mcpbEl = document.getElementById('wppilot-mcpb-download');
-            if (mcpbEl) { mcpbEl.style.display = isDesktop ? '' : 'none'; }
-            var pasteBlock = document.getElementById('wppilot-paste-block');
-            if (pasteBlock) { pasteBlock.style.display = isDesktop ? 'none' : ''; }
-            var pwNotice = document.getElementById('wppilot-prompt-password-notice');
-            if (pwNotice) { pwNotice.style.display = isDesktop ? 'none' : ''; }
-            var manualBtnWrap = document.getElementById('wppilot-manual-btn-wrap');
-            if (manualBtnWrap) { manualBtnWrap.style.display = ''; }
-            var npxlessToggle = document.getElementById('wppilot-npxless-toggle');
-            if (npxlessToggle) {
-                var showNpxless = client === 'claude-code' || client === 'codex';
-                npxlessToggle.parentElement.style.display = showNpxless ? '' : 'none';
-                if (!showNpxless) {
-                    var npxlessConfig = document.getElementById('wppilot-npxless-config');
-                    if (npxlessConfig) { npxlessConfig.style.display = 'none'; npxlessConfig.hidden = true; }
-                    npxlessToggle.setAttribute('aria-expanded', 'false');
-                }
-            }
-
-            var pathsEl = document.getElementById('wppilot-config-paths');
-            var keys = Object.keys(cfg.paths);
-            if (keys.length > 0) {
-                var html = '<ul style="margin:4px 0 0; padding-left:20px;">';
-                keys.forEach(function (label) {
-                    html += '<li><strong>' + label + '</strong>: <code>' + cfg.paths[label] + '</code></li>';
-                });
-                html += '</ul>';
-                pathsEl.innerHTML = html;
-                pathsEl.style.display = '';
-            } else {
-                pathsEl.innerHTML = '';
-                pathsEl.style.display = 'none';
-            }
-        }
-
-        window.wppilotSetClient = function (key, btn) {
-            client = key;
-            document.querySelectorAll('.wppilot-top-client-tab').forEach(function (t) { t.classList.remove('active'); });
-            btn.classList.add('active');
-            var content = document.getElementById('wppilot-connect-content');
-            if (content) { content.style.display = ''; }
-            var manualToggle = document.getElementById('wppilot-manual-toggle');
-            if (manualToggle && clientLabels[key]) {
-                manualToggle.textContent = <?php echo
-                    wppilot_script_json(__('Manual configuration for', domain: 'wppilot'))
-                ; ?> + ' ' + clientLabels[key];
-            }
-            renderConfig();
-        };
-
-        window.wppilotSetNpxlessClient = function (key, btn) {
-            npxlessClient = key;
-            document.querySelectorAll('.wppilot-npxless-client-tab').forEach(function (t) { t.classList.remove('active'); });
-            btn.classList.add('active');
-            renderNpxlessConfig();
-        };
-
-        function updateNameWarning(value) {
-            var warning = document.getElementById('wppilot-name-warning');
-            warning.style.display = value.length >= 25 ? 'block' : 'none';
-
-            var suggestion = document.getElementById('wppilot-name-suggestion');
-            var trimmed = value.trim();
-            // A name an older version suggested ("wppilot-...") still identifies this server.
-            var missingBrand = trimmed.length > 0 && trimmed.toLowerCase().indexOf('gobuildwp') === -1 && trimmed.toLowerCase().indexOf('wppilot') === -1;
-            suggestion.style.display = missingBrand ? 'block' : 'none';
-        }
-
-        window.wppilotUpdateName = function (value) {
-            mcpName = value.trim() || defaultName;
-            var nameField = document.getElementById('wppilot-mcpb-name');
-            if (nameField) { nameField.value = mcpName; }
-            updateNameWarning(value);
-            render();
-        };
-
-        window.wppilotShowPromptForDesktop = function (btn) {
-            var mcpbEl = document.getElementById('wppilot-mcpb-download');
-            if (mcpbEl) { mcpbEl.style.display = 'none'; }
-            var pasteBlock = document.getElementById('wppilot-paste-block');
-            if (pasteBlock) { pasteBlock.style.display = ''; }
-            var pwNotice = document.getElementById('wppilot-prompt-password-notice');
-            if (pwNotice) { pwNotice.style.display = ''; }
-        };
-
-        window.wppilotToggleServerName = function (btn) {
-            var field = document.getElementById('wppilot-server-name-field');
-            var expanded = btn.getAttribute('aria-expanded') === 'true';
-            if (expanded) {
-                field.style.display = 'none';
-                field.hidden = true;
-                btn.setAttribute('aria-expanded', 'false');
-            } else {
-                field.style.display = 'block';
-                field.hidden = false;
-                btn.setAttribute('aria-expanded', 'true');
-                var input = document.getElementById('wppilot-mcp-name');
-                if (input) { input.focus(); }
-            }
-        };
-
-        window.wppilotToggleManualConfig = function (btn) {
-            var panel = document.getElementById('wppilot-manual-config');
-            var expanded = btn.getAttribute('aria-expanded') === 'true';
-            if (expanded) {
-                panel.style.display = 'none';
-                panel.hidden = true;
-                btn.setAttribute('aria-expanded', 'false');
-            } else {
-                panel.style.display = '';
-                panel.hidden = false;
-                btn.setAttribute('aria-expanded', 'true');
-                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        };
-
-        // Open the manual-config section (never closes it) and scroll to it.
-        // Used by the "manual configuration" link in the password notice.
-        window.wppilotOpenManualConfig = function () {
-            var panel = document.getElementById('wppilot-manual-config');
-            if (panel === null) {
-                return;
-            }
-            panel.style.display = '';
-            panel.hidden = false;
-            var toggle = document.getElementById('wppilot-manual-toggle');
-            if (toggle !== null) {
-                toggle.setAttribute('aria-expanded', 'true');
-            }
-            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        };
-
-        window.wppilotToggleExpandPaste = function (btn) {
-            var content = document.getElementById('wppilot-paste-content');
-            var expanded = btn.getAttribute('aria-expanded') === 'true';
-            if (expanded) {
-                content.classList.remove('is-expanded');
-                btn.setAttribute('aria-expanded', 'false');
-                btn.textContent = <?php
-
-                echo wppilot_script_json(__('Show full text', domain: 'wppilot')); ?>;
-            } else {
-                content.classList.add('is-expanded');
-                btn.setAttribute('aria-expanded', 'true');
-                btn.textContent = <?php
-
-                echo wppilot_script_json(__('Show less', domain: 'wppilot')); ?>;
-            }
-        };
-
-        window.wppilotCopyPaste = function (btn) {
-            window.wppilotClipboardCopy(document.getElementById('wppilot-paste-text').textContent).then(function () {
-                var orig = btn.textContent;
-                btn.textContent = '<?php echo esc_js($copied_label); ?>';
-                var warning = document.getElementById('wppilot-paste-copied-warning');
-                if (warning) { warning.style.display = 'block'; }
-                setTimeout(function () {
-                    btn.textContent = orig;
-                    if (warning) { warning.style.display = 'none'; }
-                }, 4000);
-            });
-        };
-
-        window.wppilotCopyConfig = function (btn) {
-            window.wppilotClipboardCopy(document.getElementById('wppilot-config-code').textContent).then(function () {
-                var orig = btn.textContent;
-                btn.textContent = '<?php echo esc_js($copied_label); ?>';
-                setTimeout(function () { btn.textContent = orig; }, 1500);
-            });
-        };
-
-        window.wppilotToggleNpxlessConfig = function (btn) {
-            var panel = document.getElementById('wppilot-npxless-config');
-            var expanded = btn.getAttribute('aria-expanded') === 'true';
-            if (expanded) {
-                panel.style.display = 'none';
-                panel.hidden = true;
-                btn.setAttribute('aria-expanded', 'false');
-            } else {
-                panel.style.display = '';
-                panel.hidden = false;
-                btn.setAttribute('aria-expanded', 'true');
-            }
-        };
-
-        window.wppilotCopyNpxlessConfig = function (btn) {
-            window.wppilotClipboardCopy(document.getElementById('wppilot-npxless-code').textContent).then(function () {
-                var orig = btn.textContent;
-                btn.textContent = '<?php echo esc_js($copied_label); ?>';
-                setTimeout(function () { btn.textContent = orig; }, 1500);
-            });
-        };
-
-        function renderNpxlessConfig() {
-            var npxlessCodeEl = document.getElementById('wppilot-npxless-code');
-            if (!npxlessCodeEl) { return; }
-
-            var serverName = mcpName;
-            var url = <?php
-
-            echo wppilot_script_json($rest_url); ?>;
-            var username = usernameValue;
-
-            var authHeaderValue;
-            if (passwordIsPlaceholder) {
-                authHeaderValue = 'Basic <span class="wppilot-placeholder">BASE64_ENCODED_CREDENTIALS</span>';
-            } else {
-                var pwClean = passwordValue.replace(/\s+/g, '');
-                var encoded = window.btoa(username + ':' + pwClean);
-                authHeaderValue = 'Basic ' + encoded;
-            }
-
-            var indent = '  ';
-            var hintEl = document.getElementById('wppilot-npxless-hint');
-            var pathsEl = document.getElementById('wppilot-npxless-paths');
-            var placeholder = 'BASE64_ENCODED_CREDENTIALS';
-            var jsonQuote = function (value) {
-                return JSON.stringify(value);
-            };
-            var tomlQuote = function (value) {
-                return '"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
-            };
-            var code;
-
-            if (npxlessClient === 'codex') {
-                code = '[mcp_servers.' + serverName + ']\n' +
-                    'url = ' + tomlQuote(url) + '\n' +
-                    'http_headers = { Authorization = ' + tomlQuote(authHeaderValue.replace(/<[^>]+>/g, '')) + ' }';
-                hintEl.textContent = <?php echo
-                    wppilot_script_json(__('Add to your project’s .codex/config.toml file.', domain: 'wppilot'))
-                ; ?>;
-                pathsEl.innerHTML = '<ul style="margin:4px 0 0; padding-left:20px;">' +
-                    '<li><strong><?php echo
-                        esc_js(__('Project', domain: 'wppilot'))
-                    ; ?></strong>: <code>.codex/config.toml</code></li>' +
-                    '<li><strong><?php echo
-                        esc_js(__('Global', domain: 'wppilot'))
-                    ; ?></strong>: <code>~/.codex/config.toml</code></li>' +
-                    '</ul>';
-            } else {
-                code = '{\n' +
-                    indent + '"mcpServers": {\n' +
-                    indent + indent + jsonQuote(serverName) + ': {\n' +
-                    indent + indent + indent + '"type": "http",\n' +
-                    indent + indent + indent + '"url": ' + jsonQuote(url) + ',\n' +
-                    indent + indent + indent + '"headers": {\n' +
-                    indent + indent + indent + indent + '"Authorization": ' + jsonQuote(authHeaderValue.replace(/<[^>]+>/g, '')) + '\n' +
-                    indent + indent + indent + '}\n' +
-                    indent + indent + '}\n' +
-                    indent + '}\n' +
-                    '}';
-                hintEl.textContent = <?php echo
-                    wppilot_script_json(__('Add to your project’s .mcp.json file.', domain: 'wppilot'))
-                ; ?>;
-                pathsEl.innerHTML = '<ul style="margin:4px 0 0; padding-left:20px;">' +
-                    '<li><strong><?php echo
-                        esc_js(__('Project', domain: 'wppilot'))
-                    ; ?></strong>: <code>.mcp.json</code></li>' +
-                    '</ul>';
-            }
-
-            npxlessCodeEl.textContent = code;
-            if (passwordIsPlaceholder) {
-                npxlessCodeEl.innerHTML = npxlessCodeEl.innerHTML.replace(
-                    placeholder,
-                    '<span class="wppilot-placeholder">' + placeholder + '</span>'
-                );
-            }
-        }
-
-        render();
-    }());
-    </script>
-    <?php // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped ?>
     <?php
+    wppilot_enqueue_agent_prompt_script();
+    wppilot_enqueue_admin_script(
+        'wppilot-connect-password',
+        'connect-password.js',
+        ['wppilot-agent-prompt'],
+        'wppilotConnectPassword',
+        [
+            'configs' => $configs,
+            'clientLabels' => $clients,
+            'defaultName' => $default_name,
+            'pasteTemplate' => $paste_paragraph_template,
+            'namePlaceholder' => $name_placeholder,
+            'passwordSentinel' => $pw_slot,
+            'passwordValue' => $display_password,
+            'passwordIsPlaceholder' => $password_is_placeholder,
+            'username' => $username,
+            'endpointUrl' => $rest_url,
+            'authLine' => wppilot_agent_prompt_auth_line('password'),
+            'notes' => wppilot_agent_prompt_password_notes(),
+            'labels' => [
+                'manualPrefix' => __('Manual configuration for', domain: 'wppilot'),
+                'showFullText' => __('Show full text', domain: 'wppilot'),
+                'showLess' => __('Show less', domain: 'wppilot'),
+                'copied' => $copied_label,
+                'codexHint' => __('Add to your project’s .codex/config.toml file.', domain: 'wppilot'),
+                'mcpJsonHint' => __('Add to your project’s .mcp.json file.', domain: 'wppilot'),
+                'projectHtml' => esc_html(__('Project', domain: 'wppilot')),
+                'globalHtml' => esc_html(__('Global', domain: 'wppilot')),
+            ],
+        ],
+    );
 }
 
 function wppilot_render_mcp_dependency_inline_notice(?WP_Error $dependency_error): void
@@ -1290,34 +808,16 @@ function wppilot_render_authorization_header_warning(): void
             ); ?>
         </p>
     </div>
-    <?php // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Every value emitted in this block goes through wppilot_script_json(), which hex-escapes <, >, & and quotes for <script> context. Plugin Check cannot recognise a project-local escaper. ?>
-    <script>
-    window.fetch(<?php
-
-    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wppilot_script_json() hex-escapes for script context.
-    echo wppilot_script_json($test_url); ?>, {
-        credentials: 'same-origin',
-        headers: {
-            'Authorization': 'Basic dXNlcjpwd2Q=',
-            'X-WP-Nonce': <?php
-
-            echo wppilot_script_json($rest_nonce); ?>
-        }
-    }).then(function (response) {
-        if (!response.ok) {
-            throw new Error('Authorization header test unavailable');
-        }
-        return response.json();
-    }).then(function (result) {
-        if (result && result.status !== 'good') {
-            document.getElementById('wppilot-authorization-header-warning').hidden = false;
-        }
-    }).catch(function () {
-        // A REST or network failure does not prove that Authorization forwarding is broken.
-    });
-    </script>
-    <?php // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped ?>
     <?php
+    wppilot_enqueue_admin_script(
+        'wppilot-connect-auth-header',
+        'connect-auth-header.js',
+        data_var: 'wppilotAuthHeaderCheck',
+        data: [
+            'testUrl' => $test_url,
+            'nonce' => $rest_nonce,
+        ],
+    );
 }
 
 /**

@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * Configuration page: the Application Password connection method.
  *
@@ -29,7 +27,7 @@ if (!defined('ABSPATH')) {
  */
 function wppilot_handle_use_existing_password()
 {
-    if (($_POST['wppilot_use_existing_password'] ?? null) === null) {
+    if (!isset($_POST['wppilot_use_existing_password'])) {
         return null;
     }
 
@@ -42,8 +40,8 @@ function wppilot_handle_use_existing_password()
 
     check_admin_referer('wppilot_use_existing_password');
 
-    $raw = $_POST['wppilot_existing_password'] ?? '';
-    $value = is_string($raw) ? trim($raw) : '';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- A pasted application password is a credential shown back once for the client config; only surrounding whitespace is trimmed and its length checked, as sanitize_text_field() must not rewrite it.
+    $value = is_string($_POST['wppilot_existing_password'] ?? null) ? trim(wp_unslash($_POST['wppilot_existing_password'])) : '';
     if ($value === '') {
         return new WP_Error('empty', __('Paste the application password value before submitting.', domain: 'wppilot'));
     }
@@ -64,7 +62,7 @@ function wppilot_handle_use_existing_password()
  */
 function wppilot_handle_create_password()
 {
-    if (($_POST['wppilot_create_password'] ?? null) === null) {
+    if (!isset($_POST['wppilot_create_password'])) {
         return null;
     }
 
@@ -83,8 +81,9 @@ function wppilot_handle_create_password()
     }
 
     $user_id = get_current_user_id();
-    $raw_name = $_POST['wppilot_password_name'] ?? '';
-    $input_name = is_string($raw_name) ? trim($raw_name) : '';
+    $input_name = is_string($_POST['wppilot_password_name'] ?? null)
+        ? trim(sanitize_text_field(wp_unslash($_POST['wppilot_password_name'])))
+        : '';
     $app_name = $input_name !== '' ? 'GoBuildWP: ' . $input_name : 'GoBuildWP';
 
     // Avoid duplicate names — append a counter if one already exists.
@@ -114,7 +113,7 @@ function wppilot_handle_create_password()
  */
 function wppilot_handle_revoke_password(): void
 {
-    if (($_POST['wppilot_revoke_password'] ?? null) === null) {
+    if (!isset($_POST['wppilot_revoke_password'])) {
         return;
     }
 
@@ -122,8 +121,8 @@ function wppilot_handle_revoke_password(): void
         return;
     }
 
-    $uuid = $_POST['wppilot_revoke_uuid'] ?? '';
-    if (!is_string($uuid) || $uuid === '') {
+    $uuid = is_string($_POST['wppilot_revoke_uuid'] ?? null) ? sanitize_text_field(wp_unslash($_POST['wppilot_revoke_uuid'])) : '';
+    if ($uuid === '') {
         return;
     }
 

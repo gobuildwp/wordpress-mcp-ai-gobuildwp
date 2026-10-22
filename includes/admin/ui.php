@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * Shared admin chrome.
  *
@@ -39,6 +37,43 @@ function wppilot_script_json(mixed $value): string
     $json = wp_json_encode($value, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 
     return $json === false ? 'null' : $json;
+}
+
+/**
+ * Enqueue one of GoBuildWP's admin scripts, includes/assets/<file>, in the footer.
+ *
+ * Screens call this from the function that prints the markup the script works
+ * on. WordPress prints a footer script enqueued that late in
+ * admin_print_footer_scripts, so it still runs after that markup and before
+ * DOMContentLoaded, as the inline block it replaced did, and scripts enqueued
+ * in page order run in page order.
+ *
+ * $data, when given, is assigned to window[$data_var] immediately before the
+ * script, encoded by wppilot_script_json() so no value can close the script
+ * element. A second call for a handle already enqueued changes nothing, data
+ * included, matching the "printed once" behaviour of the blocks it replaced.
+ *
+ * @param list<string> $deps
+ */
+function wppilot_enqueue_admin_script(string $handle, string $file, array $deps = [], string $data_var = '', mixed $data = null): void
+{
+    if (wp_script_is($handle)) {
+        return;
+    }
+
+    // phpcs:disable WordPress.WP.EnqueuedResourceParameters.NotInFooter -- `args: true` IS the in_footer flag; the sniff cannot read PHP named arguments.
+    wp_register_script(
+        $handle,
+        (string) WPPILOT_PLUGIN_URL . 'includes/assets/' . $file,
+        $deps,
+        WPPILOT_VERSION,
+        args: true,
+    );
+    // phpcs:enable WordPress.WP.EnqueuedResourceParameters.NotInFooter
+    if ($data_var !== '') {
+        wp_add_inline_script($handle, 'window.' . $data_var . ' = ' . wppilot_script_json($data) . ';', 'before');
+    }
+    wp_enqueue_script($handle);
 }
 
 /**
@@ -94,7 +129,7 @@ function wppilot_render_admin_header(string $legend = ''): void
     $pro_active = function_exists('wppilot_pro_is_active') && wppilot_pro_is_active();
     // The optional Cloud pointer belongs where connections are chosen, not on every
     // screen: WordPress.org asks plugins to keep promotional notices limited in scope.
-    $current_page = isset($_GET['page']) && is_string($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $current_page = isset($_GET['page']) && is_string($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: the admin page slug only decides whether the Cloud banner is shown.
     $show_cloud_banner = in_array($current_page, ['wppilot-connect', 'wppilot-setup'], true);
     ?>
     <div class="wppilot-masthead">
@@ -199,7 +234,7 @@ function wppilot_render_admin_subtabs(array $tabs): void
         return;
     }
 
-    $current = is_string($_GET['page'] ?? null) ? sanitize_key((string) $_GET['page']) : '';
+    $current = isset($_GET['page']) && is_string($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: the admin page slug only marks which tab is current.
     ?>
     <div class="wrap wppilot-subtabs-wrap">
     <nav class="wppilot-subtabs" aria-label="<?php esc_attr_e('Screens in this section', domain: 'wppilot'); ?>">
@@ -215,30 +250,8 @@ function wppilot_render_admin_subtabs(array $tabs): void
         } ?>
     </nav>
     </div>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var holder = document.querySelector('.wppilot-subtabs-wrap');
-        var nav = holder && holder.querySelector('.wppilot-subtabs');
-        var h1 = document.querySelector('#wpbody-content .wrap:not(.wppilot-subtabs-wrap) h1');
-        if (!nav || !h1) { return; }
-        var row = document.createElement('div');
-        row.className = 'wppilot-subtabs-row';
-        row.appendChild(nav);
-        // A title that shares a row with buttons is inline; the control needs its own line,
-        // after the title's row of actions rather than wedged between them.
-        var anchor = h1;
-        while (anchor.nextElementSibling && anchor.nextElementSibling.matches('.page-title-action, a.button, button, .wppilot-title-actions')) {
-            anchor = anchor.nextElementSibling;
-        }
-        var next = anchor.nextElementSibling;
-        if (next && next.matches('p.wppilot-lede, p.description, .wppilot-lede')) {
-            anchor = next;
-        }
-        anchor.insertAdjacentElement('afterend', row);
-        holder.parentNode.removeChild(holder);
-    });
-    </script>
     <?php
+    wppilot_enqueue_admin_script('wppilot-admin-subtabs', 'admin-subtabs.js');
 }
 
 /**
@@ -246,7 +259,7 @@ function wppilot_render_admin_subtabs(array $tabs): void
  */
 function wppilot_admin_current_section(): string
 {
-    $page = is_string($_GET['page'] ?? null) ? sanitize_key((string) $_GET['page']) : '';
+    $page = isset($_GET['page']) && is_string($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: the admin page slug only selects which navigation section is highlighted.
 
     return wppilot_nav_group($page);
 }

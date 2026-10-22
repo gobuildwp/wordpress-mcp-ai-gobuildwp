@@ -44,6 +44,7 @@ final class PagespeedTest extends TestCase
         Runtime\host(self::$host);
         self::$host->cloudUrl = 'https://cloud.example';
         self::$host->signer = null;
+        self::$host->unpaired = null;
         Net::reset();
         self::$siteKitCalls = [];
         self::$siteKit = ['connected' => false, 'authenticated' => false, 'pagespeed' => null];
@@ -347,6 +348,46 @@ final class PagespeedTest extends TestCase
         self::assertInstanceOf(WP_Error::class, $error);
         self::assertSame('kit_pagespeed_page_too_slow', $error->get_error_code());
         self::assertCount(1, Net::$requests, 'the chain stops on a failure that belongs to the page');
+    }
+
+    public function testAHostThatKeepsUnpairedSitesOffTheCloudAsksGoogleDirectly(): void
+    {
+        // GoBuildWP's WordPress.org edition: no Cloud request at all until the site is connected.
+        self::$host->unpaired = false;
+        Net::$answers[] = Net::json(200, self::legacyResponse());
+
+        $result = P\check([]);
+
+        self::assertSame('google-keyless', $result['source']);
+        self::assertSame(['source' => 'cloud', 'outcome' => 'skipped', 'reason' => 'cloud_not_connected'], $result['attempts'][1]);
+        self::assertCount(1, Net::$requests);
+        self::assertStringStartsWith('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?', Net::$requests[0]['url']);
+        self::assertStringNotContainsString('cloud.example', Net::$requests[0]['url']);
+    }
+
+    public function testAHostThatKeepsUnpairedSitesOffTheCloudStillUsesItWhenPaired(): void
+    {
+        self::$host->unpaired = false;
+        self::$host->signer = static fn(array $payload): array => [
+            'base' => 'https://paired.example',
+            'body' => (string) json_encode(array_merge(['site_id' => 's1', 'ts' => 1, 'nonce' => 'n'], $payload)),
+            'headers' => ['X-Site-Signature' => 'c2ln'],
+        ];
+        Net::$answers[] = Net::json(200, self::cloudBody());
+
+        self::assertSame('cloud', P\check([])['source']);
+        self::assertSame('https://paired.example/api/pagespeed/v1/run', Net::$requests[0]['url']);
+
+        // The Cloud no longer knows the site: no unsigned retry, Google is asked instead.
+        Net::reset();
+        Net::$answers[] = Net::json(404, ['error' => ['code' => 'unknown_site', 'message' => 'This site is not connected.']]);
+        Net::$answers[] = Net::json(200, self::legacyResponse());
+        $again = P\check(['refresh' => true]);
+
+        self::assertSame('google-keyless', $again['source']);
+        self::assertSame('cloud_not_connected', $again['attempts'][1]['reason']);
+        self::assertCount(2, Net::$requests);
+        self::assertStringStartsWith('https://www.googleapis.com/', Net::$requests[1]['url']);
     }
 
     public function testAnUnusableCloudUrlSkipsTheProxy(): void

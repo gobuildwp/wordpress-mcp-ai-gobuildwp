@@ -332,8 +332,11 @@ function wppilot_register_admin_bar_toggle(\WP_Admin_Bar $wp_admin_bar): void
 
 /**
  * Style the admin-bar status chip and require confirmation before enabling from the dropdown.
+ *
+ * Hooked to admin_enqueue_scripts and wp_enqueue_scripts: the chip is in the admin bar on
+ * both sides of the site.
  */
-function wppilot_render_admin_bar_toggle_assets(): void
+function wppilot_enqueue_admin_bar_toggle_assets(): void
 {
     if (!wppilot_current_user_can_manage() || !is_admin_bar_showing()) {
         return;
@@ -345,45 +348,29 @@ function wppilot_render_admin_bar_toggle_assets(): void
             'This looks like a production site. AI Abilities are intended for staging or development sites. Continue anyway?',
             domain: 'wppilot',
         )
-        : __('AI agents will be able to execute PHP code and access the filesystem. Continue?', domain: 'wppilot');
-    ?>
-    <style>
-    #wp-admin-bar-wppilot-mcp-status > .ab-item .wppilot-ab-dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        margin: 0 7px 1px 0;
-        border-radius: 50%;
-        background: #8c8f94;
-        vertical-align: middle;
+        : (wppilot_is_wordpress_org_edition()
+            ? __('AI agents will be able to act on this site within the safety profile you have chosen. Continue?', domain: 'wppilot')
+            : __('AI agents will be able to execute PHP code and access the filesystem. Continue?', domain: 'wppilot'));
+
+    wp_enqueue_style(
+        'wppilot-admin-bar',
+        (string) WPPILOT_PLUGIN_URL . 'includes/assets/admin-bar.css',
+        [],
+        WPPILOT_VERSION,
+    );
+    // phpcs:disable WordPress.WP.EnqueuedResourceParameters.NotInFooter -- `args: true` IS the in_footer flag; the sniff cannot read PHP named arguments.
+    wp_enqueue_script(
+        'wppilot-admin-bar',
+        (string) WPPILOT_PLUGIN_URL . 'includes/assets/admin-bar.js',
+        [],
+        WPPILOT_VERSION,
+        args: true,
+    );
+    // phpcs:enable WordPress.WP.EnqueuedResourceParameters.NotInFooter
+    $data = wp_json_encode(['confirmEnable' => $confirm_message], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+    if (is_string($data)) {
+        wp_add_inline_script('wppilot-admin-bar', 'window.wppilotAdminBar = ' . $data . ';', 'before');
     }
-    #wp-admin-bar-wppilot-mcp-status.wppilot-mcp-on > .ab-item .wppilot-ab-dot {
-        background: #32d583;
-        box-shadow: 0 0 0 3px rgba(50, 213, 131, 0.2);
-    }
-    #wp-admin-bar-wppilot-mcp-status.wppilot-mcp-error > .ab-item .wppilot-ab-dot {
-        background: #fdb022;
-        box-shadow: 0 0 0 3px rgba(253, 176, 34, 0.22);
-    }
-    #wp-admin-bar-wppilot-mcp-status-label > .ab-item {
-        cursor: default;
-        font-weight: 600;
-    }
-    </style>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var toggle = document.querySelector('#wp-admin-bar-wppilot-mcp-toggle.wppilot-mcp-toggle-on > .ab-item');
-        if (!toggle) {
-            return;
-        }
-        toggle.addEventListener('click', function (event) {
-            if (!window.confirm(<?php echo wp_json_encode($confirm_message); ?>)) {
-                event.preventDefault();
-            }
-        });
-    });
-    </script>
-    <?php
 }
 
 /**

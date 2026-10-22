@@ -79,6 +79,9 @@ namespace WPPilot\Tests\Unit\Kits\Pagespeed {
 
         public mixed $signer = null;
 
+        /** The `cloud-unpaired` answer: null like a host that does not know the point. */
+        public mixed $unpaired = null;
+
         public function id(): string
         {
             return 'test';
@@ -113,6 +116,9 @@ namespace WPPilot\Tests\Unit\Kits\Pagespeed {
         {
             if ($point === 'cloud-sign') {
                 return $this->signer;
+            }
+            if ($point === 'cloud-unpaired') {
+                return $this->unpaired;
             }
             return $point === 'cloud-url' ? $this->cloudUrl : null;
         }

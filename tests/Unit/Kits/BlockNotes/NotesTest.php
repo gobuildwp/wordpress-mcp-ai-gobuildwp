@@ -110,6 +110,9 @@ final class NotesTest extends TestCase
         $this->store->editable = [];
         self::assertSame('kit_block_notes_forbidden', BlockNotes\add_note(['post_id' => 10, 'block_path' => '1', 'content' => 'x'])->get_error_code());
         self::assertFalse(BlockNotes\can_note(['post_id' => 10]));
+        // An ID that does not exist passes the gate so the ability can say so, not "Permission denied".
+        self::assertTrue(BlockNotes\can_note(['note_id' => 999]));
+        self::assertSame('kit_block_notes_note_not_found', BlockNotes\reply_note(['note_id' => 999, 'content' => 'x'])->get_error_code());
 
         $this->store->editable = [10];
         $this->store->note_types = ['post'];

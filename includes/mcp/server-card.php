@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended -- Public, read-only discovery document requested by MCP clients before they have any credential; the only inputs read are the request path, a presence-only query flag, and If-None-Match, each compared exactly.
-
 namespace WPPilot\Mcp\ServerCard;
 
 use WP_REST_Request;
@@ -329,7 +327,8 @@ function maybe_serve_well_known(): void
         return;
     }
     $home_path = rtrim((string) wp_parse_url(home_url(), PHP_URL_PATH), '/');
-    if (!is_card_request((string) ($_SERVER['REQUEST_URI'] ?? ''), $_GET, $home_path)) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Public read-only discovery document fetched by MCP clients before they hold any credential, so no nonce can exist. The URI path is only compared exactly with the fixed well-known paths (sanitizing would rewrite its percent-encoding) and the query is only checked for the presence of one key.
+    if (!is_card_request(isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '', $_GET, $home_path)) {
         return;
     }
 
@@ -342,12 +341,14 @@ function maybe_serve_well_known(): void
 
     // wp_magic_quotes() slashes $_SERVER too, so the quoted ETag arrives as \"...\" and never
     // matched: every revalidation was a full 200.
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- If-None-Match is only compared byte-for-byte with this card's own ETag; it is never stored or output.
     if (trim((string) wp_unslash($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etag) {
         status_header(304);
         exit();
     }
     status_header(200);
-    if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'HEAD') {
+    $method = isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : 'GET';
+    if (strtoupper($method) !== 'HEAD') {
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON document.
         echo $json;
     }

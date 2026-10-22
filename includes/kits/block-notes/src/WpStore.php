@@ -152,6 +152,7 @@ final class WpStore implements Store
         $time = (int) ($parts[0] ?? 0);
         $user = (int) ($parts[1] ?? 0);
         // wp_check_post_lock() lives in wp-admin and is not loaded for REST or MCP requests.
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core's post-lock window filter, read the way wp_check_post_lock() reads it.
         $window = (int) apply_filters('wp_check_post_lock_window', 150);
         if ($user <= 0 || $user === get_current_user_id() || $time <= time() - $window) {
             return '';

@@ -136,6 +136,11 @@ final class SecurityStatusTest extends TestCase
         self::assertSame(['ok', '2026-09-21T14:13:20Z'], [$wf['scans']['last_scan_result'], $wf['scans']['last_scan_at']]);
         self::assertSame(['available' => false], $wf['login_protection']['two_factor']);
         self::assertSame(2, $wf['active_blocks']);
+        self::assertSame(
+            'SELECT COUNT(*) FROM `wp_wfblocks7` WHERE `expiration` = 0 OR `expiration` > UNIX_TIMESTAMP()',
+            end($GLOBALS['wpdb']->queries),
+            'the blocks table is bound as a %i identifier',
+        );
         self::assertStringNotContainsString('SECRET', (string) json_encode($status));
     }
 
@@ -159,6 +164,15 @@ final class SecurityStatusTest extends TestCase
         self::assertSame(['medium'], array_column($only['findings'], 'severity'));
         $queries = $GLOBALS['wpdb']->queries;
         self::assertStringContainsString("`status` = 'new'", (string) end($queries), 'only open issues');
+        self::assertStringContainsString(
+            "FROM `wp_wfissues` WHERE `status` = 'new' AND ((`severity` >= 50 AND `severity` < 75)) ORDER BY",
+            (string) end($queries),
+            'table bound as %i, band values bound as %d',
+        );
+        self::assertContains(
+            "SELECT `severity`, COUNT(*) AS `n` FROM `wp_wfissues` WHERE `status` = 'new' GROUP BY `severity`",
+            $queries,
+        );
 
         $low = S\scan_findings(['provider' => 'wordfence', 'severity' => ['low']]);
         self::assertSame(['type' => 'theme'], $low['findings'][0]['component'], 'serialized objects are refused, not revived');

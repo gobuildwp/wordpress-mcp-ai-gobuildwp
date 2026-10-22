@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Values are whitelist- or regex-checked before use. The GET only displays a request looked up by an unguessable id; the Approve/Deny POST verifies a nonce via check_admin_referer() in wppilot_confirm_handle_load().
-
 /**
  * The wp-admin page where a person approves or denies one exact destructive call.
  *
@@ -51,14 +49,15 @@ function wppilot_confirm_register_page(): void
 
 function wppilot_confirm_request_id(): string
 {
-    $raw = $_GET['request'] ?? '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The id only selects which pending request to show; the Approve/Deny POST that acts on it is nonce-checked in wppilot_confirm_handle_load().
+    $raw = is_string($_GET['request'] ?? null) ? sanitize_text_field(wp_unslash($_GET['request'])) : '';
 
-    return is_string($raw) && preg_match('/^[a-f0-9]{32}$/', $raw) === 1 ? $raw : '';
+    return preg_match('/^[a-f0-9]{32}$/', $raw) === 1 ? $raw : '';
 }
 
 function wppilot_confirm_handle_load(): void
 {
-    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
         return;
     }
     if (!wppilot_current_user_can_manage()) {
@@ -71,7 +70,9 @@ function wppilot_confirm_handle_load(): void
     }
     check_admin_referer('wppilot_confirm_' . $id);
 
-    $decision = is_string($_POST['wppilot_confirm_decision'] ?? null) ? (string) $_POST['wppilot_confirm_decision'] : '';
+    $decision = is_string($_POST['wppilot_confirm_decision'] ?? null)
+        ? sanitize_text_field(wp_unslash($_POST['wppilot_confirm_decision']))
+        : '';
     if ($decision !== 'approve' && $decision !== 'deny') {
         wp_die(esc_html__('Choose Approve or Deny.', domain: 'wppilot'), '', ['response' => 400]);
     }
@@ -93,7 +94,8 @@ function wppilot_confirm_render_page(): void
 
     $id = wppilot_confirm_request_id();
     $request = $id === '' ? null : wppilot_confirmation_get_request($id);
-    $decided = is_string($_GET['decided'] ?? null) ? (string) $_GET['decided'] : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only: the outcome code from this page's own redirect selects one of three fixed notices.
+    $decided = is_string($_GET['decided'] ?? null) ? sanitize_key(wp_unslash($_GET['decided'])) : '';
 
     wppilot_render_admin_header();
     ?>

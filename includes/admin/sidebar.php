@@ -76,26 +76,23 @@ function wppilot_sidebar_hide_submenu(): void
     $visible = wppilot_sidebar_visible_pages();
 
     if ($visible === []) {
-        printf(
-            '<style id="wppilot-collapse-submenu">%s .wp-submenu{display:none !important;}</style>',
-            esc_html($selector),
-        );
-        return;
+        $css = $selector . ' .wp-submenu{display:none !important;}';
+    } else {
+        // Keep the few screens people look for in the sidebar (owners could not find Prompts
+        // once it sat behind Studio in the tab rail) and hide the rest, which the rail covers.
+        // Slugs are limited to [a-z0-9-] by wppilot_sidebar_visible_pages() and the selector
+        // is a constant, so the rule is plain CSS with nothing to escape.
+        $keep = [];
+        foreach ($visible as $slug) {
+            $keep[] = sprintf('%1$s .wp-submenu li:has(> a[href$="page=%2$s"])', $selector, $slug);
+        }
+        $css = $selector . ' .wp-submenu li:not(.wp-submenu-head){display:none !important;}' . implode(',', $keep) . '{display:list-item !important;}';
     }
 
-    // Keep the few screens people look for in the sidebar (owners could not find Prompts
-    // once it sat behind Studio in the tab rail) and hide the rest, which the rail covers.
-    $keep = [];
-    foreach ($visible as $slug) {
-        $keep[] = sprintf('%1$s .wp-submenu li:has(> a[href$="page=%2$s"])', $selector, $slug);
-    }
-    printf(
-        '<style id="wppilot-collapse-submenu">%1$s .wp-submenu li:not(.wp-submenu-head){display:none !important;}%2$s{display:list-item !important;}</style>',
-        esc_html($selector),
-        // Slugs are limited to [a-z0-9-] above and the selector is a constant, so the rule
-        // needs no escaping; esc_html() would turn the attribute quotes into &quot;.
-        implode(',', $keep), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-    );
+    // An inline-only stylesheet: the rule depends on a filter, so there is no file to load.
+    wp_register_style('wppilot-collapse-submenu', false, [], WPPILOT_VERSION);
+    wp_enqueue_style('wppilot-collapse-submenu');
+    wp_add_inline_style('wppilot-collapse-submenu', $css);
 }
 
 /**
@@ -119,7 +116,7 @@ function wppilot_sidebar_visible_pages(): array
     return $clean;
 }
 
-add_action('admin_head', callback: 'wppilot_sidebar_hide_submenu');
+add_action('admin_enqueue_scripts', callback: 'wppilot_sidebar_hide_submenu');
 
 /** Keep common destinations in task order without removing registered pages. */
 function wppilot_sidebar_order_pages(): void

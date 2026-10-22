@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * Configuration page, step 1: turning AI Abilities on and off.
  *
@@ -48,7 +46,7 @@ function wppilot_disable_ai_abilities(): bool
  */
 function wppilot_handle_toggle_enabled(): ?bool
 {
-    if (($_POST['wppilot_submit'] ?? null) === null) {
+    if (!isset($_POST['wppilot_submit'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presence check only; check_admin_referer('wppilot_settings') below runs before any value is read or saved.
         return null;
     }
     if (!wppilot_current_user_can_manage()) {
@@ -64,7 +62,7 @@ function wppilot_handle_toggle_enabled(): ?bool
         return false;
     }
 
-    $enabled = ($_POST['wppilot_ai_abilities_enabled'] ?? null) !== null;
+    $enabled = isset($_POST['wppilot_ai_abilities_enabled']);
     return $enabled ? wppilot_enable_ai_abilities() : wppilot_disable_ai_abilities();
 }
 
@@ -79,7 +77,7 @@ function wppilot_handle_admin_bar_toggle(): void
 
     check_admin_referer('wppilot_toggle_ai_abilities');
 
-    $target = $_GET['wppilot_target'] ?? '';
+    $target = isset($_GET['wppilot_target']) && is_string($_GET['wppilot_target']) ? sanitize_text_field(wp_unslash($_GET['wppilot_target'])) : '';
     $result = null;
     if ($target === 'on') {
         $result = wppilot_enable_ai_abilities();
@@ -158,16 +156,25 @@ function wppilot_render_enable_toggle(): void
             other_attributes: $submit_attributes,
         ); ?>
     </form>
-    <script>
-    document.getElementById('wppilot-settings-form').addEventListener('submit', function (e) {
-        var cb = document.getElementById('wppilot-enable-checkbox');
-        var profile = document.getElementById('wppilot-safety-profile');
-        if (cb.checked && profile.value === 'developer' && (!cb.defaultChecked || profile.value !== <?php echo
-            wp_json_encode($profile)
-        ; ?>)) {
-            var msg = <?php echo
-                wp_json_encode(
-                    $looks_production
+    <?php
+    wppilot_enqueue_admin_script(
+        'wppilot-enable-toggle',
+        'connect-enable-toggle.js',
+        data_var: 'wppilotEnableToggle',
+        data: [
+            'savedProfile' => $profile,
+            'confirmDeveloper' =>
+                wppilot_is_wordpress_org_edition()
+                    ? ($looks_production
+                        ? __(
+                            'This looks like a production site. Developer Full Access lets agents install and delete plugins and themes and change user accounts. Use Production Safe unless that is intentional. Continue?',
+                            domain: 'wppilot',
+                        )
+                        : __(
+                            'Developer Full Access lets agents install and delete plugins and themes and change user accounts. Continue?',
+                            domain: 'wppilot',
+                        ))
+                    : ($looks_production
                         ? __(
                             'This looks like a production site. Developer Full Access permits PHP execution, WP-CLI, filesystem access, and temporary administrator links. Use Production Safe unless unrestricted access is intentional. Continue?',
                             domain: 'wppilot',
@@ -175,21 +182,9 @@ function wppilot_render_enable_toggle(): void
                         : __(
                             'Developer Full Access permits PHP execution, WP-CLI, filesystem access, and temporary administrator links. Continue?',
                             domain: 'wppilot',
-                        ),
-                )
-            ; ?>;
-            if (!confirm(msg)) {
-                e.preventDefault();
-            }
-        }
-    });
-    document.getElementById('wppilot-safety-profile').addEventListener('change', function () {
-        document.querySelectorAll('.wppilot-profile-description').forEach(function (node) {
-            node.hidden = node.getAttribute('data-profile') !== this.value;
-        }, this);
-    });
-    </script>
-    <?php
+                        )),
+        ],
+    );
 }
 
 function wppilot_render_enable_prompt(?WP_Error $dependency_error): void

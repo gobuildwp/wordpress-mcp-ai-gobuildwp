@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * What kind of site is this, and are abilities on?
  *
@@ -301,7 +299,7 @@ function wppilot_production_warning_dismissed(): bool
  */
 function wppilot_handle_dismiss_production_warning(): void
 {
-    if (($_POST['wppilot_dismiss_production_warning'] ?? null) === null) {
+    if (!isset($_POST['wppilot_dismiss_production_warning'])) {
         return;
     }
 

@@ -131,6 +131,7 @@ function paused_extensions(): array
 function collected(int $since): array
 {
     /** @var mixed $raw */
+    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- COLLECT_FILTER is this kit's own prefixed filter name (wppilot_kit_site_issues_collect).
     $raw = apply_filters(COLLECT_FILTER, [], $since);
     $out = [];
     foreach (is_array($raw) ? $raw : [] as $item) {

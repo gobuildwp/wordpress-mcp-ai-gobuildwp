@@ -5,6 +5,8 @@
 
 declare(strict_types=1);
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This file is require()d inside the kit runtime's register_abilities(), so its variables are local to that function, not globals.
+
 namespace WPPilot\Kits\Pagespeed;
 
 use WPPilot\Kits\Runtime;

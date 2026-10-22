@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * Per-ability rules: enable/disable, and the governance overrides.
  *
@@ -184,6 +182,7 @@ function wppilot_is_ability_hub_screen(): bool
         return false;
     }
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen detection: the admin page slug only decides whether the disable policy is skipped while the Hub lists abilities; nothing is changed.
     $page = is_string($_GET['page'] ?? null) ? sanitize_key(wp_unslash($_GET['page'])) : '';
 
     return $page === 'wppilot-abilities';

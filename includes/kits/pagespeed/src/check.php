@@ -21,7 +21,8 @@ if (!defined('ABSPATH')) {
  *                      REST route, when the module is connected and Site Kit lets this user read
  *                      it. Google is called with Site Kit's credentials; GoBuildWP never sees them.
  *   2. cloud           The GoBuildWP Cloud proxy, which holds GoBuildWP's own PageSpeed key. Works
- *                      whether or not the site is paired with the Cloud.
+ *                      whether or not the site is paired with the Cloud, unless the host's
+ *                      `cloud-unpaired` extension answers false: then only a paired site uses it.
  *   3. google-api-key  Google directly, with a key the site owner saved in GoBuildWP settings.
  *   4. google-keyless  Google directly with no key. Its quota is shared by every keyless caller
  *                      on the internet and answers 429 for much of the day, so it is last.
@@ -349,12 +350,32 @@ function from_cloud_proxy(string $url, string $strategy, bool $refresh = false):
         }
     }
 
+    // A host can keep an unpaired site's tests away from the Cloud entirely (GoBuildWP's
+    // WordPress.org edition does): then Google is asked directly, as if no Cloud existed.
+    if (!unpaired_cloud_allowed()) {
+        return 'cloud_not_connected';
+    }
+
     $base = cloud_url();
     if ($base === '') {
         return 'cloud_url_not_usable';
     }
 
     return cloud_post($base, (string) wp_json_encode($payload, JSON_UNESCAPED_SLASHES), [], $url, $strategy);
+}
+
+/**
+ * Whether a site that is not paired with the Cloud may still use its proxy, unsigned.
+ *
+ * The host's `cloud-unpaired` extension decides; a host that does not answer (a kit exported into
+ * another plugin) keeps the proxy available, as before this extension point existed.
+ */
+function unpaired_cloud_allowed(): bool
+{
+    /** @var mixed $allowed */
+    $allowed = Runtime\host()->extension('cloud-unpaired');
+
+    return $allowed !== false;
 }
 
 /**

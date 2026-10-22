@@ -1,0 +1,27 @@
+/*
+ * SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ * The GoBuildWP status chip in the admin bar (front end and wp-admin).
+ */
+#wp-admin-bar-wppilot-mcp-status > .ab-item .wppilot-ab-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 0 7px 1px 0;
+    border-radius: 50%;
+    background: #8c8f94;
+    vertical-align: middle;
+}
+#wp-admin-bar-wppilot-mcp-status.wppilot-mcp-on > .ab-item .wppilot-ab-dot {
+    background: #32d583;
+    box-shadow: 0 0 0 3px rgba(50, 213, 131, 0.2);
+}
+#wp-admin-bar-wppilot-mcp-status.wppilot-mcp-error > .ab-item .wppilot-ab-dot {
+    background: #fdb022;
+    box-shadow: 0 0 0 3px rgba(253, 176, 34, 0.22);
+}
+#wp-admin-bar-wppilot-mcp-status-label > .ab-item {
+    cursor: default;
+    font-weight: 600;
+}

@@ -63,6 +63,7 @@ function run_tests(array $input): array|WP_Error
         }
         try {
             /** @var mixed $result */
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core's Site Health filter, applied exactly as core applies it to a test result.
             $result = apply_filters('site_status_test_result', call_user_func($callback));
         } catch (\Throwable $thrown) {
             $results[] = ['id' => $id, 'label' => label($test, $id), 'status' => 'error', 'description' => 'The test failed: ' . $thrown->getMessage()];

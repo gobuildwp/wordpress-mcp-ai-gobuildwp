@@ -125,6 +125,7 @@ function load(): void
             'wppilot-edit-element.php',
             'wppilot-delete-element.php',
             'wppilot-set-content.php',
+            'wppilot-build-page.php',
             'wppilot-manage-page-settings.php',
             'wppilot-clear-document-cache.php',
         ] as $file
@@ -202,6 +203,7 @@ function capture_before_image(mixed $before, string $ability_name, mixed $input)
         'wppilot/elementor-move-element',
         'wppilot/elementor-reorder-children',
         'wppilot/elementor-set-content',
+        'wppilot/elementor-build-page',
         'wppilot/elementor-set-page-settings',
     ], strict: true)) {
         return $before;

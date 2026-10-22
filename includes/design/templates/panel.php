@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template file: require()d inside a namespaced render function, so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary. Reads are type-checked and escaped on output.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template file: require()d inside a namespaced render function, so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary.
 
 use WPPilot\Design\Admin;
 use WPPilot\Design\Contract;
@@ -55,6 +55,7 @@ $page_style = $page_accent !== '' ? '--ds-accent:' . $page_accent : '';
         'designs' => __('Your designs', domain: 'wppilot'),
         'starters' => __('Starter kits', domain: 'wppilot'),
     ]);
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only: the tab slug is whitelist-checked against $tabs below and only picks which list to show.
     $tab = isset($_GET['tab']) && is_string($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'designs';
     if (!isset($tabs[$tab])) {
         $tab = 'designs';

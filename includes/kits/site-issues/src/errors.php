@@ -122,6 +122,7 @@ function make_room(array $error): void
     $limit = wp_convert_hr_to_bytes((string) ini_get('memory_limit'));
     if ($limit > 0) {
         // ini_set may be disabled; the write below is then attempted with what is left.
+        // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged, WordPress.PHP.NoSilencedErrors.Discouraged -- Only after an out-of-memory fatal, inside the shutdown recorder: 32 MB more so the record can be written, as wp_raise_memory_limit() does for admin screens. Silenced because a host may forbid it.
         @ini_set('memory_limit', (string) ($limit + 32 * MB_IN_BYTES));
     }
 }
@@ -137,7 +138,8 @@ function current_path(): string
     if (wp_doing_cron()) {
         return 'wp-cron';
     }
-    $uri = isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only the path component is kept, then reduced to printable ASCII and capped at 200 characters below; sanitize_text_field() would drop its percent-encoded octets and make the recorded path unrecognisable.
+    $uri = isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
     $path = (string) wp_parse_url($uri, PHP_URL_PATH);
     $path = preg_replace('/[^\x20-\x7E]/', '', $path) ?? '';
     return mb_substr($path, 0, 200);

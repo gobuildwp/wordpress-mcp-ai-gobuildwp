@@ -5,6 +5,8 @@
 
 declare(strict_types=1);
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This file is require()d inside render_page() in includes/preview/admin.php, so its variables are local to that function, not globals.
+
 namespace WPPilot\Preview\Admin;
 
 use WPPilot\Preview\Store;

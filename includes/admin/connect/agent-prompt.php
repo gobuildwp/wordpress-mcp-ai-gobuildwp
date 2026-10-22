@@ -119,7 +119,7 @@ function wppilot_agent_prompt_oauth_notes(): array
  */
 function wppilot_render_agent_prompt_block(string $prefix, string $method): void
 {
-    wppilot_render_agent_prompt_assets_once();
+    wppilot_enqueue_agent_prompt_script();
     $is_secret = $method !== 'oauth';
     ?>
     <div class="wppilot-agent-prompt" id="<?php echo esc_attr($prefix); ?>-agent-prompt-wrap" style="margin-top:14px;">
@@ -168,16 +168,17 @@ function wppilot_render_agent_prompt_block(string $prefix, string $method): void
 }
 
 /**
- * The builder and the toggle, printed once no matter how many blocks render.
+ * The builder and the toggle (includes/assets/connect-agent-prompt.js), enqueued
+ * once no matter how many blocks render.
+ *
+ * The method panels' own scripts call window.wppilotAgentPrompt() as they start,
+ * so they name 'wppilot-agent-prompt' as a dependency and call this first.
  */
-function wppilot_render_agent_prompt_assets_once(): void
+function wppilot_enqueue_agent_prompt_script(): void
 {
-    static $printed = false;
-    // @mago-expect analysis:impossible-condition
-    if ($printed) {
+    if (wp_script_is('wppilot-agent-prompt')) {
         return;
     }
-    $printed = true;
 
     $strings = [
         'intro' => __('Set up this WordPress site as an MCP server in %s.', domain: 'wppilot'),
@@ -227,94 +228,11 @@ function wppilot_render_agent_prompt_assets_once(): void
         'show' => __('Show', domain: 'wppilot'),
         'hide' => __('Hide', domain: 'wppilot'),
     ];
-    ?>
-    <?php // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- Every value goes through wppilot_script_json(), which hex-escapes for script context. ?>
-    <script>
-    (function () {
-        var S = <?php echo wppilot_script_json($strings); ?>;
 
-        // The context comes from whichever method panel is rendering: the same
-        // fields every panel already has for its own snippet, so no panel has to
-        // describe its configuration twice.
-        window.wppilotAgentPrompt = function (prefix, ctx) {
-            var el = document.getElementById(prefix + '-agent-prompt');
-            if (!el) { return; }
-
-            var lines = [
-                S.intro.replace('%s', ctx.clientLabel),
-                '',
-                S.serverName + ' ' + ctx.serverName,
-                S.serverUrl + ' ' + ctx.url,
-                S.auth + ' ' + ctx.authLine,
-                ''
-            ];
-
-            if (ctx.steps && ctx.steps.length) {
-                lines.push(S.uiSteps);
-                ctx.steps.forEach(function (step, i) {
-                    lines.push((i + 1) + '. ' + step);
-                });
-            } else if (ctx.code) {
-                lines.push(ctx.isShell ? S.runThis : S.writeThis);
-                lines.push('');
-                lines.push(ctx.code);
-                var paths = ctx.paths || {};
-                var keys = Object.keys(paths);
-                if (!ctx.isShell && keys.length) {
-                    lines.push('');
-                    lines.push(S.writeTo);
-                    keys.forEach(function (label) {
-                        lines.push('- ' + label + ': ' + paths[label]);
-                    });
-                }
-            }
-
-            lines.push('');
-            lines.push(S.rules);
-            lines.push(S.ruleExact);
-            if (!ctx.isShell) { lines.push(S.ruleMerge); }
-            lines.push(S.ruleRestart);
-            if (ctx.hasSecret) { lines.push(S.ruleSecret); }
-            lines.push(S.ruleReport);
-            lines.push(S.ruleNoAsk);
-
-            lines.push('');
-            lines.push(S.verify);
-            lines.push(S.verifyTools);
-            lines.push(S.verifyCall);
-
-            // Behaviour that looks like a fault and is not. Without these an
-            // agent "fixes" a working connection and leaves it broken.
-            if (ctx.notes && ctx.notes.length) {
-                lines.push('');
-                lines.push(S.notesTitle);
-                ctx.notes.forEach(function (note) { lines.push('- ' + note); });
-            }
-
-            el.textContent = lines.join('\n');
-        };
-
-        window.wppilotToggleAgentPrompt = function (prefix, btn) {
-            var body = document.getElementById(prefix + '-agent-prompt-body');
-            if (!body) { return; }
-            var open = btn.getAttribute('aria-expanded') === 'true';
-            body.hidden = open;
-            body.style.display = open ? 'none' : '';
-            btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-            btn.textContent = open ? S.show : S.hide;
-        };
-
-        window.wppilotCopyAgentPrompt = function (prefix, btn) {
-            var el = document.getElementById(prefix + '-agent-prompt');
-            if (!el) { return; }
-            window.wppilotClipboardCopy(el.textContent).then(function () {
-                var original = btn.textContent;
-                btn.textContent = S.copied;
-                setTimeout(function () { btn.textContent = original; }, 1500);
-            });
-        };
-    }());
-    </script>
-    <?php // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-    <?php
+    wppilot_enqueue_admin_script(
+        'wppilot-agent-prompt',
+        'connect-agent-prompt.js',
+        data_var: 'wppilotAgentPromptStrings',
+        data: $strings,
+    );
 }

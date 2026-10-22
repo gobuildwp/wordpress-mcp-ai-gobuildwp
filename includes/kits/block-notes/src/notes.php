@@ -388,7 +388,14 @@ function can_note(array $input): bool
     if ($post_id <= 0 && (int) ($input['note_id'] ?? 0) > 0) {
         $post_id = (int) ($store->note((int) $input['note_id'])['post_id'] ?? 0);
     }
-    return $post_id > 0 && $store->can_edit($post_id);
+    // A note or post that does not exist has no per-post rule to check. Refusing here turned a
+    // mistyped ID into "Permission denied", which sends the agent looking for a missing grant;
+    // Runtime\can_run() has already required a site manager, and the ability itself answers
+    // with the precise "No note/post has that ID".
+    if ($post_id <= 0 || $store->post($post_id) === null) {
+        return true;
+    }
+    return $store->can_edit($post_id);
 }
 
 /**

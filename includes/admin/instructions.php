@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 namespace WPPilot\Context;
 
 if (!defined('ABSPATH')) {
@@ -145,12 +143,10 @@ function instructions_custom_injection_suppressed(): bool
 
 function instructions_post_string(string $key): string
 {
-    $raw = $_POST[$key] ?? '';
-    if (!is_string($raw)) {
-        return '';
-    }
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only read by context_handle_post() and the handlers it runs after check_admin_referer('wppilot_context'). The action is whitelist-compared and the toggle compared to '1'; the context text is plain text for agents, saved verbatim and esc_textarea()'d on output, so sanitize_text_field() would wrongly strip its newlines and any literal tags.
+    $raw = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : '';
 
-    return wp_unslash($raw);
+    return is_string($raw) ? $raw : '';
 }
 
 function register_context_menu(): void
@@ -181,7 +177,7 @@ function register_context_menu(): void
 /** @return array{type:string,message:string}|null */
 function context_handle_post(): ?array
 {
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
         return null;
     }
 

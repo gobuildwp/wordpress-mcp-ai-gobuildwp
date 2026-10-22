@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * GoBuildWP Pro upsell: submenu entry, Connect-page card, dismissible welcome notice.
  */
@@ -48,7 +46,7 @@ function wppilot_pro_integration_catalog(): array
 {
     return [
         // Page builders, themes, and block libraries.
-        ['label' => 'Elementor', 'category' => 'builder', 'constant' => 'ELEMENTOR_VERSION', 'abilities' => 51],
+        ['label' => 'Elementor', 'category' => 'builder', 'constant' => 'ELEMENTOR_VERSION', 'abilities' => 56],
         ['label' => 'Bricks Builder', 'category' => 'builder', 'constant' => 'BRICKS_VERSION', 'abilities' => 49],
         ['label' => 'Bricksforge', 'category' => 'builder', 'constant' => 'BRICKSFORGE_VERSION', 'abilities' => 21],
         ['label' => 'Divi 5', 'category' => 'builder', 'constant' => 'ET_BUILDER_VERSION', 'abilities' => 47],
@@ -329,23 +327,13 @@ add_filter(
     },
 );
 
-add_action('admin_footer', static function (): void {
+// Open the "Get Pro" submenu entry in a new tab: $submenu has no target attribute, so a
+// footer script sets it once the menu is on the page.
+add_action('admin_enqueue_scripts', static function (): void {
     if (!wppilot_current_user_can_manage()) {
         return;
     }
-    ?>
-    <script>
-    (function() {
-        var links = document.querySelectorAll('#toplevel_page_wppilot-connect .wp-submenu a');
-        for (var i = 0; i < links.length; i++) {
-            if (links[i].href.indexOf('gobuildwp.com/pro') !== -1) {
-                links[i].target = '_blank';
-                links[i].rel = 'noopener';
-            }
-        }
-    })();
-    </script>
-    <?php
+    wppilot_enqueue_admin_script('wppilot-pro-submenu', 'pro-submenu.js');
 });
 
 /**
@@ -388,15 +376,13 @@ function wppilot_pro_dismiss_url(string $key): string
  * visited could dismiss notices on their behalf via an <img> tag.
  */
 add_action('admin_init', static function (): void {
-    $raw_key = $_GET['wppilot_pro_dismiss'] ?? null;
-    if (!is_string($raw_key) || $raw_key === '') {
+    // The dismiss key names the nonce action, so it is read first and the nonce is checked
+    // below with check_admin_referer() before anything is written.
+    $key = isset($_GET['wppilot_pro_dismiss']) && is_string($_GET['wppilot_pro_dismiss']) ? sanitize_key(wp_unslash($_GET['wppilot_pro_dismiss'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Verified by check_admin_referer() below, whose action is built from this key.
+    if ($key === '') {
         return;
     }
     if (!wppilot_current_user_can_manage()) {
-        return;
-    }
-    $key = sanitize_key($raw_key);
-    if ($key === '') {
         return;
     }
 
@@ -424,14 +410,17 @@ function wppilot_render_pro_welcome_notice(): void
         return;
     }
     // Don't show on the Pro page itself or irrelevant screens outside GoBuildWP admin.
+    // The WordPress.org edition keeps it to GoBuildWP's own screens: no notice on the
+    // Dashboard or Plugins screens.
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    $own_screens_only = wppilot_is_wordpress_org_edition();
     $on_wppilot =
         $screen
         && (
             str_starts_with($screen->id, 'toplevel_page_wppilot')
             || str_starts_with($screen->id, 'wppilot_page_')
-            || $screen->id === 'dashboard'
-            || $screen->id === 'plugins'
+            || (!$own_screens_only && $screen->id === 'dashboard')
+            || (!$own_screens_only && $screen->id === 'plugins')
         );
     if (!$on_wppilot) {
         return;
@@ -467,20 +456,8 @@ function wppilot_render_pro_welcome_notice(): void
             </a>
         </p>
     </div>
-    <script>
-    (function() {
-        var notices = document.querySelectorAll('.wppilot-pro-notice');
-        for (var i = 0; i < notices.length; i++) {
-            notices[i].addEventListener('click', function(e) {
-                if (e.target && e.target.classList.contains('notice-dismiss')) {
-                    var url = this.getAttribute('data-dismiss-url');
-                    if (url) { fetch(url, {credentials: 'same-origin'}); }
-                }
-            });
-        }
-    })();
-    </script>
     <?php
+    wppilot_enqueue_admin_script('wppilot-pro-notice', 'pro-notice.js');
 }
 
 /**

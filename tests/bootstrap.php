@@ -33,6 +33,12 @@ define('WPPILOT_MCP_ADAPTER_CLASS', 'WP\\MCP\\Core\\McpAdapter');
 
 require_once __DIR__ . '/doubles/wordpress.php';
 
+// Which edition this is. The source tree is the GitHub edition; the release
+// packager flips the constant only in the staged WordPress.org artifact. Code
+// that differs by edition takes the edition as an optional argument, so both
+// branches are exercised here without redefining the constant.
+require_once dirname(__DIR__) . '/includes/distribution.php';
+
 
 // Which copy of the adapter won. Pure path and classmap reading; it registers
 // nothing and touches WordPress only through wp_normalize_path().

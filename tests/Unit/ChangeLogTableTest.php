@@ -267,6 +267,10 @@ final class ChangeLogTableTest extends TestCase
 
         $again = wppilot_changes_install_and_migrate();
         self::assertSame(['storage' => 'table', 'copied' => 0, 'done' => true, 'error' => ''], $again);
+
+        $read_back = array_values(array_filter($this->db->queries, static fn(string $q): bool => str_ends_with($q, ' LIMIT 1') && str_starts_with($q, 'SELECT seq, change_id,')));
+        self::assertNotSame([], $read_back, 'the schema is proven by reading every column back');
+        self::assertStringEndsWith(' FROM `wp_wppilot_changes` LIMIT 1', $read_back[0], 'the table name is bound as a %i identifier');
     }
 
     public function testAMigrationThatLostItsPlaceStartsOverWithoutDuplicates(): void

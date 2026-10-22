@@ -198,7 +198,7 @@ function el_build_edit_mutator(
         if ($replace || $styles !== []) {
             /** @var array<string, mixed> $existing_styles */
             $existing_styles = is_array($element['styles'] ?? null) ? $element['styles'] : [];
-            $element['styles'] = $replace ? $styles : array_merge($existing_styles, $styles);
+            $element['styles'] = $replace ? $styles : el_merge_style_entries($existing_styles, $styles);
         }
 
         return el_finalize_atomic_node($element, $dynamic_tag_errors);

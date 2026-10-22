@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 namespace WPPilot\Design\Admin;
 
 if (!defined('ABSPATH')) {
@@ -79,18 +77,20 @@ function render_page(): void
     if (!current_user_can_manage()) {
         wp_die(esc_html__('You do not have permission to manage the design system.', domain: 'wppilot'));
     }
-    if (($_GET['view'] ?? null) !== null) {
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Routing only: which parameter is present picks the template to render; each template validates its own value, and every change it offers posts to a nonce-checked handler.
+    if (isset($_GET['view'])) {
         require __DIR__ . '/templates/detail.php';
         return;
     }
-    if (($_GET['design'] ?? null) !== null) {
+    if (isset($_GET['design'])) {
         require __DIR__ . '/templates/edit.php';
         return;
     }
-    if (($_GET['import'] ?? null) !== null) {
+    if (isset($_GET['import'])) {
         require __DIR__ . '/templates/import.php';
         return;
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
     require __DIR__ . '/templates/panel.php';
 }
 
@@ -149,7 +149,8 @@ function enqueue_assets(string $hook): void
             wp_print_font_faces();
         }
     });
-    if (($_GET['design'] ?? null) === null) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only decides whether the editor screen needs the code editor assets; nothing is changed.
+    if (!isset($_GET['design'])) {
         return;
     }
     $settings = wp_enqueue_code_editor(['type' => 'text/markdown']);
@@ -184,8 +185,9 @@ function redirect_with_notice(string $type, string $message, array $args = []): 
 function handle_activate(): void
 {
     require_capability_and_nonce('wppilot_design_activate');
-    $slug_raw = $_POST['slug'] ?? '';
-    $slug = \WPPilot\Design\Parser\normalize_slug(is_string($slug_raw) ? $slug_raw : '');
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by require_capability_and_nonce() on the first line of this handler.
+    $slug_raw = is_string($_POST['slug'] ?? null) ? sanitize_title(wp_unslash($_POST['slug'])) : '';
+    $slug = \WPPilot\Design\Parser\normalize_slug($slug_raw);
     $record = $slug !== '' ? \WPPilot\Design\Library\find($slug) : null;
     if ($record === null) {
         redirect_with_notice('error', __('That design does not exist.', domain: 'wppilot'));
@@ -211,8 +213,9 @@ function handle_activate(): void
 function resolve_import_content(?array $file): ?string
 {
     if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-        $pasted = $_POST['design_content'] ?? '';
-        return is_string($pasted) ? wp_unslash($pasted) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only called from handle_import() after require_capability_and_nonce(). A pasted DESIGN.md is a multi-line Markdown document kept verbatim; handle_import() size-limits it and validates it with the DESIGN.md parser, and sanitize_text_field() would collapse its newlines.
+        $pasted = isset($_POST['design_content']) ? wp_unslash($_POST['design_content']) : '';
+        return is_string($pasted) ? $pasted : '';
     }
     $name = is_string($file['name'] ?? null) ? $file['name'] : '';
     $tmp = is_string($file['tmp_name'] ?? null) ? $file['tmp_name'] : '';
@@ -236,6 +239,7 @@ function handle_import(): void
 {
     require_capability_and_nonce('wppilot_design_import');
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified by require_capability_and_nonce() at the top of this handler. resolve_import_content() checks the upload error, the .md extension and the size, and only reads the PHP-provided tmp_name.
     $file = $_FILES['design_file'] ?? null;
     $content = resolve_import_content(is_array($file) ? $file : null);
     if ($content === null) {
@@ -294,7 +298,8 @@ function handle_import(): void
  */
 function maybe_activate_import(string $slug, array $readiness): bool
 {
-    if (($_POST['activate'] ?? null) === null) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Only called from handle_import() after require_capability_and_nonce('wppilot_design_import').
+    if (!isset($_POST['activate'])) {
         return false;
     }
     if (!$readiness['ready']) {
@@ -326,8 +331,12 @@ function import_success_message(array $result, string $content): string
 
 function read_design_id(): int
 {
-    $raw = $_POST['design_id'] ?? $_GET['design'] ?? null;
-    return is_scalar($raw) ? (int) $raw : 0;
+    // phpcs:disable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- The id names the nonce action: every POST handler passes it straight to require_capability_and_nonce('wppilot_design_*_' . $id) before acting, and the GET use only loads the editor.
+    if (isset($_POST['design_id'])) {
+        return is_scalar($_POST['design_id']) ? absint($_POST['design_id']) : 0;
+    }
+    return isset($_GET['design']) && is_scalar($_GET['design']) ? absint($_GET['design']) : 0;
+    // phpcs:enable WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
 }
 
 function load_user_design(int $post_id): \WP_Post
@@ -347,8 +356,9 @@ function handle_save(): void
     require_capability_and_nonce('wppilot_design_save_' . $post_id);
     $post = load_user_design($post_id);
 
-    $content_raw = $_POST['content'] ?? '';
-    $content = is_string($content_raw) ? wp_unslash($content_raw) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified above via require_capability_and_nonce(). DESIGN.md is a multi-line Markdown document kept verbatim; it is size-limited and validated by the DESIGN.md parser below, and sanitize_text_field() would collapse its newlines.
+    $content_raw = isset($_POST['content']) ? wp_unslash($_POST['content']) : '';
+    $content = is_string($content_raw) ? $content_raw : '';
     if (strlen($content) > \WPPilot\Design\Parser\MAX_BYTES) {
         redirect_with_notice('error', __('DESIGN.md exceeds the size limit.', domain: 'wppilot'));
         return;
@@ -430,8 +440,9 @@ function unique_user_slug(string $base): string
 function handle_duplicate(): void
 {
     require_capability_and_nonce('wppilot_design_duplicate');
-    $slug_raw = $_POST['slug'] ?? '';
-    $slug = \WPPilot\Design\Parser\normalize_slug(is_string($slug_raw) ? $slug_raw : '');
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by require_capability_and_nonce() on the first line of this handler.
+    $slug_raw = is_string($_POST['slug'] ?? null) ? sanitize_title(wp_unslash($_POST['slug'])) : '';
+    $slug = \WPPilot\Design\Parser\normalize_slug($slug_raw);
     $source = $slug !== '' ? \WPPilot\Design\Library\find($slug) : null;
     if ($source === null) {
         redirect_with_notice('error', __('That design does not exist.', domain: 'wppilot'));
@@ -460,8 +471,8 @@ function handle_duplicate(): void
 function handle_restore(): void
 {
     $post_id = read_design_id();
-    $revision_raw = $_POST['revision_id'] ?? 0;
-    $revision_id = is_scalar($revision_raw) ? (int) $revision_raw : 0;
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- The revision id names the nonce action verified on the next line.
+    $revision_id = isset($_POST['revision_id']) && is_scalar($_POST['revision_id']) ? absint($_POST['revision_id']) : 0;
     require_capability_and_nonce('wppilot_design_restore_' . $revision_id);
     $post = load_user_design($post_id);
 
@@ -518,8 +529,9 @@ function handle_use_starter(): void
 {
     require_capability_and_nonce('wppilot_design_use_starter');
 
-    $slug_raw = $_POST['slug'] ?? '';
-    $starter = \WPPilot\Design\Examples\find(is_string($slug_raw) ? $slug_raw : '');
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified by require_capability_and_nonce() above.
+    $slug_raw = is_string($_POST['slug'] ?? null) ? sanitize_title(wp_unslash($_POST['slug'])) : '';
+    $starter = \WPPilot\Design\Examples\find($slug_raw);
     if ($starter === null) {
         redirect_with_notice('error', __('That starter kit does not exist.', domain: 'wppilot'));
         return;

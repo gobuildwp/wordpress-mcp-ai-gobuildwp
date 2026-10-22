@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 /**
  * The Settings screen: one home for every site-wide GoBuildWP switch.
  *
@@ -240,7 +238,7 @@ function wppilot_settings_save_pagespeed(array $post): void
  */
 function wppilot_handle_settings_save(): void
 {
-    if (($_POST['wppilot_settings_submit'] ?? null) === null) {
+    if (!isset($_POST['wppilot_settings_submit'])) {
         return;
     }
     if (!wppilot_current_user_can_manage()) {
@@ -278,7 +276,8 @@ function wppilot_render_settings_screen(): void
             domain: 'wppilot',
         ); ?></p>
 
-        <?php if (($_GET['updated'] ?? null) === '1') { ?>
+        <?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only: the flag from this screen's own post-save redirect shows a fixed "Settings saved." notice.
+        if (isset($_GET['updated']) && $_GET['updated'] === '1') { ?>
             <div class="notice notice-success"><p><?php
 
             esc_html_e('Settings saved.', domain: 'wppilot'); ?></p></div>

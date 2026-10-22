@@ -582,3 +582,76 @@ function el_local_style_entry(array $flat, array $states = [], ?string &$error =
         ],
     ];
 }
+
+/**
+ * Merge incoming style entries into an element's existing ones, property by
+ * property.
+ *
+ * An ergonomic edit is always written under `s-<element_id>`, the same id
+ * build-page and add-element give the element's own style. Merging at the
+ * entry level therefore replaced the whole entry: asking to right-align a row
+ * deleted its display, direction and gap on desktop and every tablet and mobile
+ * variant with them, and the page fell apart one "small" edit at a time.
+ * A variant with the same breakpoint and state now takes the new properties on
+ * top of its old ones; a variant that did not exist is added. Removing a
+ * property still needs replace=true or wppilot/elementor-delete-element-style.
+ *
+ * @param array<string, mixed> $existing
+ * @param array<string, mixed> $incoming
+ * @return array<string, mixed>
+ */
+function el_merge_style_entries(array $existing, array $incoming): array
+{
+    /** @var mixed $entry */
+    foreach ($incoming as $id => $entry) {
+        /** @var mixed $current */
+        $current = $existing[$id] ?? null;
+        if (
+            !is_array($entry) || !is_array($current)
+            || !is_array($entry['variants'] ?? null) || !is_array($current['variants'] ?? null)
+        ) {
+            $existing[$id] = $entry;
+            continue;
+        }
+
+        /** @var list<mixed> $variants */
+        $variants = array_values($current['variants']);
+        /** @var mixed $variant */
+        foreach ($entry['variants'] as $variant) {
+            if (!is_array($variant)) {
+                continue;
+            }
+            $key = el_style_variant_key($variant);
+            $matched = false;
+            foreach ($variants as $i => $old) {
+                if (!is_array($old) || el_style_variant_key($old) !== $key) {
+                    continue;
+                }
+                $old_props = is_array($old['props'] ?? null) ? $old['props'] : [];
+                $new_props = is_array($variant['props'] ?? null) ? $variant['props'] : [];
+                $variants[$i] = array_merge($old, $variant, ['props' => array_merge($old_props, $new_props)]);
+                $matched = true;
+                break;
+            }
+            if (!$matched) {
+                $variants[] = $variant;
+            }
+        }
+        $existing[$id] = array_merge($current, $entry, ['variants' => $variants]);
+    }
+
+    return $existing;
+}
+
+/**
+ * The breakpoint and state a style variant applies to, as one comparable key.
+ *
+ * @param array<string, mixed> $variant
+ */
+function el_style_variant_key(array $variant): string
+{
+    $meta = is_array($variant['meta'] ?? null) ? $variant['meta'] : [];
+    $breakpoint = is_string($meta['breakpoint'] ?? null) ? $meta['breakpoint'] : 'desktop';
+    $state = is_string($meta['state'] ?? null) ? $meta['state'] : '';
+    return $breakpoint . '|' . $state;
+}

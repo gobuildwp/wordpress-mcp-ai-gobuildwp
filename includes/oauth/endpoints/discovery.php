@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\Endpoints\Discovery;
 
 if (!defined('ABSPATH')) {
@@ -232,7 +230,8 @@ function serve(array $document): void
 
 function maybe_serve(): void
 {
-    $path = wp_parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The URI path is only compared exactly with the fixed discovery paths below; sanitize_text_field() would rewrite its percent-encoding.
+    $path = wp_parse_url(isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '', PHP_URL_PATH);
     if (!is_string($path)) {
         return;
     }

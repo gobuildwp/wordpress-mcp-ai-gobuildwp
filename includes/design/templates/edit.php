@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Template file: require()d inside a namespaced render function, so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary. Reads are type-checked and escaped on output.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template file: require()d inside a namespaced render function, so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary.
 
 use WPPilot\Design\Admin;
 use WPPilot\Design\Cpt;
@@ -19,8 +19,8 @@ if (!Admin\current_user_can_manage()) {
     wp_die(esc_html__('You do not have permission to edit designs.', domain: 'wppilot'));
 }
 
-$design_param = $_GET['design'] ?? '';
-$post_id = is_scalar($design_param) ? (int) $design_param : 0;
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: the id only selects which design to load into the editor; saving posts to a nonce-checked handler.
+$post_id = isset($_GET['design']) && is_scalar($_GET['design']) ? absint($_GET['design']) : 0;
 // @mago-expect analysis:mixed-assignment
 $maybe_post = $post_id > 0 ? get_post($post_id) : null;
 if (!$maybe_post instanceof \WP_Post || $maybe_post->post_type !== Cpt\POST_TYPE) {

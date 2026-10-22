@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\Keys;
 
 use League\OAuth2\Server\CryptKey;
@@ -194,6 +192,7 @@ function openssl_config_environment(): array
     foreach (['OPENSSL_CONF', 'SSLEAY_CONF'] as $name) {
         $value = getenv($name);
         if (!is_string($value) || trim($value) === '') {
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- A server-environment filesystem path (not request input), only checked with is_readable() and handed to OpenSSL as its config file; stripslashes() or sanitize_text_field() would corrupt a Windows path.
             $from_server = $_SERVER[$name] ?? null;
             $value = is_string($from_server) ? $from_server : '';
         }

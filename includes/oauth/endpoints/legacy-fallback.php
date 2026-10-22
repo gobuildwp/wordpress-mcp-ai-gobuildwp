@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\Endpoints\LegacyFallback;
 
 if (!defined('ABSPATH')) {
@@ -65,7 +63,10 @@ function maybe_serve(): void
         return;
     }
 
-    $endpoint = endpoint_for_request($_SERVER['REQUEST_URI'] ?? '', $_SERVER['REQUEST_METHOD'] ?? 'GET');
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The URI path is only compared exactly with three fixed OAuth paths in endpoint_for_request(); sanitize_text_field() would rewrite its percent-encoding.
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
+    $method = isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : 'GET';
+    $endpoint = endpoint_for_request($request_uri, $method);
     if ($endpoint === null) {
         return;
     }
@@ -85,11 +86,10 @@ function redirect_to_authorization_page(): void
 {
     $parameters = [];
     foreach (AUTHORIZATION_QUERY_PARAMETERS as $name) {
-        // OAuth authorization requests are cross-site GETs and intentionally carry no WP nonce.
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        $value = $_GET[$name] ?? null;
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Cross-site OAuth authorization GET, so no nonce can exist; the protocol values are forwarded unchanged to the authorization page, which validates each one, and sanitizing would alter redirect_uri, state and the PKCE challenge.
+        $value = isset($_GET[$name]) ? wp_unslash($_GET[$name]) : null;
         if (is_string($value)) {
-            $parameters[$name] = wp_unslash($value);
+            $parameters[$name] = $value;
         }
     }
 

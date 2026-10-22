@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\Endpoints\Register;
 
 use WP_Error;
@@ -52,7 +50,7 @@ function is_self_test_request(WP_REST_Request $req): bool
 // @mago-expect lint:cyclomatic-complexity
 function handle(WP_REST_Request $req): WP_REST_Response|WP_Error
 {
-    $client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $client_ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
     ClientValidation\prune_dead_clients();
     $self_test = is_self_test_request($req);
     if ($client_ip !== '' && !$self_test && !ClientValidation\check_and_increment_rate_limit($client_ip)) {

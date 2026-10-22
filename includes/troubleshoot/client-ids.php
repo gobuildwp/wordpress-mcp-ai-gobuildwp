@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Every state-changing request on this screen verifies a nonce via check_admin_referer() before acting; the sniff cannot trace that across function boundaries. Reads are type-checked, whitelist-compared, and escaped on output.
-
 namespace WPPilot\Troubleshoot\ClientIds;
 
 use WP_Error;
@@ -64,7 +62,7 @@ function generate(string $client_key): array|WP_Error
         $client_id = $repository->create(
             $entry['client_name'],
             $entry['redirect_uris'],
-            $_SERVER['REMOTE_ADDR'] ?? '',
+            isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '',
             admin_created: true,
         );
     }

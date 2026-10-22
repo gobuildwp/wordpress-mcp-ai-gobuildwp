@@ -1031,16 +1031,29 @@ function wordpress_filesystem_error(): ?WP_Error
 }
 
 /**
- * Resolve an install request to a download URL, from a directory slug or an
- * explicit ZIP.
+ * Resolve an install request to a download URL, from a WordPress.org directory
+ * slug or, outside the WordPress.org edition, an explicit HTTPS ZIP.
+ *
+ * The WordPress.org edition installs from the WordPress.org directory only: its
+ * schema has no zip_url, and a zip_url that reaches this function anyway (a
+ * direct PHP caller, say) is refused before anything is fetched.
  *
  * @param array<string, mixed> $input
+ * @param bool|null $directory_only Defaults to the running edition.
  * @return array{slug: string, download: string}|WP_Error
  */
-function wordpress_install_source(array $input, bool $is_theme): array|WP_Error
+function wordpress_install_source(array $input, bool $is_theme, ?bool $directory_only = null): array|WP_Error
 {
+    $directory_only ??= \wppilot_is_wordpress_org_edition();
     $has_slug = trim((string) ($input['slug'] ?? '')) !== '';
     $has_zip = trim((string) ($input['zip_url'] ?? '')) !== '';
+    if ($directory_only && ($has_zip || !$has_slug)) {
+        return new WP_Error(
+            'wppilot_install_source_directory_only',
+            __('Provide "slug": plugins and themes are installed from the WordPress.org directory only.', domain: 'wppilot'),
+            ['status' => 422],
+        );
+    }
     if ($has_slug === $has_zip) {
         return new WP_Error(
             'wppilot_install_source_ambiguous',

@@ -164,11 +164,13 @@ function bounded(callable $run): mixed
 {
     $previous = ini_get('pcre.backtrack_limit');
     $limit = $previous !== false && (int) $previous > 0 ? min((int) $previous, BACKTRACK_LIMIT) : BACKTRACK_LIMIT;
+    // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Lowers the PCRE backtrack limit for this one bounded call only (never raises it); restored in finally below.
     ini_set('pcre.backtrack_limit', (string) $limit);
     try {
         return $run();
     } finally {
         if ($previous !== false) {
+            // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Restores the site's own PCRE backtrack limit saved above.
             ini_set('pcre.backtrack_limit', $previous);
         }
     }
@@ -441,6 +443,7 @@ function json_flags(string $raw, mixed $decoded): array
  */
 function quietly(callable $run, string &$problem): mixed
 {
+    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler -- Scoped to one PCRE/JSON call to capture its warning text for the caller; restore_error_handler() runs in finally.
     set_error_handler(static function (int $errno, string $message) use (&$problem): bool {
         $problem = preg_replace('/^preg_match\(\): /', '', $message) ?? $message;
         return true;

@@ -78,7 +78,8 @@ function register(): void
 function serve_command(array $args, array $assoc_args): void
 {
     // Before anything can print: a notice on stdout is a corrupt protocol message.
-    ini_set('display_errors', 'stderr'); // phpcs:ignore WordPress.PHP.IniSet.display_errors_Disallowed -- stdout is the protocol channel; errors must go to stderr.
+    // phpcs:ignore WordPress.PHP.IniSet.display_errors_Disallowed, PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors, Squiz.PHP.DiscouragedFunctions.Discouraged -- WP-CLI only (wp wppilot mcp serve): stdout is the JSON-RPC protocol channel, so PHP errors are sent to stderr instead; nothing is hidden.
+    ini_set('display_errors', 'stderr');
 
     $user = wp_get_current_user();
     if ($user->ID <= 0) {
@@ -88,6 +89,7 @@ function serve_command(array $args, array $assoc_args): void
         \WP_CLI::error('GoBuildWP\'s AI abilities are switched off on this site. Switch them on under GoBuildWP > Connect first.');
     }
     /** This filter belongs to the MCP adapter; a site that switched stdio off there has switched it off here too. */
+    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- The bundled MCP Adapter's own filter, read so a site that disabled stdio there stays disabled here.
     if (!(bool) apply_filters('mcp_adapter_enable_stdio_transport', true) || !(bool) apply_filters('wppilot_stdio_enabled', true)) {
         \WP_CLI::error('The stdio transport is disabled on this site (mcp_adapter_enable_stdio_transport or wppilot_stdio_enabled).');
     }

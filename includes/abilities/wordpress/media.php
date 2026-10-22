@@ -207,6 +207,20 @@ function wordpress_import_media_url(array $input): array|WP_Error
 
     $temporary = download_url($url, timeout: 30);
     if (is_wp_error($temporary)) {
+        // download_url() reports every refused download as code http_404, whatever the real
+        // status, with only the reason phrase ("Bad Request") as message: it names neither
+        // the host nor the status. The real status is in the error data. Some hosts,
+        // Wikimedia among them, answer 400/403 to WordPress's default user agent.
+        $data = $temporary->get_error_data();
+        if ($temporary->get_error_code() === 'http_404' && is_array($data) && is_int($data['code'] ?? null)) {
+            return new WP_Error('wppilot_media_download_refused', sprintf(
+                /* translators: 1: host name, 2: HTTP status code, 3: reason phrase */
+                __('%1$s refused the download with HTTP %2$d %3$s. Some hosts block requests from WordPress servers; try another URL for the file, or upload it.', domain: 'wppilot'),
+                (string) wp_parse_url($url, PHP_URL_HOST),
+                $data['code'],
+                $temporary->get_error_message(),
+            ), ['status' => 502, 'remote_status' => $data['code']]);
+        }
         return $temporary;
     }
     $path = (string) wp_parse_url($url, PHP_URL_PATH);

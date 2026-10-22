@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Template file: require()d inside a namespaced render function, so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary. Reads are type-checked and escaped on output.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template file: require()d inside a namespaced render function, so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary.
 
 use WPPilot\Design\Admin;
 use WPPilot\Design\Contract;
@@ -23,8 +23,9 @@ if (!Admin\current_user_can_manage()) {
     wp_die(esc_html__('You do not have permission to view this page.', domain: 'wppilot'));
 }
 
-$view_param = $_GET['view'] ?? '';
-$slug = Parser\normalize_slug(is_string($view_param) ? $view_param : '');
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only view: the slug only selects which design to display; changes post to nonce-checked handlers.
+$view_param = is_string($_GET['view'] ?? null) ? sanitize_title(wp_unslash($_GET['view'])) : '';
+$slug = Parser\normalize_slug($view_param);
 $design = $slug !== '' ? Library\find($slug) : null;
 if ($design === null) {
     wp_die(esc_html__('Design not found.', domain: 'wppilot'));

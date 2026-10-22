@@ -172,7 +172,8 @@ function wppilot_changes_schema_install(): ?string
         ['agent_label', 'agent_client', 'group_id', 'session_id', 'status', 'rolled_back_at', 'entry_data'],
         array_values(WPPILOT_CHANGES_PAYLOAD_COLUMNS),
     ));
-    $ready = $wpdb->query("SELECT {$columns} FROM {$table} LIMIT 1") !== false;
+    // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $columns is implode() of this file's literal column names, never input; the table is bound as a %i identifier.
+    $ready = $wpdb->query($wpdb->prepare("SELECT {$columns} FROM %i LIMIT 1", $table)) !== false;
     $read_error = (string) ($wpdb->last_error ?? '');
     if (method_exists($wpdb, 'suppress_errors')) {
         $wpdb->suppress_errors((bool) $suppressed);

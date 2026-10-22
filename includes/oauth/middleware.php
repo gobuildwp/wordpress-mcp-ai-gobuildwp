@@ -5,8 +5,6 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- OAuth 2.1 protocol endpoint called by external MCP clients; WordPress nonces cannot exist in this flow. Input is validated against the RFC grammar and rejected with protocol errors, and redirects go to client-registered callback URLs as the spec requires.
-
 namespace WPPilot\OAuth\Middleware;
 
 use League\OAuth2\Server\Exception\OAuthServerException;
@@ -120,6 +118,7 @@ function is_rest_request(): bool
         return true;
     }
 
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only the URI path is used, and only for a prefix comparison with the REST URL prefix; sanitize_text_field() would rewrite its percent-encoding.
     $uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
     $path = (string) wp_parse_url($uri, PHP_URL_PATH);
     $prefix = '/' . trim(rest_get_url_prefix(), '/') . '/';
@@ -600,12 +599,14 @@ function route_required_scope(string $route, string $method): ?string
 
 function get_authorization_header(): string
 {
-    $auth = trim($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The Authorization header carries a credential that is hashed and compared byte-for-byte, so it is only unslashed and trimmed; sanitize_text_field() could alter it.
+    $auth = isset($_SERVER['HTTP_AUTHORIZATION']) ? trim((string) wp_unslash($_SERVER['HTTP_AUTHORIZATION'])) : '';
     if ($auth !== '') {
         return $auth;
     }
 
-    return trim($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The same credential as Apache passes it after a rewrite: hashed and compared byte-for-byte, so only unslashed and trimmed.
+    return isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? trim((string) wp_unslash($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) : '';
 }
 
 function has_bearer_scheme(string $auth): bool

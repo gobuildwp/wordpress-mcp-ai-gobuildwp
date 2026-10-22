@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Uninstall removes this plugin's own custom tables and options; direct queries and the DROP are the entire job of this file, and it runs only when WordPress itself invokes an uninstall.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Uninstall removes this plugin's own custom tables and options; direct queries and the DROP are the entire job of this file, and it runs only when WordPress itself invokes an uninstall.
 
 /**
  * Remove everything GoBuildWP stored.
@@ -354,15 +354,15 @@ function wppilot_uninstall_current_site(): void
         ),
     );
 
-    // Tables last: the post deletions above read from them.
-    //
-    // Not prepared, and cannot be: $wpdb->prepare() has no placeholder for an
-    // identifier, only for values. The names come from wppilot_uninstall_tables(),
-    // which builds each one from $wpdb->prefix and a literal — no request data
-    // reaches this string.
+    // Tables last: the post deletions above read from them. Each name comes from
+    // wppilot_uninstall_tables() ($wpdb->prefix plus a literal) and is bound as a
+    // %i identifier.
     foreach (wppilot_uninstall_tables() as $table) {
-        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- No values are interpolated at all — prepare() has no placeholder for a table identifier, and the names come from $wpdb->prefix plus a literal.
-        $wpdb->query("DROP TABLE IF EXISTS {$table}");
+        // @mago-expect analysis:possibly-invalid-argument
+        $wpdb->query(
+            // @mago-expect analysis:possibly-invalid-argument
+            $wpdb->prepare('DROP TABLE IF EXISTS %i', $table),
+        );
     }
 }
 

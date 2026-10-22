@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom tables created in includes/oauth/schema.php; WordPress has no API for them. Table names come from $wpdb->prefix plus fixed suffixes - never from input - and every value goes through $wpdb->prepare().
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The OAuth clients table created in includes/oauth/schema.php has no WordPress API. Not cached: a client registered, renamed or deleted must be seen by the very next token or authorize request. Every query is prepared, with the table bound as a %i identifier.
 
 namespace WPPilot\OAuth\Repositories;
 
@@ -81,8 +81,8 @@ final class ClientRepository implements ClientRepositoryInterface
         // @mago-expect analysis:possibly-invalid-argument
         // @mago-expect analysis:possibly-invalid-argument
         $row = $wpdb->get_row($wpdb->prepare("SELECT client_id, client_name, redirect_uris, is_confidential
-                 FROM {$wpdb->prefix}wppilot_oauth_clients
-                 WHERE client_id = %s", $clientIdentifier), ARRAY_A);
+                 FROM %i
+                 WHERE client_id = %s", $wpdb->prefix . 'wppilot_oauth_clients', $clientIdentifier), ARRAY_A);
         if (!is_array($row)) {
             // Not a locally registered client. Under MCP 2026-07-28 an HTTPS
             // client_id is a Client ID Metadata Document URL, which is resolved
@@ -187,8 +187,8 @@ final class ClientRepository implements ClientRepositoryInterface
         // @mago-expect analysis:possibly-invalid-argument
         // @mago-expect analysis:possibly-invalid-argument
         $rows = $wpdb->get_results($wpdb->prepare("SELECT client_id, client_name, created_at, last_used_at
-                 FROM {$wpdb->prefix}wppilot_oauth_clients
-                 ORDER BY created_at DESC LIMIT %d", $limit), ARRAY_A);
+                 FROM %i
+                 ORDER BY created_at DESC LIMIT %d", $wpdb->prefix . 'wppilot_oauth_clients', $limit), ARRAY_A);
         // @mago-expect analysis:invalid-return-statement
         return $rows === null ? [] : $rows;
     }
@@ -204,9 +204,9 @@ final class ClientRepository implements ClientRepositoryInterface
         /** @var \wpdb $wpdb */
         // @mago-expect analysis:possibly-invalid-argument
         // @mago-expect analysis:possibly-invalid-argument
-        $id = $wpdb->get_var($wpdb->prepare("SELECT client_id FROM {$wpdb->prefix}wppilot_oauth_clients
+        $id = $wpdb->get_var($wpdb->prepare("SELECT client_id FROM %i
                  WHERE admin_created = 1 AND client_name = %s
-                 ORDER BY created_at DESC LIMIT 1", $client_name));
+                 ORDER BY created_at DESC LIMIT 1", $wpdb->prefix . 'wppilot_oauth_clients', $client_name));
         return is_string($id) && $id !== '' ? $id : null;
     }
 
@@ -218,13 +218,12 @@ final class ClientRepository implements ClientRepositoryInterface
         // @mago-expect lint:no-global
         global $wpdb;
         /** @var \wpdb $wpdb */
-        // Not prepared, and cannot be: the only interpolation is $wpdb->prefix in
-        // the table name, and prepare() has no placeholder for an identifier.
-        // The statement takes no arguments, so no request data reaches it.
-        $rows = $wpdb->get_results("SELECT client_id, client_name, created_at, last_used_at
-                 FROM {$wpdb->prefix}wppilot_oauth_clients
+        // @mago-expect analysis:possibly-invalid-argument
+        // @mago-expect analysis:possibly-invalid-argument
+        $rows = $wpdb->get_results($wpdb->prepare("SELECT client_id, client_name, created_at, last_used_at
+                 FROM %i
                  WHERE admin_created = 1
-                 ORDER BY created_at DESC", ARRAY_A);
+                 ORDER BY created_at DESC", $wpdb->prefix . 'wppilot_oauth_clients'), ARRAY_A);
         // @mago-expect analysis:invalid-return-statement
         return $rows === null ? [] : $rows;
     }

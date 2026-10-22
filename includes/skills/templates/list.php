@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended -- Template file: require()d inside a namespaced render function, so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary. Reads are type-checked and escaped on output.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template file: require()d inside WPPilot\Skills\Admin\render_page(), so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary.
 
 use WPPilot\Skills\Admin;
 use WPPilot\Skills\Cpt;
@@ -20,7 +20,7 @@ if (!Admin\current_user_can_manage()) {
 }
 
 $per_page = 50;
-$paged = max(1, (int) ($_GET['paged'] ?? 1));
+$paged = max(1, isset($_GET['paged']) && is_string($_GET['paged']) ? (int) $_GET['paged'] : 1); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination of the skills list.
 $user_query = new \WP_Query([
     'post_type' => Cpt\POST_TYPE,
     'post_status' => ['publish', 'draft'],
@@ -461,41 +461,6 @@ $new_url = add_query_arg(['page' => Admin\PAGE_SLUG, 'skill' => 'new'], admin_ur
     <?php endforeach; ?>
 
 </div>
-<script>
-(function () {
-    var file = document.getElementById('wppilot-skills-upload-file');
-    var form = document.getElementById('wppilot-skills-upload-form');
-    var MAX_UPLOAD = 20;
-    if (file && form) {
-        file.addEventListener('change', function () {
-            if (!file.files || file.files.length === 0) {
-                return;
-            }
-            if (file.files.length > MAX_UPLOAD) {
-                alert('Too many files. Upload up to ' + MAX_UPLOAD + ' skills at a time.');
-                file.value = '';
-                return;
-            }
-            form.submit();
-        });
-    }
+<?php
 
-    // Client-side filter for the current page's rows. Searches slug and
-    // description (visible text inside each row).
-    var search = document.getElementById('wppilot-skills-search');
-    var list = document.querySelector('[data-wppilot-skills-list]');
-    if (search && list) {
-        var rows = Array.prototype.slice.call(list.querySelectorAll('.wppilot-skills-d-row'));
-        search.addEventListener('input', function () {
-            var q = search.value.toLowerCase().trim();
-            rows.forEach(function (row) {
-                if (q === '') {
-                    row.style.display = '';
-                    return;
-                }
-                row.style.display = (row.textContent || '').toLowerCase().indexOf(q) !== -1 ? '' : 'none';
-            });
-        });
-    }
-})();
-</script>
+wppilot_enqueue_admin_script('wppilot-skills-list', 'skills-list.js');

@@ -5,6 +5,8 @@
 
 declare(strict_types=1);
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- This file is require()d inside the kit runtime's load_kits(), so its variables are local to that function, not globals.
+
 namespace WPPilot\Kits\ScheduledAudits;
 
 use WPPilot\Kits\Runtime;

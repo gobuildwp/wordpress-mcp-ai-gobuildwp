@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace WPPilot\Admin\Changes;
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Template file: require()d inside render_page(), so every variable is function-scoped, never global. The prefix sniff cannot see across the include boundary.
+
 if (!defined('ABSPATH')) {
     exit();
 }
@@ -19,8 +21,8 @@ if (!current_user_can_manage()) {
 // Counted and paged by the ledger itself: the table can hold ten thousand rows with their
 // before-images, and only one page of them is ever shown.
 $total = \wppilot_count_change_log($filters);
-// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Pagination of a read.
-$paged = max(1, (int) ($_GET['paged'] ?? 1));
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Pagination of a read-only list.
+$paged = max(1, isset($_GET['paged']) && is_scalar($_GET['paged']) ? absint($_GET['paged']) : 1);
 $pages = max(1, (int) ceil($total / PER_PAGE));
 $paged = min($paged, $pages);
 $visible = \wppilot_query_change_log($filters, PER_PAGE, ($paged - 1) * PER_PAGE);
