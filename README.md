@@ -1,7 +1,7 @@
 # GoBuildWP: WordPress MCP server and AI website builder for Claude, ChatGPT, Cursor and Codex
 
 <!-- current-releases:start -->
-Current releases: **GoBuildWP Free 1.18.7 / Pro 1.13.0**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.18.8 / Pro 1.13.0**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
 [![Version](https://img.shields.io/github/v/release/gobuildwp/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
@@ -20,6 +20,12 @@ Current releases: **GoBuildWP Free 1.18.7 / Pro 1.13.0**. Pro requires Free 1.18
 Website: <https://gobuildwp.com> · Docs: <https://gobuildwp.com/docs> · Client setup guides: <https://gobuildwp.com/wordpress-mcp> · Release notes and build demos on X: <https://x.com/gobuildwp>
 
 ---
+
+## What's new in 1.18.8
+
+- **Works with strict MCP clients when ACF Pro is active.** ACF Pro's native no-input abilities declare a `"type": "null"` input schema, which made Cloudflare MCP Portals and other strict clients reject the whole tool list. Both transports now serve an empty object schema for them, and calling them with `{}` works.
+- **Safety hints on the modern transport.** `tools/list` now carries `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`, as the legacy adapter did.
+- **Pro: custom premium WordPress themes with AI.** Describe the site to ChatGPT, Claude or your AI IDE and it writes a real classic or hybrid theme: PHP templates, CSS and JavaScript you own. GoBuildWP Pro keeps it as a managed project with source review, an isolated private preview, approved installation and activation, and recovery that never overwrites newer content. How it works: <https://gobuildwp.com/ai-wordpress-theme-builder> · Watch Claude build an animated agency theme: <https://www.youtube.com/watch?v=KJk96c-XW4c>
 
 ## What's new in 1.18.7
 

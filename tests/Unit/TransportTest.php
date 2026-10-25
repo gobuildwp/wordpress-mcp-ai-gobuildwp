@@ -27,6 +27,15 @@ use function WPPilot\Mcp\tool_name;
  */
 final class TransportTest extends TestCase
 {
+    public function testModernSafetyAnnotationsPreserveFalseAndRejectNonBooleans(): void
+    {
+        self::assertSame(['readOnlyHint' => true, 'destructiveHint' => false], \WPPilot\Mcp\tool_safety_annotations([
+            'annotations' => ['readonly' => true, 'destructive' => false, 'idempotent' => 'true'],
+        ]));
+        self::assertSame([], \WPPilot\Mcp\tool_safety_annotations(['annotations' => ['readonly' => 'false']]));
+        self::assertSame([], \WPPilot\Mcp\tool_safety_annotations([]));
+    }
+
     #[DataProvider('mcpRoutes')]
     public function testMcpRoutesAreClaimed(string $route): void
     {

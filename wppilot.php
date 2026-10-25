@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Plugin Name: GoBuildWP
  * Plugin URI: https://gobuildwp.com
  * Description: WordPress MCP server with free Elementor MCP editing. Connects Claude, Codex, Cursor and other AI clients to typed WordPress abilities over MCP, with OAuth 2.1, safety profiles, change evidence and rollback.
- * Version: 1.18.7
+ * Version: 1.18.8
  * Requires at least: 6.9
  * Requires PHP: 8.0
  * Update URI: https://gobuildwp.com/wppilot/

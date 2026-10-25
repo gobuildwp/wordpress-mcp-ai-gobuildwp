@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 /**
  * Internal compatibility contract shared by metadata, startup gates, and agent context.
  */
-define(constant_name: 'WPPILOT_VERSION', value: '1.18.7');
+define(constant_name: 'WPPILOT_VERSION', value: '1.18.8');
 define(constant_name: 'WPPILOT_REST_API_VERSION', value: 1);
 define(constant_name: 'WPPILOT_MINIMUM_WORDPRESS_VERSION', value: '6.9');
 // The newest WordPress this release was exercised against. Advertised rather

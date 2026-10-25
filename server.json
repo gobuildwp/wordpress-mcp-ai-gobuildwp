@@ -3,7 +3,7 @@
     "name": "com.gobuildwp/gobuildwp",
     "title": "GoBuildWP",
     "description": "WordPress MCP server: typed abilities with safety profiles, change evidence and undo.",
-    "version": "1.18.7",
+    "version": "1.18.8",
     "websiteUrl": "https://gobuildwp.com",
     "repository": {
         "url": "https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp",

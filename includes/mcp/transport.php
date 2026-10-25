@@ -301,10 +301,35 @@ function list_tools(): array
         if ($tool === null) {
             continue;
         }
+        $annotations = tool_safety_annotations($meta);
+        if ($annotations !== []) {
+            $tool['annotations'] = $annotations;
+        }
         $tools[] = function_exists('WPPilot\Mcp\decorate_tool') ? decorate_tool($tool, $meta) : $tool;
     }
 
     return sort_tools_deterministically($tools);
+}
+
+/**
+ * Preserve ability safety hints for modern clients, as the legacy adapter does.
+ * Unknown or malformed classifications remain absent and therefore fail closed.
+ * @param array<string, mixed> $meta
+ * @return array<string, bool>
+ */
+function tool_safety_annotations(array $meta): array
+{
+    $source = $meta['annotations'] ?? null;
+    if (!is_array($source)) {
+        return [];
+    }
+    $result = [];
+    foreach (['readonly' => 'readOnlyHint', 'destructive' => 'destructiveHint', 'idempotent' => 'idempotentHint', 'openWorldHint' => 'openWorldHint'] as $key => $hint) {
+        if (isset($source[$key]) && is_bool($source[$key])) {
+            $result[$hint] = $source[$key];
+        }
+    }
+    return $result;
 }
 
 /**

@@ -4,7 +4,7 @@ Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.18.7
+Stable tag: 1.18.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -177,6 +177,11 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 
 == Changelog ==
 
+= 1.18.8 =
+* Fixed: tools whose input or output schema root is not an object, such as ACF Pro's native no-input abilities (root "type": "null"), broke tools/list for strict MCP clients, so Cloudflare MCP Portals and others refused the whole server. Both the modern transport and the bundled MCP Adapter's tool list now give a null or nullable root an empty object schema. A tool whose input root cannot be an object (such as a string) is left out, and a non-object output schema is dropped, instead of serving an invalid list.
+* Fixed: calling one of those null-input abilities with {} or no arguments failed with "not of type null". Empty input now reaches them as null, over MCP and the REST run route.
+* Fixed: modern MCP tool discovery now carries the abilities' safety hints (readOnlyHint, destructiveHint, idempotentHint, openWorldHint), as the legacy adapter already did, so Cloud and ChatGPT can verify read-only tools. A missing or non-boolean classification is left out, which clients treat as unsafe.
+
 = 1.18.7 =
 * New: wppilot/elementor-build-page builds a whole Elementor page from one nested description ({type, settings, styles, children}) in a single call, on v3 containers or v4 atomic elements. Composing a page one add-element at a time took a dozen calls, each carrying its own parent id and position, and a widget rejected halfway left a half-built page. The whole page is now validated before anything is written, a rejected widget returns its compact schema inline, and dry_run=true checks a description without touching the page. The default replaces the page's content; replace=false appends. A node's styles take the same flat {color, font-size, ...} map as edit-element, checked against the style schema before anything is written.
 * Changed: GoBuildWP Pro can resolve design-spec roles and section grammars inside build-page through two filters, wppilot_elementor_build_page_node and wppilot_elementor_build_page_grammar. Without Pro a node that asks for either is refused by name rather than built without the styling it asked for.
@@ -211,6 +216,9 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.18.8 =
+Fixes tool discovery for strict MCP clients such as Cloudflare MCP Portals when ACF Pro or another plugin registers abilities without an object input schema.
 
 = 1.18.7 =
 Adds wppilot/elementor-build-page: a whole Elementor page in one validated call. Update together with GoBuildWP Pro 1.13.0, which builds whole websites on top of it.
