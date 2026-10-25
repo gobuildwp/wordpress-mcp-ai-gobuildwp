@@ -142,7 +142,12 @@ function wppilot_normalize_empty_ability_input(WP_Ability $ability, mixed $input
         return $input;
     }
 
-    return $ability->get_input_schema() === [] ? null : $input;
+    // A root of `"type": "null"` (ACF's native no-input abilities) refuses an empty array as
+    // "not of type null" just as a missing schema refuses any input; both take null.
+    $schema = $ability->get_input_schema();
+    $type = $schema['type'] ?? null;
+
+    return $schema === [] || $type === 'null' || $type === ['null'] ? null : $input;
 }
 
 /**

@@ -14,9 +14,11 @@ use WP_Ability;
 
 use function WPPilot\Mcp\ability_for_tool;
 use function WPPilot\Mcp\advertise_confirmation;
+use function WPPilot\Mcp\client_ready_tool;
 use function WPPilot\Mcp\empty_input_for;
 use function WPPilot\Mcp\is_mcp_route;
 use function WPPilot\Mcp\normalize_schema;
+use function WPPilot\Mcp\repair_tool_list;
 use function WPPilot\Mcp\route_is_served;
 use function WPPilot\Mcp\tool_name;
 
@@ -313,5 +315,108 @@ final class TransportTest extends TestCase
                 'properties' => ['post_id' => ['type' => 'integer']],
             ],
         );
+    }
+
+    /**
+     * ACF Pro 6.8's native abilities declare `"type": "null"` (no input) and
+     * `["object", "null"]` (optional object) roots. MCP requires `"object"`, and
+     * Cloudflare MCP Portals rejected the whole tools/list for eight such tools.
+     */
+    public function testNullInputRootIsAdvertisedAsAnEmptyObject(): void
+    {
+        $tool = client_ready_tool(['name' => 'acf-list', 'inputSchema' => ['type' => 'null', 'description' => 'No input.']]);
+
+        self::assertNotNull($tool);
+        self::assertSame('object', $tool['inputSchema']['type']);
+        self::assertFalse($tool['inputSchema']['additionalProperties']);
+        self::assertSame('No input.', $tool['inputSchema']['description']);
+        self::assertSame(
+            '{"type":"object","properties":{},"additionalProperties":false,"description":"No input."}',
+            json_encode($tool['inputSchema']),
+        );
+    }
+
+    public function testNullableObjectRootBecomesObject(): void
+    {
+        $tool = client_ready_tool([
+            'name' => 'acf-get',
+            'inputSchema' => ['type' => ['object', 'null'], 'properties' => ['id' => ['type' => 'integer']]],
+        ]);
+
+        self::assertNotNull($tool);
+        self::assertSame('object', $tool['inputSchema']['type']);
+        self::assertSame(['id' => ['type' => 'integer']], $tool['inputSchema']['properties']);
+    }
+
+    public function testObjectSchemaIsLeftAsAuthored(): void
+    {
+        $schema = ['type' => 'object', 'properties' => ['id' => ['type' => 'integer']], 'required' => ['id']];
+        $tool = client_ready_tool(['name' => 'x', 'inputSchema' => $schema, 'outputSchema' => $schema]);
+
+        self::assertSame($schema, $tool['inputSchema'] ?? null);
+        self::assertSame($schema, $tool['outputSchema'] ?? null);
+    }
+
+    public function testToolWithNoObjectFormOfItsInputIsLeftOut(): void
+    {
+        self::assertNull(client_ready_tool(['name' => 'scalar', 'inputSchema' => ['type' => 'string']]));
+    }
+
+    public function testNonObjectOutputSchemaIsDroppedButTheToolKept(): void
+    {
+        $tool = client_ready_tool([
+            'name' => 'list',
+            'inputSchema' => ['type' => 'object'],
+            'outputSchema' => ['type' => 'array', 'items' => ['type' => 'string']],
+        ]);
+
+        self::assertNotNull($tool);
+        self::assertArrayNotHasKey('outputSchema', $tool);
+    }
+
+    /**
+     * The legacy adapter answers clients without modern `_meta`; its list gets
+     * the same rules, and one unusable tool must not take the rest with it.
+     */
+    public function testLegacyToolListIsRepairedWithoutLosingTheRest(): void
+    {
+        $tools = repair_tool_list([
+            ['name' => 'a', 'inputSchema' => ['type' => 'null']],
+            ['name' => 'b', 'inputSchema' => ['type' => 'string']],
+            ['name' => 'c', 'inputSchema' => ['type' => ['object', 'null'], 'properties' => []]],
+        ]);
+
+        self::assertSame(['a', 'c'], array_column($tools, 'name'));
+        self::assertSame('object', $tools[0]['inputSchema']['type']);
+        self::assertSame('object', $tools[1]['inputSchema']['type']);
+        self::assertSame('{}', json_encode($tools[1]['inputSchema']['properties']));
+    }
+
+    public function testNullRootAbilityIsCalledWithNull(): void
+    {
+        self::assertNull(empty_input_for(new WP_Ability('acf/list', input_schema: ['type' => 'null'])));
+    }
+
+    public function testNullableObjectAbilityIsCalledWithAnEmptyObject(): void
+    {
+        self::assertSame([], empty_input_for(new WP_Ability('acf/get', input_schema: ['type' => ['object', 'null']])));
+    }
+
+    /**
+     * The REST run shim takes `{"input":{}}` as "no arguments" the same way.
+     */
+    public function testRestShimPassesNullToANullRootAbility(): void
+    {
+        require_once dirname(__DIR__, 2) . '/includes/rest/shim.php';
+
+        self::assertNull(\wppilot_normalize_empty_ability_input(new WP_Ability('acf/list', input_schema: ['type' => 'null']), []));
+        self::assertSame([], \wppilot_normalize_empty_ability_input(
+            new WP_Ability('acf/get', input_schema: ['type' => ['object', 'null']]),
+            [],
+        ));
+        self::assertSame(['id' => 1], \wppilot_normalize_empty_ability_input(
+            new WP_Ability('acf/list', input_schema: ['type' => 'null']),
+            ['id' => 1],
+        ));
     }
 }

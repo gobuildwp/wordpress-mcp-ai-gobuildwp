@@ -291,13 +291,16 @@ function list_tools(): array
             continue;
         }
 
-        $tool = [
+        $tool = client_ready_tool([
             'name' => tool_name($ability->get_name()),
             'title' => (string) $ability->get_label(),
             'description' => (string) $ability->get_description(),
             'inputSchema' => normalize_schema(advertise_confirmation($ability, $ability->get_input_schema())),
             'outputSchema' => normalize_schema($ability->get_output_schema()),
-        ];
+        ]);
+        if ($tool === null) {
+            continue;
+        }
         $tools[] = function_exists('WPPilot\Mcp\decorate_tool') ? decorate_tool($tool, $meta) : $tool;
     }
 
@@ -475,6 +478,105 @@ function normalize_schema(mixed $schema): array
     }
 
     return force_schema_objects($schema);
+}
+
+/**
+ * Give a tool the root schema shapes MCP requires, or drop it.
+ *
+ * MCP fixes the root of `inputSchema` (and of `outputSchema`, when present) at
+ * `"type": "object"`, and strict clients validate the whole tools/list result
+ * against that: one tool with another root fails the list, so every tool on the
+ * connection disappears, not just the one at fault. Cloudflare MCP Portals
+ * reports it as
+ *
+ *     Invalid result for tools/list: "code": "invalid_value", "values": ["object"]
+ *
+ * Abilities GoBuildWP does not own declare other roots. ACF's native abilities
+ * declare `"type": "null"` for no input and `["object", "null"]` for optional
+ * input. So the root is mapped, and nothing below it is touched:
+ *
+ * - no `type`, or `"object"`: object, as authored;
+ * - a type list including `"object"`: object. MCP arguments are always an
+ *   object, so the nullable half is never sent;
+ * - `"null"`: an object that takes no properties. call_tool() turns the empty
+ *   arguments back into null; see empty_input_for().
+ *
+ * Any other input root (a bare string, a list) has no object form a client
+ * could send, so that tool alone is left out of the list, and the
+ * `wppilot_mcp_tool_skipped` action names it. An `outputSchema` whose root is
+ * not an object is removed instead of the tool: the field is optional, and an
+ * advertised one obliges the result to match it.
+ *
+ * @param array<string, mixed> $tool
+ * @return array<string, mixed>|null
+ */
+function client_ready_tool(array $tool): ?array
+{
+    $input = $tool['inputSchema'] ?? null;
+    if (is_array($input)) {
+        $input = object_root_schema($input);
+        if ($input === null) {
+            $name = is_string($tool['name'] ?? null) ? $tool['name'] : '';
+            if (function_exists('do_action')) {
+                \do_action('wppilot_mcp_tool_skipped', $name, 'input_schema_root');
+            }
+            return null;
+        }
+        $tool['inputSchema'] = force_schema_objects($input);
+    }
+
+    $output = $tool['outputSchema'] ?? null;
+    if (is_array($output)) {
+        $type = $output['type'] ?? 'object';
+        if ($type === 'object') {
+            $output['type'] = 'object';
+            $tool['outputSchema'] = force_schema_objects($output);
+        } else {
+            unset($tool['outputSchema']);
+        }
+    }
+
+    return $tool;
+}
+
+/**
+ * Map an input schema's root onto `"type": "object"`; see client_ready_tool().
+ *
+ * @param array<string, mixed> $schema
+ * @return array<string, mixed>|null Null when the root has no object form.
+ */
+function object_root_schema(array $schema): ?array
+{
+    $type = $schema['type'] ?? 'object';
+
+    if ($type === 'null') {
+        $empty = ['type' => 'object', 'properties' => [], 'additionalProperties' => false];
+        if (is_string($schema['description'] ?? null)) {
+            $empty['description'] = $schema['description'];
+        }
+        return $empty;
+    }
+
+    if ($type === 'object' || (is_array($type) && in_array('object', $type, strict: true))) {
+        $schema['type'] = 'object';
+        return $schema;
+    }
+
+    return null;
+}
+
+/**
+ * Whether an ability's input schema accepts only null at the root.
+ *
+ * Such an ability takes no input, and core validates null against it: an empty
+ * array — what an MCP client's `{}` decodes to — is refused as "not of type
+ * null". The REST shim and call_tool() ask this to pass null instead.
+ */
+function input_schema_is_null(WP_Ability $ability): bool
+{
+    $type = $ability->get_input_schema()['type'] ?? null;
+
+    return $type === 'null' || $type === ['null'];
 }
 
 /**
@@ -777,7 +879,7 @@ function empty_input_for(WP_Ability $ability): mixed
         return \wppilot_normalize_empty_ability_input($ability, []);
     }
 
-    return $ability->get_input_schema() === [] ? null : [];
+    return $ability->get_input_schema() === [] || input_schema_is_null($ability) ? null : [];
 }
 
 /**
@@ -818,15 +920,43 @@ function tool_error(WP_Error $error, mixed $id): array
 }
 
 /**
+ * The legacy adapter's tool list with each tool made client-ready.
+ *
+ * Same rules as the modern path (client_ready_tool()): object roots, object
+ * maps, and a tool whose input root has no object form left out rather than
+ * failing the whole list.
+ *
+ * @param array<array-key, mixed> $tools
+ * @return list<mixed>
+ */
+function repair_tool_list(array $tools): array
+{
+    $repaired = [];
+    foreach ($tools as $tool) {
+        if (!is_array($tool)) {
+            $repaired[] = $tool;
+            continue;
+        }
+        $tool = client_ready_tool($tool);
+        if ($tool !== null) {
+            $repaired[] = $tool;
+        }
+    }
+
+    return $repaired;
+}
+
+/**
  * Repair the legacy adapter's tool schemas on the way out.
  *
  * A request without modern `_meta` is answered by the bundled adapter, which
  * passes each ability's schema through as authored — so the empty
- * `'properties' => []` that `normalize_schema()` now fixes on the modern path
- * still reaches a legacy client as a JSON array, and Anthropic still rejects
- * the whole payload for it. The adapter is a pinned composer package, so the
- * correction belongs in the response rather than in its source, where the next
- * `composer update` would undo it.
+ * `'properties' => []` that `normalize_schema()` fixes on the modern path, and
+ * a root other than `"type": "object"` (client_ready_tool()), still reach a
+ * legacy client as authored, and strict clients reject the whole payload. The
+ * adapter is a pinned composer package, so the correction belongs in the
+ * response rather than in its source, where the next `composer update` would
+ * undo it.
  *
  * @return mixed The response, with tool schemas corrected where they applied.
  */
@@ -846,23 +976,7 @@ function repair_legacy_tool_schemas(mixed $response, WP_REST_Server $server, WP_
         return $response;
     }
 
-    $changed = false;
-    foreach ($result['tools'] as $index => $tool) {
-        if (!is_array($tool)) {
-            continue;
-        }
-        foreach (['inputSchema', 'outputSchema'] as $keyword) {
-            if (is_array($tool[$keyword] ?? null)) {
-                $result['tools'][$index][$keyword] = force_schema_objects($tool[$keyword]);
-                $changed = true;
-            }
-        }
-    }
-
-    if (!$changed) {
-        return $response;
-    }
-
+    $result['tools'] = repair_tool_list($result['tools']);
     $body['result'] = $result;
     $response->set_data($body);
 
