@@ -140,6 +140,14 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 
 Content creation is draft-first: an absent, blank or malformed status resolves to `draft` before any capability check, so nothing is published by accident.
 
+## Learn: videos and guides
+
+- **Video: build a custom WordPress theme with Claude and GoBuildWP Pro.** From a creative brief to Afterglyph, an animated agency theme with GSAP and ScrollTrigger: site connection, the brief, private preview, approval and content editing. <https://www.youtube.com/watch?v=KJk96c-XW4c>
+- **AI WordPress theme builder (Pro):** how the managed theme workflow goes from brief to installed theme. <https://gobuildwp.com/ai-wordpress-theme-builder>
+- **Connect your AI client:** step-by-step setup for ChatGPT, Claude, Cursor and other MCP clients. <https://gobuildwp.com/wordpress-mcp>
+- **Documentation and ability reference:** <https://gobuildwp.com/docs>
+- **Release notes and build demos on X:** <https://x.com/gobuildwp>
+
 ## Quick setup
 
 ### 1. Install the plugin
