@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-printf "%s\n" "Disabled in isolated GoBuildWP workspace; use reviewed local fixtures." >&2
-exit 1
 #
 # Build the distributable GoBuildWP ZIP.
 #

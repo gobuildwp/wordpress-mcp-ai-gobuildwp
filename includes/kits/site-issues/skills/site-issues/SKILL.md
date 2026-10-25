@@ -17,7 +17,7 @@ error, or an update was rolled back.
   at that moment, needs looking at.
 - `paused_extensions`: WordPress's recovery mode paused these after a fatal. They stay paused only
   for the administrator in recovery mode; visitors still run them.
-- `update_failures`: updates `wppilot/safe-update` rolled back, with the reason it gave.
+- `update_failures`: updates the safe-update tool rolled back, with the reason it gave.
 - `backup_failures`: the last run of a backup plugin that failed.
 
 Report what you find in plain words: what failed, when and how often, whose code, and the one
