@@ -1,5 +1,5 @@
 === GoBuildWP ===
-Contributors: wppilot
+Contributors: gobuildwp
 Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
