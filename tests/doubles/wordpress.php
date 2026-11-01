@@ -647,6 +647,13 @@ if (!function_exists('__')) {
     }
 }
 
+if (!function_exists('_n')) {
+    function _n(string $single, string $plural, int $number, string $domain = 'default'): string
+    {
+        return $number === 1 ? $single : $plural;
+    }
+}
+
 if (!function_exists('is_user_logged_in')) {
     function is_user_logged_in(): bool
     {

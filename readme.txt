@@ -4,7 +4,7 @@ Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.18.8
+Stable tag: 1.19.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,7 @@ The Overview screen names the AI clients actually talking to your site, identifi
 * Typed design-library, Gutenberg staging, diagnostics, skills, change-ledger, file and developer operations, with every ability individually switchable.
 * Skills and site-wide instructions, so agents start with your context rather than guessing.
 * A sandbox for agent-authored PHP, isolated behind directory guards.
+* Two-factor login: authenticator-app codes and one-time backup codes after the password, set up from the user's profile, with an optional policy that requires it for chosen roles.
 * A diagnostics screen that probes the connection the way a client does and names what to fix.
 
 = External services =
@@ -177,6 +178,21 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 
 == Changelog ==
 
+= 1.19.0 =
+* New: GoBuildWP Cloud security scans read the site through the plugin. A file integrity scan compares WordPress core, and plugins and themes from WordPress.org, with their official checksums, and looks for PHP where it does not belong: uploads, image files carrying code, folders beside WordPress and known backdoor patterns. A database scan looks for injected scripts and spam links in posts, comments, options, post meta and cron. Both run in the background in small steps and report progress, so a large site does not hit the PHP time limit.
+* New: fixes for what a scan finds, each with an undo: quarantine a file, restore a core, plugin or theme file from its official copy, clean an infected file or setting, demote an unexpected administrator and unpublish an injected post.
+* New: website protection: a firewall for common attack requests, login protection with lockouts after repeated failed sign-ins, IP blocks, and virtual patches for known plugin vulnerabilities until an update is installed.
+* New: live security watch. The site records security events as they happen (new or promoted administrators, files added or changed, failed sign-ins, changed settings, updates) for GoBuildWP Cloud to show and alert on.
+* New: two-factor sign-in for chosen user roles, with authenticator apps and backup codes.
+* New: wppilot/db-cleanup-preview and wppilot/db-cleanup remove old spam comments, trashed comments and post revisions. The cleanup needs confirmation and can be undone: each row comes back with its original id.
+* New: wppilot/not-found-log records which paths return 404, rolled up per path and capped at 200, keeping only the referrer's host, so GoBuildWP Cloud can report broken links. Return false from wppilot_kit_not_found_log_enabled to stop recording.
+* New: gobuildwp/commerce-activity-since counts what changed since a point in time (orders, customers, users, comments, edited posts and form entries) so you can judge what restoring an earlier backup would lose. Counts only, never the rows.
+* New: AI change notifications in wp-admin: a Dashboard widget with the latest changes AI agents made through GoBuildWP, a notice when there are changes you have not seen, and a count on the GoBuildWP menu.
+* Changed: security writes (fixes, protection settings, IP blocks, two-factor settings) run only for a GoBuildWP Cloud request whose signature the site has verified, never for a local administrator or another MCP client. GoBuildWP Cloud sees what is installed through a new inventory route, which sends a hash with each status check and the full list only when it changes.
+* Changed: the change log names GoBuildWP Cloud as the actor instead of its machine user-agent.
+* Fixed: a database scan on MariaDB left a shortened query time limit in place for the rest of the request. It is now restored.
+* Fixed: wppilot/read-file returned a UTF-8 text file as base64 when a partial read ended inside a multi-byte character. The incomplete character is now left for the next read, and bytes_read says where that read starts.
+
 = 1.18.8 =
 * Fixed: tools whose input or output schema root is not an object, such as ACF Pro's native no-input abilities (root "type": "null"), broke tools/list for strict MCP clients, so Cloudflare MCP Portals and others refused the whole server. Both the modern transport and the bundled MCP Adapter's tool list now give a null or nullable root an empty object schema. A tool whose input root cannot be an object (such as a string) is left out, and a non-object output schema is dropped, instead of serving an invalid list.
 * Fixed: calling one of those null-input abilities with {} or no arguments failed with "not of type null". Empty input now reaches them as null, over MCP and the REST run route.
@@ -216,6 +232,9 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.19.0 =
+Adds what GoBuildWP Cloud's Security Guardian needs on the site: integrity and database scans with undoable fixes, a firewall, login protection, virtual patches, live security events and two-factor sign-in. Update together with GoBuildWP Pro 1.14.0.
 
 = 1.18.8 =
 Fixes tool discovery for strict MCP clients such as Cloudflare MCP Portals when ACF Pro or another plugin registers abilities without an object input schema.

@@ -88,6 +88,10 @@ final class WPPilotHost implements Host, ProfileGate
         if ($point === 'cloud-sign') {
             return [$this, 'sign_cloud_payload'];
         }
+        if ($point === 'cloud-verified') {
+            // Whether this request is a GoBuildWP Cloud call whose signature verified (Security Guardian R3).
+            return function_exists('gobuildwp_cloud_request_verified') && \gobuildwp_cloud_request_verified();
+        }
         if ($point === 'cloud-unpaired') {
             // Whether a site not connected to GoBuildWP Cloud may still use its PageSpeed proxy.
             // The WordPress.org edition contacts the Cloud only once an administrator connects it.

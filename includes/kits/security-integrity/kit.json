@@ -1,0 +1,89 @@
+{
+    "slug": "security-integrity",
+    "version": "1.0.0",
+    "namespace": "GoBuildWP\\Kits\\SecurityIntegrity",
+    "tier": "free",
+    "runtime": "^1.4",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "security-integrity": {
+            "label": "Security integrity",
+            "description": "Background scans that compare WordPress core, WordPress.org plugin and WordPress.org theme files against their published checksums, look for PHP in the uploads folder and for code patterns often left by attackers, and check the database and configuration for risky accounts, roles, URLs, injected scripts and settings. Scan results name files, rules and line numbers, or database rows by id and label, and never include file contents or stored values. Fixes for what a scan found (quarantine a file, restore a core file from WordPress.org, demote an administrator, unpublish a post) are separate, confirmed and undoable."
+        }
+    },
+    "abilities": [
+        {
+            "name": "gobuildwp/integrity-scan-start",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/integrity-scan-status",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/integrity-scan-results",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/integrity-scan-cancel",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/db-security-scan-start",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/db-security-scan-status",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/db-security-scan-results",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/db-security-scan-cancel",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/security-fix-apply",
+            "readonly": false,
+            "destructive": true,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/security-fix-undo",
+            "readonly": false,
+            "destructive": true,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/security-fix-list",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": [],
+    "tests": [
+        "tests/Unit/Kits/SecurityIntegrity"
+    ]
+}

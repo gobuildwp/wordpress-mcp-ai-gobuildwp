@@ -14,13 +14,15 @@ declare(strict_types=1);
  *
  *   pairing.php     §1-§3  begin, return, confirm in wp-admin, and the link option
  *   signing.php     §5     the site's Ed25519 key and signed calls to the Cloud
- *   rest.php        §4     the two routes the Cloud calls with its access token
+ *   rest.php        §4     the routes the Cloud calls with its access token
  *   heartbeat.php   §5     the hourly heartbeat and the schedule that drives it
  *   events.php      §5     the same heartbeat pushed early, with `event`, when a backup, update or extension change happens
  *   updates.php     §4     pending core, plugin and theme updates for the status answer
  *   backups.php     §4     the newest backup and running state for the status answer
+ *   inventory.php   §4     installed plugins, themes and core for vulnerability matching, and its hash
  *   policy.php      §7     safety settings pushed from the Cloud, only as far as the owner allows
  *   rate-limit.php  §6     the Cloud credential's write budget
+ *   request-signing.php    the Cloud's own key, and the signature its writes must carry (Security Guardian R3)
  *
  * What the Cloud holds is an ordinary GoBuildWP access token, minted on this
  * site with the scope and ceiling the account owner chose. It passes every
@@ -71,8 +73,10 @@ require_once __DIR__ . '/heartbeat.php';
 require_once __DIR__ . '/events.php';
 require_once __DIR__ . '/updates.php';
 require_once __DIR__ . '/backups.php';
+require_once __DIR__ . '/inventory.php';
 require_once __DIR__ . '/policy.php';
 require_once __DIR__ . '/rate-limit.php';
+require_once __DIR__ . '/request-signing.php';
 
 add_action('admin_post_wppilot_cloud_begin', callback: 'wppilot_cloud_handle_begin');
 add_action('admin_post_wppilot_cloud_return', callback: 'wppilot_cloud_handle_return');
@@ -82,11 +86,13 @@ add_action('admin_post_wppilot_cloud_disconnect', callback: 'wppilot_cloud_handl
 add_action('admin_post_wppilot_cloud_manage', callback: 'wppilot_cloud_handle_manage');
 
 add_action('rest_api_init', callback: 'wppilot_cloud_register_routes');
+add_filter('rest_pre_dispatch', callback: 'gobuildwp_cloud_signing_pre_dispatch', priority: GOBUILDWP_CLOUD_SIGNING_PRIORITY, accepted_args: 3);
 
 // No arguments: the event push (events.php) passes $event itself.
 add_action(WPPILOT_CLOUD_HEARTBEAT_HOOK, callback: 'wppilot_cloud_send_heartbeat', priority: 10, accepted_args: 0);
 add_action('admin_init', callback: 'wppilot_cloud_maintain_schedule');
 add_action('upgrader_process_complete', callback: 'wppilot_cloud_on_upgrade', priority: 10, accepted_args: 2);
 wppilot_cloud_register_event_hooks();
+gobuildwp_cloud_register_inventory_hooks();
 
 add_filter('wppilot_tool_call_rate_limit', callback: 'wppilot_cloud_rate_limit', priority: 10, accepted_args: 2);

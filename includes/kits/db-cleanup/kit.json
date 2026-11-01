@@ -1,0 +1,37 @@
+{
+    "slug": "db-cleanup",
+    "version": "1.0.0",
+    "namespace": "WPPilot\\Kits\\DbCleanup",
+    "tier": "free",
+    "runtime": "^1.1",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "wordpress": {
+            "label": "WordPress",
+            "description": "Typed WordPress operations: content, taxonomies, media, comments, revisions, menus, users, and allowlisted site settings."
+        }
+    },
+    "abilities": [
+        {
+            "name": "wppilot/db-cleanup-preview",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "wppilot/db-cleanup",
+            "readonly": false,
+            "destructive": true,
+            "ledger": "restore:kits/db-cleanup-row"
+        }
+    ],
+    "skills": [
+        "db-cleanup"
+    ],
+    "tests": [
+        "tests/Unit/Kits/DbCleanup"
+    ]
+}

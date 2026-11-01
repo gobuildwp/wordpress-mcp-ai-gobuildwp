@@ -18,6 +18,8 @@ const WPPILOT_PRO_URL = 'https://gobuildwp.com/pro/';
 const WPPILOT_PRO_DISMISS_PREFIX = 'wppilot_pro_dismissed_';
 
 const WPPILOT_PRO_WELCOME_KEY = 'welcome';
+const WPPILOT_CLOUD_PRO_URL = 'https://gobuildwp.com/cloud';
+const WPPILOT_CLOUD_PRO_NOTICE_KEY = 'cloud_pro';
 
 /**
  * True when the GoBuildWP Pro plugin is active.
@@ -512,4 +514,116 @@ function wppilot_render_pro_upsell_card(): void
         </p>
     </div>
     <?php
+}
+
+/**
+ * What GoBuildWP Cloud Pro adds, for the Home card and the notice. Cloud Pro is a
+ * separate subscription from the Pro plugin licence, so both show it.
+ *
+ * @return list<string>
+ */
+function wppilot_cloud_pro_features(): array
+{
+    return [
+        __('Security Guardian: known vulnerabilities on every site, with fixes', domain: 'wppilot'),
+        __('Site Rescue when a site goes down', domain: 'wppilot'),
+        __('Scheduled, checked updates with rollback', domain: 'wppilot'),
+        __('Bulk actions and safety policies across sites', domain: 'wppilot'),
+        __('Email, Slack and Teams alerts; client reports', domain: 'wppilot'),
+        __('Up to 500 sites in one workspace', domain: 'wppilot'),
+    ];
+}
+
+/**
+ * Where "Upgrade" goes: the workspace's upgrade page when this site is connected to
+ * GoBuildWP Cloud, otherwise the Cloud plans page.
+ */
+function wppilot_cloud_pro_upgrade_url(string $medium): string
+{
+    $link = function_exists('wppilot_cloud_link') ? wppilot_cloud_link() : null;
+    $base = $link !== null && function_exists('wppilot_cloud_normalize_url') ? wppilot_cloud_normalize_url($link['cloud_url']) : '';
+    if ($base !== '') {
+        return $base . '/upgrade';
+    }
+    return WPPILOT_CLOUD_PRO_URL . '?utm_source=plugin&utm_medium=' . rawurlencode($medium);
+}
+
+/**
+ * Cloud Pro card for the Home screen's side column.
+ */
+function wppilot_render_cloud_pro_card(): void
+{
+    $connected = function_exists('wppilot_cloud_link') && wppilot_cloud_link() !== null;
+    ?>
+    <section class="wppilot-panel wppilot-home__card">
+        <header class="wppilot-home__card-head">
+            <h2><?php esc_html_e('GoBuildWP Cloud Pro', domain: 'wppilot'); ?></h2>
+            <span class="wppilot-pill"><?php esc_html_e('PRO', domain: 'wppilot'); ?></span>
+        </header>
+        <p><?php echo esc_html(
+            $connected
+                ? __('This site is connected to GoBuildWP Cloud. Cloud Pro adds, for every site in your workspace:', domain: 'wppilot')
+                : __('Manage all your sites from one place. Cloud Free covers 3 sites; Cloud Pro adds:', domain: 'wppilot'),
+        ); ?></p>
+        <ul style="margin:0 0 12px 18px;list-style:disc;">
+            <?php foreach (wppilot_cloud_pro_features() as $feature) { ?>
+                <li><?php echo esc_html($feature); ?></li>
+            <?php } ?>
+        </ul>
+        <p style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0;">
+            <a class="button button-primary" href="<?php echo esc_url(wppilot_cloud_pro_upgrade_url('home_card')); ?>" target="_blank" rel="noopener">
+                <?php echo esc_html($connected ? __('Upgrade to Cloud Pro', domain: 'wppilot') : __('See Cloud Pro plans', domain: 'wppilot')); ?>
+            </a>
+            <?php if (!$connected) { ?>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=wppilot-connect')); ?>"><?php esc_html_e('Connect to Cloud free', domain: 'wppilot'); ?></a>
+            <?php } ?>
+        </p>
+    </section>
+    <?php
+}
+
+/**
+ * Dismissible Cloud Pro notice on GoBuildWP's own screens. It waits until the Pro
+ * welcome notice is gone (or Pro is active), so the two never stack.
+ */
+add_action('admin_notices', callback: 'wppilot_render_cloud_pro_notice');
+
+function wppilot_render_cloud_pro_notice(): void
+{
+    if (!wppilot_current_user_can_manage()) {
+        return;
+    }
+    $user_id = get_current_user_id();
+    if (get_user_meta($user_id, WPPILOT_PRO_DISMISS_PREFIX . WPPILOT_CLOUD_PRO_NOTICE_KEY, single: true)) {
+        return;
+    }
+    if (!wppilot_pro_is_active() && !get_user_meta($user_id, WPPILOT_PRO_DISMISS_PREFIX . WPPILOT_PRO_WELCOME_KEY, single: true)) {
+        return;
+    }
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || !(str_starts_with($screen->id, 'toplevel_page_wppilot') || str_starts_with($screen->id, 'wppilot_page_'))) {
+        return;
+    }
+
+    $brand = wppilot_pro_brand();
+    ?>
+    <div class="notice is-dismissible wppilot-pro-notice" data-dismiss-url="<?php echo
+        esc_url(wppilot_pro_dismiss_url(WPPILOT_CLOUD_PRO_NOTICE_KEY))
+    ; ?>" style="border-left:4px solid <?php echo esc_attr($brand['lime']); ?>;padding:4px 12px 12px;">
+        <p style="margin:12px 0 6px;font-size:15px;font-weight:700;color:<?php echo esc_attr($brand['ink']); ?>;">
+            <?php esc_html_e('New: GoBuildWP Cloud Pro', domain: 'wppilot'); ?>
+        </p>
+        <p style="margin:0 0 12px;max-width:70ch;font-size:13.5px;line-height:1.6;color:#50575e;">
+            <?php echo esc_html(implode(' · ', wppilot_cloud_pro_features())); ?>
+        </p>
+        <p style="margin:0 0 4px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+            <a href="<?php echo esc_url(wppilot_cloud_pro_upgrade_url('notice')); ?>" target="_blank" rel="noopener" class="button" style="background:<?php echo
+                esc_attr($brand['lime'])
+            ; ?>;border-color:<?php echo esc_attr($brand['lime']); ?>;color:#fff;font-weight:700;text-shadow:none;box-shadow:none;">
+                <?php esc_html_e('See Cloud Pro plans', domain: 'wppilot'); ?>
+            </a>
+        </p>
+    </div>
+    <?php
+    wppilot_enqueue_admin_script('wppilot-pro-notice', 'pro-notice.js');
 }

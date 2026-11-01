@@ -125,11 +125,24 @@ function wppilot_read_file($input)
         return new WP_Error('read_failed', sprintf('Could not read file: %s', $resolved));
     }
 
+    $truncated = $limit !== -1 && ($offset + strlen($content)) < $size;
+
+    // A partial read can end inside a multi-byte character, which made a UTF-8 text file come back
+    // as base64. Drop the incomplete tail (at most 3 bytes); bytes_read tells the caller where the
+    // next page starts, so nothing is skipped.
+    $is_text_mime = wppilot_is_text_mime_type($mime_type);
+    if ($truncated && $is_text_mime && !mb_check_encoding(value: $content, encoding: 'UTF-8')) {
+        for ($cut = 1; $cut <= 3 && $cut < strlen($content); $cut++) {
+            if (mb_check_encoding(value: substr($content, 0, -$cut), encoding: 'UTF-8')) {
+                $content = substr($content, 0, -$cut);
+                break;
+            }
+        }
+    }
     $bytes_read = strlen($content);
-    $truncated = $limit !== -1 && ($offset + $bytes_read) < $size;
 
     // Determine encoding: use base64 for binary content or invalid UTF-8.
-    $is_text = wppilot_is_text_mime_type($mime_type) && mb_check_encoding(value: $content, encoding: 'UTF-8');
+    $is_text = $is_text_mime && mb_check_encoding(value: $content, encoding: 'UTF-8');
 
     if (!$is_text) {
         $content = base64_encode($content);

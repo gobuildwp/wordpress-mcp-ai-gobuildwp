@@ -960,7 +960,7 @@ function wppilot_session_later_writers(string $session, string $target, string $
             'ability' => (string) ($entry['ability'] ?? ''),
             'recorded_at' => (string) ($entry['recorded_at'] ?? ''),
             'session_id' => (string) ($entry['session'] ?? ''),
-            'by' => trim((string) ($agent['label'] ?? '') . ' ' . (string) ($agent['client'] ?? '')) ?: (string) ($user['login'] ?? ''),
+            'by' => wppilot_change_actor_by($agent, $user),
         ];
         if (count($found) >= 5) {
             break;
@@ -968,6 +968,27 @@ function wppilot_session_later_writers(string $session, string $target, string $
     }
 
     return $found;
+}
+
+/**
+ * Who made a change, as a person reads it: the connection label, else the client
+ * name, else the WordPress login. GoBuildWP Cloud's machine User-Agent is hidden.
+ *
+ * @param array<mixed> $agent
+ * @param array<mixed> $user
+ */
+function wppilot_change_actor_by(array $agent, array $user): string
+{
+    $label = trim((string) ($agent['label'] ?? ''));
+    $client = (string) ($agent['client'] ?? '');
+    if ($label !== '') {
+        return wppilot_client_display($label, $client);
+    }
+    if (trim($client) !== '') {
+        return wppilot_client_label($client);
+    }
+
+    return (string) ($user['login'] ?? '');
 }
 
 /**

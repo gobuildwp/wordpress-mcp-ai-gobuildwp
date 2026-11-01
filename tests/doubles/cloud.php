@@ -123,3 +123,64 @@ if (!function_exists('wp_get_theme')) {
         };
     }
 }
+
+if (!function_exists('wp_get_themes')) {
+    /**
+     * Installed themes are $GLOBALS['wppilot_test_themes']: stylesheet => headers. A child
+     * theme names its parent in a `Template` header, as style.css does.
+     *
+     * @return array<string, object>
+     */
+    function wp_get_themes(): array
+    {
+        $themes = [];
+        foreach ($GLOBALS['wppilot_test_themes'] ?? [] as $stylesheet => $headers) {
+            $themes[(string) $stylesheet] = new class((string) $stylesheet, $headers) {
+                /** @param array<string, string> $headers */
+                public function __construct(private string $stylesheet, private array $headers) {}
+
+                public function get(string $header): string
+                {
+                    return $this->headers[$header] ?? '';
+                }
+
+                public function get_template(): string
+                {
+                    return $this->headers['Template'] ?? $this->stylesheet;
+                }
+            };
+        }
+
+        return $themes;
+    }
+}
+
+if (!function_exists('get_stylesheet')) {
+    function get_stylesheet(): string
+    {
+        return (string) ($GLOBALS['wppilot_test_stylesheet'] ?? '');
+    }
+}
+
+if (!function_exists('get_template')) {
+    function get_template(): string
+    {
+        return (string) ($GLOBALS['wppilot_test_template'] ?? $GLOBALS['wppilot_test_stylesheet'] ?? '');
+    }
+}
+
+if (!function_exists('get_mu_plugins')) {
+    /** @return array<string, array<string, string>> */
+    function get_mu_plugins(): array
+    {
+        return $GLOBALS['wppilot_test_mu_plugins'] ?? [];
+    }
+}
+
+if (!function_exists('get_dropins')) {
+    /** @return array<string, array<string, string>> */
+    function get_dropins(): array
+    {
+        return $GLOBALS['wppilot_test_dropins'] ?? [];
+    }
+}

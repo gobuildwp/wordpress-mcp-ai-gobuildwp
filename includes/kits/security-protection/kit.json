@@ -1,0 +1,65 @@
+{
+    "slug": "security-protection",
+    "version": "1.0.0",
+    "namespace": "GoBuildWP\\Kits\\SecurityProtection",
+    "tier": "free",
+    "runtime": "^1.4",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "security-protection": {
+            "label": "Website protection",
+            "description": "A request firewall (path traversal, SQL injection, script injection, PHP wrappers, code execution, PHP uploads, scanner tools), login protection that locks out an address after repeated failed logins, IP blocks, XML-RPC and user-enumeration blocking, and 404-flood blocking. Everything is off until it is turned on. Administrators who are signed in are never blocked. Events record the address, rule and path, never the request's values."
+        }
+    },
+    "abilities": [
+        {
+            "name": "gobuildwp/protection-status",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/protection-events",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/protection-blocks",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/protection-configure",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/protection-block-ip",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/protection-unblock-ip",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/protection-virtual-patches",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": [],
+    "tests": [
+        "tests/Unit/Kits/SecurityProtection"
+    ]
+}

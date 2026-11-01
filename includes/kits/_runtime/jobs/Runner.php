@@ -26,8 +26,11 @@ if (!defined('ABSPATH')) {
  * permission checks and ledger attribution both need the person who asked.
  *
  * Nothing here is visible to an agent until a kit exposes it; the Tasks extension will.
+ *
+ * A step may return `'yield' => true` to save its state and stop for this tick (it is waiting on
+ * something, a lock or a backoff); advance() runs a single step for a caller that polls.
  */
-final class Runner implements Jobs
+final class Runner implements SteppableJobs
 {
     public const OPTION_PREFIX = 'wppilot_kit_job_';
     public const INDEX_OPTION = 'wppilot_kit_jobs';
@@ -74,9 +77,7 @@ final class Runner implements Jobs
             'created_at' => $now,
             'updated_at' => $now,
         ]);
-        $index = $this->index();
-        $index[] = $id;
-        update_option(self::INDEX_OPTION, array_values(array_unique($index)), false);
+        $this->update_index(static fn(array $index): array => [...$index, $id]);
         $this->schedule(0);
         return $id;
     }
@@ -97,6 +98,46 @@ final class Runner implements Jobs
         $job['status'] = 'cancelled';
         $job['updated_at'] = time();
         $this->save($job);
+        return true;
+    }
+
+    public function advance(string $id): ?array
+    {
+        $job = $this->get($id);
+        if ($job === null || !in_array($job['status'], ['queued', 'running'], strict: true)) {
+            return $job;
+        }
+        if (!$this->claim($id)) {
+            // A tick or another poll is stepping it; report the job as it stands.
+            return $job;
+        }
+        try {
+            $job = $this->get($id) ?? $job;
+            if (in_array($job['status'], ['queued', 'running'], strict: true)) {
+                $job = $this->run($job, microtime(true) + self::STEP_BUDGET, 1);
+            }
+        } finally {
+            $this->release($id);
+        }
+        if ($job['status'] === 'running' || $job['status'] === 'queued') {
+            $this->schedule(5);
+        }
+        return $job;
+    }
+
+    public function resume(string $id, ?array $state = null): bool
+    {
+        $job = $this->get($id);
+        if ($job === null || $job['status'] !== 'done') {
+            return false;
+        }
+        $job['status'] = 'running';
+        if ($state !== null) {
+            $job['state'] = $state;
+        }
+        $job['updated_at'] = time();
+        $this->save($job);
+        $this->schedule(0);
         return true;
     }
 
@@ -138,9 +179,10 @@ final class Runner implements Jobs
 
     /**
      * @param array<string, mixed> $job
+     * @param int $max_steps 0 for as many as the deadline allows.
      * @return array<string, mixed>
      */
-    private function run(array $job, float $deadline): array
+    private function run(array $job, float $deadline, int $max_steps = 0): array
     {
         $step = $this->steps[(string) $job['kind']] ?? null;
         if ($step === null) {
@@ -151,8 +193,10 @@ final class Runner implements Jobs
         $previous_user = get_current_user_id();
         wp_set_current_user((int) $job['owner']);
         $job['status'] = 'running';
+        $steps = 0;
         try {
-            while (microtime(true) < $deadline) {
+            while (microtime(true) < $deadline && ($max_steps === 0 || $steps < $max_steps)) {
+                $steps++;
                 // Re-read between steps so a cancel from another request stops the job promptly.
                 $fresh = $this->get((string) $job['id']);
                 if ($fresh !== null && $fresh['status'] === 'cancelled') {
@@ -175,6 +219,10 @@ final class Runner implements Jobs
                     $job['progress'] = 1.0;
                     break;
                 }
+                if (($outcome['yield'] ?? false) === true) {
+                    // Waiting on something outside the job; try again next tick, not in a loop.
+                    break;
+                }
                 $this->save($job);
             }
         } catch (\Throwable $error) {
@@ -183,6 +231,11 @@ final class Runner implements Jobs
             $job['updated_at'] = time();
         } finally {
             wp_set_current_user($previous_user);
+        }
+        // A cancel that landed during the last step wins over that step's result.
+        $fresh = $this->get((string) $job['id']);
+        if ($fresh !== null && $fresh['status'] === 'cancelled') {
+            return $fresh;
         }
         $this->save($job);
         return $job;
@@ -220,7 +273,37 @@ final class Runner implements Jobs
     private function forget(string $id): void
     {
         delete_option(self::OPTION_PREFIX . $id);
-        update_option(self::INDEX_OPTION, array_values(array_diff($this->index(), [$id])), false);
+        $this->update_index(static fn(array $index): array => array_diff($index, [$id]));
+    }
+
+    /**
+     * Read-modify-write of the shared index under a short lock, so two requests enqueueing at
+     * once don't drop each other's job. The lock is an add_option() INSERT on a unique key; a
+     * stale one from a crashed request expires after 10 s. If the lock can't be had in 2 s the
+     * write goes ahead anyway: a lost index entry only delays cleanup, a lost job would not.
+     *
+     * @param callable(list<string>): array<int, string> $change
+     */
+    private function update_index(callable $change): void
+    {
+        $lock = self::INDEX_OPTION . '_lock';
+        $give_up = microtime(true) + 2;
+        $locked = false;
+        while (!($locked = add_option($lock, time() + 10, '', false)) && microtime(true) < $give_up) {
+            wp_cache_delete($lock, 'options');
+            if ((int) get_option($lock, 0) <= time()) {
+                delete_option($lock);
+                continue;
+            }
+            usleep(50_000);
+        }
+        try {
+            update_option(self::INDEX_OPTION, array_values(array_unique($change($this->index()))), false);
+        } finally {
+            if ($locked) {
+                delete_option($lock);
+            }
+        }
     }
 
     /** @return list<string> */

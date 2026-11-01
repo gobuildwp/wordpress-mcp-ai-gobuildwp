@@ -141,8 +141,13 @@ function wppilot_uninstall_options(): array
         'wppilot_cloud_manage',
         'wppilot_cloud_policy',
         'wppilot_cloud_event_push',
+        'gobuildwp_cloud_inventory_hash',
+        // includes/kits/security-live/src/logins.php: recent failed logins.
+        'gobuildwp_live_login_failures',
         // includes/kits/site-issues: the PHP fatal error log.
         'wppilot_kit_site_issues_php_errors',
+        // includes/kits/not-found-log: the rolled-up 404 log.
+        'wppilot_kit_not_found_log',
     ];
 }
 
@@ -207,6 +212,8 @@ function wppilot_uninstall_user_meta_keys(): array
         'wppilot_production_warning_dismissed',
         'wppilot_troubleshoot_dismissed',
         'wppilot_chat_consent',
+        // includes/admin/notifications.php
+        'wppilot_changes_seen_at',
     ];
 }
 
@@ -230,6 +237,9 @@ function wppilot_uninstall_cron_hooks(): array
         'wppilot_cloud_heartbeat',
         // includes/cloud/events.php
         'wppilot_cloud_event_push',
+        // includes/kits/security-live: the change watch, and the one-off run after an update.
+        'gobuildwp_kit_sl_tick',
+        'gobuildwp_kit_sl_tick_soon',
     ];
 }
 
@@ -324,6 +334,25 @@ function wppilot_uninstall_current_site(): void
         // includes/kits/scheduled-audits: the routines, and each routine's state, reports and lock
         // (wppilot_kit_routines_state_<id>, _report_<id>, _lock_<id>).
         'wppilot_kit_routines',
+        // includes/kits/security-integrity: the scan index, stored result pages and start mutexes.
+        'gobuildwp_kit_si_',
+        // includes/kits/security-protection: settings, blocks, events, counters and hit transients.
+        'gobuildwp_kit_sp_',
+        '_transient_gobuildwp_kit_sp_',
+        '_transient_timeout_gobuildwp_kit_sp_',
+        // includes/kits/security-live: settings, events, the change-watch index, cursor, queue and lock.
+        'gobuildwp_kit_sl_',
+        '_transient_gobuildwp_kit_sl_',
+        '_transient_timeout_gobuildwp_kit_sl_',
+        // includes/kits/security-2fa: the role policy, interim logins, failure counts and codes
+        // waiting to be shown once.
+        'gobuildwp_kit_2fa_',
+        '_transient_gobuildwp_kit_2fa_',
+        '_transient_timeout_gobuildwp_kit_2fa_',
+        // includes/cloud/request-signing.php: Cloud request nonces seen in the last fifteen minutes.
+        'gobuildwp_cloud_nonce_',
+        '_transient_gobuildwp_cloud_nonce_',
+        '_transient_timeout_gobuildwp_cloud_nonce_',
         // includes/preview/store.php: one option per pending preview, plus the
         // compare-and-set lock each apply claims.
         'wppilot_preview_',
@@ -354,6 +383,17 @@ function wppilot_uninstall_current_site(): void
         ),
     );
 
+    // includes/kits/security-2fa: each user's encrypted secret, backup-code hashes and state.
+    // Removing them turns two-factor login off for everyone, which is what uninstalling means.
+    // @mago-expect analysis:possibly-invalid-argument -- $wpdb->usermeta is a trusted table name.
+    $wpdb->query(
+        // @mago-expect analysis:possibly-invalid-argument
+        $wpdb->prepare(
+            "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s",
+            $wpdb->esc_like('gobuildwp_kit_2fa_') . '%',
+        ),
+    );
+
     // Tables last: the post deletions above read from them. Each name comes from
     // wppilot_uninstall_tables() ($wpdb->prefix plus a literal) and is bound as a
     // %i identifier.
@@ -380,6 +420,8 @@ if (is_multisite()) {
             }
         }
     }
+    // includes/cloud/inventory.php keeps its hash cache network-wide on multisite.
+    delete_site_option('gobuildwp_cloud_inventory_hash');
 
     return;
 }

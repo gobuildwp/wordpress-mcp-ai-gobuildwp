@@ -49,7 +49,9 @@ interface Host
      * reach it through Runtime\run_ability(), which falls back to the confirm guard.
      * `cloud-url` is the base URL of the host's cloud service (a string, '' when unusable), and
      * `cloud-sign` a callable that signs a payload for it ({base, body, headers}, or null when the
-     * site is not paired).
+     * site is not paired). `cloud-verified` is true only while the host is serving a request from
+     * its cloud service whose signature it verified; kits reach it through
+     * Runtime\require_cloud_request().
      */
     public function extension(string $point): mixed;
 
@@ -203,4 +205,30 @@ interface Jobs
     public function get(string $id): ?array;
 
     public function cancel(string $id): bool;
+}
+
+/**
+ * Jobs a caller can step on request and reopen.
+ *
+ * Optional, like PagedLedger: a kit checks `instanceof SteppableJobs` and otherwise waits for
+ * WP-Cron. A site with cron disabled still finishes work when a caller that polls the job (the
+ * Cloud, say) asks for one step per poll; a step that returns `'yield' => true` saves its state
+ * and hands over until the next tick or poll instead of running again at once.
+ */
+interface SteppableJobs extends Jobs
+{
+    /**
+     * Run one step of a queued or running job whose lease is free, then hand the lease back.
+     *
+     * @return array<string, mixed>|null The job after the step, or as it was when no step ran;
+     *         null when there is no such job.
+     */
+    public function advance(string $id): ?array;
+
+    /**
+     * Reopen a finished job so it runs again from its saved state, or from $state when given.
+     *
+     * @param array<string, mixed>|null $state
+     */
+    public function resume(string $id, ?array $state = null): bool;
 }

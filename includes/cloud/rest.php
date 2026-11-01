@@ -6,14 +6,14 @@
 declare(strict_types=1);
 
 /**
- * The two routes the Cloud calls on this site, §4.
+ * The routes the Cloud calls on this site, §4.
  *
- * Both accept exactly one credential: the access token this site gave the
+ * All accept exactly one credential: the access token this site gave the
  * Cloud in §3. Not another GoBuildWP token, not an administrator's cookie or
  * application password - a token for some other client must not be able to
  * read the Cloud's status or, worse, unlink it. The OAuth middleware lets a
- * token identity reach /wppilot/v1/cloud/* at all; the permission callback
- * here is what narrows that to the linked token.
+ * token identity reach /wppilot/v1/cloud/* and /gobuildwp/v1/cloud/* at all;
+ * the permission callback here is what narrows that to the linked token.
  */
 
 if (!defined('ABSPATH')) {
@@ -37,6 +37,12 @@ function wppilot_cloud_register_routes(): void
     register_rest_route('wppilot/v1', '/cloud/unlink', [
         'methods' => 'POST',
         'callback' => 'wppilot_cloud_rest_unlink',
+        'permission_callback' => 'wppilot_cloud_rest_permission',
+    ]);
+
+    register_rest_route('gobuildwp/v1', '/cloud/inventory', [
+        'methods' => 'GET',
+        'callback' => 'gobuildwp_cloud_rest_inventory',
         'permission_callback' => 'wppilot_cloud_rest_permission',
     ]);
 }
@@ -111,6 +117,11 @@ function wppilot_cloud_rest_status(): WP_REST_Response|WP_Error
         'updates' => wppilot_cloud_pending_updates(),
         'backup' => wppilot_cloud_backup_summary(),
         'policy' => wppilot_cloud_policy_status(),
+        // Moves whenever what is installed or active changes; the Cloud then fetches
+        // GET /gobuildwp/v1/cloud/inventory. See inventory.php.
+        'inventory_hash' => gobuildwp_cloud_inventory_hash(),
+        // enforced once the Cloud's key is stored; unavailable where PHP cannot verify Ed25519.
+        'cloud_signing' => gobuildwp_cloud_signing_status(),
     ];
     // The site-issues kit's summary: counts, newest fatal, newest few issues. Left out (not null)
     // when the kit is not loaded, which is what older plugins send too.
@@ -119,6 +130,25 @@ function wppilot_cloud_rest_status(): WP_REST_Response|WP_Error
     }
 
     return new WP_REST_Response($status, 200);
+}
+
+/**
+ * GET /gobuildwp/v1/cloud/inventory: installed plugins, themes, core, mu-plugins
+ * and drop-ins, with the hash the status answer carries.
+ */
+function gobuildwp_cloud_rest_inventory(): WP_REST_Response|WP_Error
+{
+    if (wppilot_cloud_link() === null) {
+        return new WP_Error('wppilot_cloud_forbidden', __('This site is not connected to GoBuildWP Cloud.', domain: 'wppilot'), [
+            'status' => 403,
+        ]);
+    }
+
+    $inventory = gobuildwp_cloud_inventory();
+    // From these items, and cached, so the next status answer carries the same hash.
+    $inventory['inventory_hash'] = gobuildwp_cloud_inventory_remember(gobuildwp_cloud_inventory_hash_of($inventory['items'], $inventory));
+
+    return new WP_REST_Response($inventory, 200);
 }
 
 /**

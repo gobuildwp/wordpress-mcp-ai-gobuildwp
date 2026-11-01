@@ -257,4 +257,17 @@ final class CloudEventsTest extends TestCase
         self::assertSame('backup_failed', wppilot_cloud_event_state()['event']);
         self::assertSame('anything', wppilot_cloud_on_updraftplus_last_backup('anything'));
     }
+
+    public function test_a_live_security_event_outranks_every_other_event(): void
+    {
+        $this->link();
+        $now = 1_760_000_000;
+
+        wppilot_cloud_note_event('backup_failed', $now);
+        wppilot_cloud_note_event('security_live', $now + 1);
+        wppilot_cloud_note_event('update_finished', $now + 2);
+
+        self::assertSame('security_live', wppilot_cloud_event_state()['event']);
+        self::assertCount(1, self::pushes(), 'still one debounced push');
+    }
 }

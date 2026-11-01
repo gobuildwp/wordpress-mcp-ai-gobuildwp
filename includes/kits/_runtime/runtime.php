@@ -29,8 +29,12 @@ if (!defined('ABSPATH')) {
  * 1.2 added unclaimed(), for kits that carry an ability another plugin may already register, and
  * kit.json `requires.any`, for kits that serve whichever of several plugins is active, and the
  * SessionLedger host interface, for kits whose restore types a session undo should check and redo.
+ * 1.3 added the SteppableJobs interface (advance() and resume()), and a step's `yield` result, for
+ * jobs a caller steps by polling instead of waiting for WP-Cron.
+ * 1.4 added require_cloud_request() and the host's `cloud-verified` extension point, for abilities
+ * that run only when the host's cloud service calls them.
  */
-const API_VERSION = '1.2';
+const API_VERSION = '1.4';
 
 require_once __DIR__ . '/host.php';
 require_once __DIR__ . '/ledger/post-partial.php';
@@ -115,6 +119,32 @@ function can_run(): bool
 {
     $host = host();
     return $host->is_enabled() && $host->can_manage();
+}
+
+/**
+ * Refuse a call that is not a verified request from the host's cloud service.
+ *
+ * For abilities sold as part of the cloud plan: inside GoBuildWP they run only for a GoBuildWP
+ * Cloud request whose signature the site verified, never for a local administrator, WP-CLI,
+ * WP-Cron or another MCP client. Standalone the host offers no `cloud-verified` point, so they
+ * are always refused. Call it from the permission callback after the capability checks, so the
+ * caller gets this explanation rather than a bare "not allowed".
+ *
+ * A background job such an ability already started is not checked again: its steps run through
+ * the job runner, not through the ability.
+ *
+ * Returns true or a WP_Error, never false; `bool` only because a `true` type needs PHP 8.2.
+ */
+function require_cloud_request(): bool|WP_Error
+{
+    if (host()->extension('cloud-verified') === true) {
+        return true;
+    }
+    return new WP_Error(
+        'gobuildwp_cloud_pro_required',
+        __('This security action runs from GoBuildWP Cloud Pro. Open your site in GoBuildWP Cloud to use it.', domain: 'wppilot'),
+        ['status' => 403],
+    );
 }
 
 /**

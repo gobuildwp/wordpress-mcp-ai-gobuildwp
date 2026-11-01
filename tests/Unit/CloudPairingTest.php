@@ -661,14 +661,19 @@ final class CloudPairingTest extends TestCase
         record_oauth_identity(1, ['mcp'], 'token-7', via: 'token');
         self::assertTrue(oauth_identity_may_use_route('/wppilot/v1/cloud/status', 'GET'));
         self::assertTrue(oauth_identity_may_use_route('/wppilot/v1/cloud/unlink', 'POST'));
+        self::assertTrue(oauth_identity_may_use_route('/gobuildwp/v1/cloud/inventory', 'GET'));
         self::assertFalse(oauth_identity_may_use_route('/wppilot/v1/cloudy', 'GET'));
+        self::assertFalse(oauth_identity_may_use_route('/gobuildwp/v1/cloudy', 'GET'));
+        self::assertFalse(oauth_identity_may_use_route('/gobuildwp/v1/settings', 'GET'));
         self::assertFalse(oauth_identity_may_use_route('/wppilot/v1/settings', 'GET'));
 
         record_oauth_identity(1, ['mcp'], 'client-abc');
         self::assertFalse(oauth_identity_may_use_route('/wppilot/v1/cloud/status', 'GET'));
+        self::assertFalse(oauth_identity_may_use_route('/gobuildwp/v1/cloud/inventory', 'GET'));
 
         reset_request_context();
         self::assertFalse(oauth_identity_may_use_route('/wppilot/v1/cloud/status', 'GET'));
+        self::assertFalse(oauth_identity_may_use_route('/gobuildwp/v1/cloud/inventory', 'GET'));
     }
 
     public function test_status_describes_the_site(): void
@@ -694,7 +699,10 @@ final class CloudPairingTest extends TestCase
                 'applied' => null,
                 'current' => ['safety_profile' => 'production', 'confirmation_mode' => 'argument', 'disabled' => [], 'require_confirmation' => []],
             ],
+            'inventory_hash' => gobuildwp_cloud_inventory_hash(),
+            'cloud_signing' => 'none',
         ], $response->data);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $response->data['inventory_hash']);
     }
 
     public function test_status_lists_pending_updates_from_the_transients_only(): void

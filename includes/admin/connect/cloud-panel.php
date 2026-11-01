@@ -116,7 +116,7 @@ function wppilot_render_cloud_panel(): void
         $link = wppilot_cloud_link();
         $pending = $link === null && $state !== '' ? wppilot_cloud_pending($state, get_current_user_id()) : null;
         if ($link !== null) {
-            wppilot_render_cloud_connected($link);
+            wppilot_render_cloud_connected($link, $result === 'connected');
         } elseif ($pending !== null && is_array($pending['policy'] ?? null)) {
             wppilot_render_cloud_confirm($state, $pending['policy']);
         } else {
@@ -207,12 +207,31 @@ function wppilot_render_cloud_confirm(string $state, array $policy): void
  * The connected state.
  *
  * @param array{site_id: string|int, token_id: int, account_hint: string, cloud_url: string, paired_at: string} $link
+ * @param bool $just_connected Right after pairing: points to the site's first scan in the Cloud.
  */
-function wppilot_render_cloud_connected(array $link): void
+function wppilot_render_cloud_connected(array $link, bool $just_connected = false): void
 {
     $paired = strtotime($link['paired_at']);
     $paired_label = $paired !== false ? wp_date(wppilot_get_datetime_format('Y-m-d H:i'), $paired) : false;
+    $base = wppilot_cloud_normalize_url($link['cloud_url']);
+    $site_url = $base !== '' && (string) $link['site_id'] !== ''
+        ? $base . '/sites/' . rawurlencode((string) $link['site_id']) . ($just_connected ? '?first=1' : '')
+        : '';
     ?>
+    <?php if ($site_url !== ''): ?>
+        <p>
+            <a class="<?php echo esc_attr($just_connected ? 'button button-primary' : 'button'); ?>" href="<?php echo esc_url($site_url); ?>" target="_blank" rel="noopener noreferrer">
+                <?php echo esc_html($just_connected ? __('See your first scan in GoBuildWP Cloud', domain: 'wppilot') : __('Open this site in GoBuildWP Cloud', domain: 'wppilot')); ?>
+            </a>
+            <?php if ($just_connected): ?>
+                <span class="description"><?php esc_html_e('Updates, backups and known vulnerabilities, checked in about a minute.', domain: 'wppilot'); ?></span>
+            <?php endif; ?>
+        </p>
+        <p class="description">
+            <?php esc_html_e('Cloud Pro adds Security Guardian fixes, Site Rescue, scheduled updates, bulk actions and alerts across all your sites.', domain: 'wppilot'); ?>
+            <a href="<?php echo esc_url($base . '/upgrade'); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('See Cloud Pro plans', domain: 'wppilot'); ?></a>
+        </p>
+    <?php endif; ?>
     <table class="form-table" role="presentation" style="margin-top:0;">
         <tr>
             <th scope="row"><?php esc_html_e('Account', domain: 'wppilot'); ?></th>

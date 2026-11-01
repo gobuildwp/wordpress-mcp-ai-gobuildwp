@@ -558,6 +558,9 @@ function wppilot_cloud_complete(string $state, int $user_id): array|WP_Error
         'paired_at' => gmdate('Y-m-d\TH:i:s\Z'),
     ];
     update_option(WPPILOT_CLOUD_LINK_OPTION, $link, autoload: false);
+    // A new link trusts the key this answer carries, not one a mismatch flagged on an earlier link.
+    delete_transient(GOBUILDWP_CLOUD_SIGNING_MISMATCH_TRANSIENT);
+    gobuildwp_cloud_signing_accept($response['body']['cloud_signing'] ?? null, $site_id);
     update_option(WPPILOT_CLOUD_SEEN_VERSION_OPTION, WPPILOT_VERSION, autoload: false);
     // Every pairing starts unmanaged, whatever an earlier one was allowed: the owner opts in to this account.
     delete_option(WPPILOT_CLOUD_MANAGE_OPTION);
@@ -583,7 +586,9 @@ function wppilot_cloud_revoke_token(int $token_id): void
  */
 function wppilot_cloud_clear_link(): void
 {
+    // The Cloud's signing key lives in the link, so it goes with it.
     delete_option(WPPILOT_CLOUD_LINK_OPTION);
+    delete_transient(GOBUILDWP_CLOUD_SIGNING_MISMATCH_TRANSIENT);
     wp_clear_scheduled_hook(WPPILOT_CLOUD_HEARTBEAT_HOOK);
     // A new pairing, perhaps to another account, starts unmanaged: the owner opts in again.
     // The settings the Cloud applied stay as they are; only its right to change them goes.

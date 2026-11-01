@@ -1,0 +1,31 @@
+{
+    "slug": "not-found-log",
+    "version": "1.0.0",
+    "namespace": "WPPilot\\Kits\\NotFoundLog",
+    "tier": "free",
+    "runtime": "^1.1",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "diagnostics": {
+            "label": "Diagnostics",
+            "description": "Read-only operational, performance, security, and integration diagnostics."
+        }
+    },
+    "abilities": [
+        {
+            "name": "wppilot/not-found-log",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": [
+        "not-found-log"
+    ],
+    "tests": [
+        "tests/Unit/Kits/NotFoundLog"
+    ]
+}

@@ -1,0 +1,29 @@
+{
+    "slug": "security-recovery",
+    "version": "1.0.0",
+    "namespace": "GoBuildWP\\Kits\\SecurityRecovery",
+    "tier": "free",
+    "runtime": "^1.3",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "security-recovery": {
+            "label": "Security recovery",
+            "description": "What changed on the site since a point in time, as counts only: WooCommerce orders and customers, new users, comments, edited posts and pages, and entries in WPForms, Gravity Forms and Fluent Forms. Used to judge what a restore to an earlier backup would lose. Read-only, and never returns the rows themselves."
+        }
+    },
+    "abilities": [
+        {
+            "name": "gobuildwp/commerce-activity-since",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": [],
+    "tests": [
+        "tests/Unit/Kits/SecurityRecovery"
+    ]
+}

@@ -23,7 +23,7 @@ declare(strict_types=1);
  * source therefore keeps GoBuildWP's literal names — the verifiers and the website count literal
  * `wp_register_ability('wppilot/…')` calls — and this script renames them on the way out:
  *
- *   PHP namespace   WPPilot\Kits\…                  → --namespace\…   (names, `use`, strings)
+ *   PHP namespace   WPPilot\Kits\…, GoBuildWP\Kits\… → --namespace\…   (names, `use`, strings)
  *   ability names   'wppilot/<name>'                 → '<prefix>/<name>'
  *   host abilities  wppilot/list-changes, rollback-change → <prefix>/kit-list-changes, kit-rollback-change
  *                   (the standalone host's equivalents; a skill pointing at GoBuildWP's own
@@ -163,13 +163,20 @@ final class Rewriter
             $host['wppilot/' . $from] = $this->prefix . '/' . $to;
         }
         return [
-            'namespace' => ['WPPilot\\Kits' => $this->namespace, 'WPPilot\\Tests\\Unit\\Kits' => $this->namespace . '\\Tests'],
-            'ability_prefix' => ['wppilot/' => $this->prefix . '/'],
+            'namespace' => [
+                'WPPilot\\Kits' => $this->namespace,
+                'GoBuildWP\\Kits' => $this->namespace,
+                'WPPilot\\Tests\\Unit\\Kits' => $this->namespace . '\\Tests',
+                'GoBuildWP\\Tests\\Unit\\Kits' => $this->namespace . '\\Tests',
+            ],
+            'ability_prefix' => ['wppilot/' => $this->prefix . '/', 'gobuildwp/' => $this->prefix . '/'],
             'host_abilities' => $host,
             'names' => [
                 'wppilot_kit_' => $this->prefix . '_kit_',
                 '_wppilot_kit_' => '_' . $this->prefix . '_kit_',
                 'wppilot-kit' => $this->prefix . '-kit',
+                'gobuildwp_kit_' => $this->prefix . '_kit_',
+                'gobuildwp-kit' => $this->prefix . '-kit',
             ],
             'text_domain' => ['wppilot' => $this->domain, 'wppilot-pro' => $this->domain],
             'categories' => $this->categories,
@@ -187,25 +194,25 @@ final class Rewriter
         $namespace = $this->namespace;
         if ($test) {
             $text = (string) preg_replace_callback(
-                '/WPPilot(\\\\{1,2})Tests\1Unit\1Kits(?![A-Za-z0-9_])/',
+                '/(?:WPPilot|GoBuildWP)(\\\\{1,2})Tests\1Unit\1Kits(?![A-Za-z0-9_])/',
                 static fn(array $m): string => str_replace('\\', $m[1], $namespace) . $m[1] . 'Tests',
                 $text,
             );
             $text = str_replace(['/includes/kits/_runtime/', '/includes/kits/'], ['/runtime/', '/kits/'], $text);
         }
         $text = (string) preg_replace_callback(
-            '/WPPilot(\\\\{1,2})Kits(?![A-Za-z0-9_])/',
+            '/(?:WPPilot|GoBuildWP)(\\\\{1,2})Kits(?![A-Za-z0-9_])/',
             static fn(array $m): string => str_replace('\\', $m[1], $namespace),
             $text,
         );
         $prefix = $this->prefix;
         $text = (string) preg_replace_callback(
-            '/(?<![A-Za-z0-9_.\/-])wppilot\/([a-z0-9][a-z0-9-]*)/',
+            '/(?<![A-Za-z0-9_.\/-])(?:wppilot|gobuildwp)\/([a-z0-9][a-z0-9-]*)/',
             static fn(array $m): string => $prefix . '/' . (HOST_EQUIVALENTS[$m[1]] ?? $m[1]),
             $text,
         );
-        $text = (string) preg_replace('/(?<![A-Za-z0-9])wppilot_kit_/', $prefix . '_kit_', $text);
-        return (string) preg_replace('/(?<![A-Za-z0-9_])wppilot-kit/', $prefix . '-kit', $text);
+        $text = (string) preg_replace('/(?<![A-Za-z0-9])(?:wppilot|gobuildwp)_kit_/', $prefix . '_kit_', $text);
+        return (string) preg_replace('/(?<![A-Za-z0-9_])(?:wppilot|gobuildwp)-kit/', $prefix . '-kit', $text);
     }
 
     public function php(string $source, bool $test): string
@@ -292,13 +299,13 @@ final class Rewriter
         $namespace = $this->namespace;
         if ($test) {
             $name = (string) preg_replace_callback(
-                '/^(\\\\?)WPPilot\\\\Tests\\\\Unit\\\\Kits(?=\\\\|$)/',
+                '/^(\\\\?)(?:WPPilot|GoBuildWP)\\\\Tests\\\\Unit\\\\Kits(?=\\\\|$)/',
                 static fn(array $m): string => $m[1] . $namespace . '\\Tests',
                 $name,
             );
         }
         return (string) preg_replace_callback(
-            '/^(\\\\?)WPPilot\\\\Kits(?=\\\\|$)/',
+            '/^(\\\\?)(?:WPPilot|GoBuildWP)\\\\Kits(?=\\\\|$)/',
             static fn(array $m): string => $m[1] . $namespace,
             $name,
         );

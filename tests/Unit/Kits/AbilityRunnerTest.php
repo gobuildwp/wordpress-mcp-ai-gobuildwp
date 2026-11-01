@@ -60,6 +60,35 @@ final class AbilityRunnerTest extends TestCase
     }
 
     /**
+     * `cloud-verified` reports the signing check's verdict for this request, cannot be filtered,
+     * and Runtime\require_cloud_request() refuses with the Cloud Pro error until it is true.
+     */
+    public function testRequireCloudRequestFollowsTheVerifiedSignature(): void
+    {
+        require_once dirname(__DIR__, 3) . '/includes/cloud/request-signing.php';
+        add_filter('wppilot_kit_extension', static fn(): bool => true);
+
+        try {
+            \gobuildwp_cloud_request_set_verified(false);
+            self::assertFalse((new WPPilotHost())->extension('cloud-verified'));
+            $refused = Runtime\require_cloud_request();
+            self::assertInstanceOf(WP_Error::class, $refused);
+            self::assertSame('gobuildwp_cloud_pro_required', $refused->get_error_code());
+            self::assertSame(
+                'This security action runs from GoBuildWP Cloud Pro. Open your site in GoBuildWP Cloud to use it.',
+                $refused->get_error_message(),
+            );
+            self::assertSame(403, $refused->get_error_data()['status']);
+
+            \gobuildwp_cloud_request_set_verified(true);
+            self::assertTrue((new WPPilotHost())->extension('cloud-verified'));
+            self::assertTrue(Runtime\require_cloud_request());
+        } finally {
+            \gobuildwp_cloud_request_set_verified(false);
+        }
+    }
+
+    /**
      * A destructive inner ability needs its own confirm: approving the outer call is not a human
      * approval of this one.
      */

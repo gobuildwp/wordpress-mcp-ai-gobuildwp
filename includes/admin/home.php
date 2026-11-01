@@ -82,6 +82,7 @@ function wppilot_render_home_page(): void
                 <?php wppilot_home_clients($clients, $setup_url); ?>
                 <?php wppilot_home_shortcuts(); ?>
                 <?php wppilot_home_pro(); ?>
+                <?php if (function_exists('wppilot_render_cloud_pro_card')) { wppilot_render_cloud_pro_card(); } ?>
             </div>
         </div>
     </div>

@@ -37,7 +37,7 @@ final class Kit_Test_Site
         WPPilot_Test_State::$capabilities = [];
         WPPilot_Test_State::$current_user_id = 0;
         foreach (array_keys(WPPilot_Test_State::$options) as $name) {
-            if (str_starts_with((string) $name, 'wppilot_kit_')) {
+            if (str_starts_with((string) $name, 'wppilot_kit_') || str_starts_with((string) $name, 'gobuildwp_kit_')) {
                 unset(WPPilot_Test_State::$options[$name]);
             }
         }
@@ -49,6 +49,12 @@ final class Kit_Test_Site
     {
         WPPilot_Test_State::$current_user_id = $user_id;
         WPPilot_Test_State::$capabilities = array_values($capabilities);
+    }
+
+    /** Make $user_id the current user, keeping the capabilities as_user() set (a job runner's owner switch). */
+    public static function switch_user(int $user_id): void
+    {
+        WPPilot_Test_State::$current_user_id = $user_id;
     }
 
     public static function register_post_types(string ...$types): void

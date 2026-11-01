@@ -1,0 +1,35 @@
+{
+    "slug": "security-2fa",
+    "version": "1.0.0",
+    "namespace": "GoBuildWP\\Kits\\SecurityTwoFactor",
+    "tier": "free",
+    "runtime": "^1.4",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "security-2fa": {
+            "label": "Two-factor login",
+            "description": "Two-factor login for wp-login.php: after the password, users enter a six-digit code from an authenticator app or a one-time backup code. Users set it up on their profile page; administrators can reset it for a user and can require it for chosen roles, with a few grace sign-ins first. Secrets and backup codes are never returned."
+        }
+    },
+    "abilities": [
+        {
+            "name": "gobuildwp/two-factor-status",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/two-factor-configure",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": [],
+    "tests": [
+        "tests/Unit/Kits/SecurityTwoFactor"
+    ]
+}

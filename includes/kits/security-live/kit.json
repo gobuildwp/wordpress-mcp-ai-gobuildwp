@@ -1,0 +1,47 @@
+{
+    "slug": "security-live",
+    "version": "1.0.0",
+    "namespace": "GoBuildWP\\Kits\\SecurityLive",
+    "tier": "free",
+    "runtime": "^1.4",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "security-live": {
+            "label": "Live security",
+            "description": "Watches the site between scans. Instant checks record PHP uploads, new administrators, changes to sensitive settings, file editor saves, new must-use plugins and drop-ins, and posts saved with injected scripts. A change watch looks at code files whose size or time changed and checks only those against WordPress.org checksums and the scan rules. The first pass learns the site and records nothing. Nothing is blocked or changed."
+        }
+    },
+    "abilities": [
+        {
+            "name": "gobuildwp/security-live-status",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/security-live-events",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/security-live-run-watch",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/security-live-configure",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": [],
+    "tests": [
+        "tests/Unit/Kits/SecurityLive"
+    ]
+}

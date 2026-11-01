@@ -1,7 +1,7 @@
 # GoBuildWP: WordPress MCP server and AI website builder for Claude, ChatGPT, Cursor and Codex
 
 <!-- current-releases:start -->
-Current releases: **GoBuildWP Free 1.18.8 / Pro 1.14.0**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.19.0 / Pro 1.14.1**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
 [![Version](https://img.shields.io/github/v/release/gobuildwp/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
@@ -20,6 +20,14 @@ Current releases: **GoBuildWP Free 1.18.8 / Pro 1.14.0**. Pro requires Free 1.18
 Website: <https://gobuildwp.com> · Docs: <https://gobuildwp.com/docs> · Client setup guides: <https://gobuildwp.com/wordpress-mcp> · Release notes and build demos on X: <https://x.com/gobuildwp>
 
 ---
+
+## What's new in 1.19.0
+
+- **Security scans with GoBuildWP Cloud.** File integrity against the official WordPress.org checksums, PHP hidden in uploads and images, and injected scripts and spam links in the database, scanned in the background in small steps.
+- **Fixes you can undo.** Quarantine or restore a file, clean an infected file or setting, demote an unexpected administrator, unpublish an injected post.
+- **Website protection.** Firewall, login lockouts, IP blocks, virtual patches for known plugin vulnerabilities, and two-factor sign-in for chosen roles. Security writes run only for a signed GoBuildWP Cloud request.
+- **Database cleanup and a 404 log.** Remove old spam, trashed comments and revisions with an undo, and see which paths return 404.
+- **AI change notifications in wp-admin.** A Dashboard widget, a notice and a menu count for changes AI agents made.
 
 ## What's new in 1.18.8
 
@@ -248,18 +256,18 @@ GoBuildWP serves both protocol revisions during the migration window: the statel
 | **Gutenberg and blocks** | **Free**: block content, staged block batches, block themes (global styles, templates, patterns, navigation), Block Notes | **Pro**: GenerateBlocks, Kadence Blocks, Spectra and Spectra One modules (each needs that plugin) | — |
 | **Other page builders** | — (Free refuses writes that a builder would ignore, instead of reporting a false success) | **Pro**: Bricks, Divi, Oxygen, Beaver Builder, Breakdance, WPBakery, Etch, Mosaic, Flatsome UX Builder (each needs that builder) | — |
 | **WooCommerce** | **Free**: 13 abilities: catalogue, store, order and customer reads, and one product's name, description, prices and stock with undo (WooCommerce 9.0+) | **Pro**: 50 more: create and delete products, full product editing, bulk prices and stock, orders, refunds, coupons, store settings, sales reports | — |
-| **SEO** | **Free**: one post's SEO title, description and robots in 7 SEO plugins; site content audit (broken links, orphans, missing descriptions) | **Pro**: focus keywords, canonicals, social previews, schema, redirects, bulk SEO, reviewable content-fix plans | **Cloud + Pro**: SEO report from Search Console, read through each site's Site Kit |
+| **SEO** | **Free**: one post's SEO title, description and robots in 7 SEO plugins; site content audit (broken links, orphans, missing descriptions) | **Pro**: focus keywords, canonicals, social previews, schema, redirects, bulk SEO, reviewable content-fix plans | **Cloud Pro**: SEO report from Search Console, read through each site's Site Kit |
 | **PageSpeed and performance** | **Free**: PageSpeed Insights (Lighthouse, Core Web Vitals) with no Google key; performance health checks | **Pro**: cache plugin abilities (purge, settings, warm, measure) and step-by-step PageSpeed fix plans that re-measure after each change | **Cloud**: answers the free PageSpeed check when Site Kit cannot, no account needed |
 | **Security checks** | **Free**: configuration-security checks; Wordfence and Solid Security status, scan findings and lockouts | **Pro**: hardening plan you confirm, applied with before-and-after checks and rollback; IP block and unblock; start scans | — |
-| **Updates** | **Free**: update plugins and themes with explicit confirmation (recorded, not reversible) | **Pro**: safe updates: backup check, before-and-after page checks, automatic rollback, undo for 7 days | **Cloud**: see pending updates (sites on Free 1.18.0+). **Cloud + Pro**: start updates from Cloud |
-| **Backups** | **Free**: status and history from UpdraftPlus, Duplicator, BackWPup and All-in-One WP Migration | **Pro**: start a backup (UpdraftPlus, BackWPup, All-in-One WP Migration; not Duplicator); optionally refuse risky calls until a fresh backup exists | **Cloud**: see backup status. **Cloud + Pro**: start backups from Cloud |
+| **Updates** | **Free**: update plugins and themes with explicit confirmation (recorded, not reversible) | **Pro**: safe updates: backup check, before-and-after page checks, automatic rollback, undo for 7 days | **Cloud**: see pending updates (sites on Free 1.18.0+). **Cloud Pro**: start updates from Cloud |
+| **Backups** | **Free**: status and history from UpdraftPlus, Duplicator, BackWPup and All-in-One WP Migration | **Pro**: start a backup (UpdraftPlus, BackWPup, All-in-One WP Migration; not Duplicator); optionally refuse risky calls until a fresh backup exists | **Cloud**: see backup status. **Cloud Pro**: start backups from Cloud |
 | **Forms** | **Free**: list forms and read redacted entries (WPForms, Contact Form 7, Gravity Forms, Forminator) | **Pro**: build and edit forms in eight form plugins, full entry values, exports | — |
 | **Custom fields, multilingual, LMS, events** | — | **Pro**: ACF, Meta Box, JetEngine, Pods, ACPT, WPML, Polylang, Weglot, Tutor LMS, The Events Calendar and more | — |
-| **Multi-site management** | **Free**: one site per direct connection; on a WordPress multisite network, run an ability on any network site | — | **Cloud**: up to 3 sites in one MCP link. **Cloud + Pro**: more sites by plan, bulk actions across sites with a dry run |
-| **Approvals and confirmations** | **Free**: safety profiles, per-ability switches, explicit confirmation for destructive calls, optional "a person approves" mode | **Pro**: approval queue that holds an agent's write until a person approves it, with email notification | **Cloud + Pro**: safety policies pushed to sites whose owner allows it |
+| **Multi-site management** | **Free**: one site per direct connection; on a WordPress multisite network, run an ability on any network site | — | **Cloud**: up to 3 sites in one MCP link. **Cloud Pro**: more sites by plan, bulk actions across sites with a dry run |
+| **Approvals and confirmations** | **Free**: safety profiles, per-ability switches, explicit confirmation for destructive calls, optional "a person approves" mode | **Pro**: approval queue that holds an agent's write until a person approves it, with email notification | **Cloud Pro**: safety policies pushed to sites whose owner allows it |
 | **Undo and change history** | **Free**: change ledger with agent attribution; undo one change, a batch, or a whole agent session, verified against the before-image | **Pro**: Pro writes recorded in the same ledger | **Cloud**: review and undo changes on each connected site |
 | **Agent memory** | Skills and site-wide instructions | **Pro**: persistent, approved memory across conversations | — |
-| **Licence and price** | GPL-2.0-or-later, no key, no account | Paid licence from [gobuildwp.com](https://gobuildwp.com/pricing) | Free account for up to 3 sites; more with a Pro licence |
+| **Licence and price** | GPL-2.0-or-later, no key, no account | Paid licence from [gobuildwp.com](https://gobuildwp.com/pricing) | Free account for up to 3 sites; Cloud Pro plans (Care, Agency, Agency Plus, Enterprise) for more sites, Security Guardian and Site Rescue |
 
 [Compare Free vs Pro](https://gobuildwp.com/free-vs-pro) · [Pricing](https://gobuildwp.com/pricing) · [All integrations](https://gobuildwp.com/integrations)
 
@@ -351,6 +359,7 @@ Where each builder keeps its layout, and what that means for an agent: [`docs/pa
 
 - **Free:** configuration-security checks in Diagnostics, and read-only status from Wordfence and Solid Security: firewall mode, scan schedule and results, open findings by severity, and lockouts. IP addresses are reduced to their network, other people's logins are masked, and licence keys and secrets are never read. The site issues log records the PHP fatal errors behind "There has been a critical error on this website", with the plugin or theme they came from.
 - **Pro:** `wppilot/security-harden-plan` proposes a hardening profile as current → proposed changes with reasons; `wppilot/security-apply-settings` applies it with confirmation, reads each setting back, runs checks before and after, and rolls everything back if a check regresses. Pro can also block and unblock IPs and start a scan.
+- **Cloud Pro:** [Security Guardian](#gobuildwp-cloud-every-site-behind-one-mcp-link) matches every connected site against a daily vulnerability feed, runs scheduled integrity and malware scans on sites with Free 1.19.0 or newer, and applies human-approved, undoable fixes, website protection and virtual patches.
 
 ## Safe updates and backups
 
@@ -370,17 +379,32 @@ The free plugin connects one site directly. **GoBuildWP Cloud** is an optional h
 
 **Each site stays the final authority.** Its safety profile, confirmations, change ledger and undo apply exactly as with a direct connection, and Cloud can never exceed the access the site granted. Disconnect from either side and the token is revoked.
 
-| | Free | With a GoBuildWP Pro licence |
-| --- | --- | --- |
-| Connected sites | 3 | Single Site plan: 3 · 10 Sites plan: 10 · 100 Sites plan: 100 · Unlimited Sites plan: see [pricing](https://gobuildwp.com/pricing) |
-| Single-site tools, change review and undo | Yes | Yes |
-| Pending updates and backup status (sites on Free 1.18.0+) | Yes | Yes |
-| Start updates and backups from Cloud | — | Yes |
-| Bulk actions across sites, with a dry run | — | Yes |
-| Safety policies pushed to sites | — | Yes |
-| SEO report (via each site's Site Kit) | — | Yes |
+Cloud has a free plan and four paid **Cloud Pro** plans, sold separately from the Pro plugin:
 
-Cloud is included with every Pro licence. [More about Cloud](https://gobuildwp.com/cloud) · [Sign up](https://app.gobuildwp.com/register)
+| | Free | Care | Agency | Agency Plus | Enterprise |
+| --- | --- | --- | --- | --- | --- |
+| Connected sites | 3 | 10 | 50 | 150 | 500 |
+| Team seats | 1 | 2 | 5 | 15 | Unlimited |
+| Single-site tools, change review and undo | Yes | Yes | Yes | Yes | Yes |
+| Pending updates and backup status (sites on Free 1.18.0+) | Yes | Yes | Yes | Yes | Yes |
+| Start and schedule updates and backups, bulk actions with a dry run, safety policies pushed to sites | — | Yes | Yes | Yes | Yes |
+| Site Rescue: diagnose and recover a broken site | — | Yes | Yes | Yes | Yes |
+| SEO report from Search Console (via each site's Site Kit) | — | Yes | Yes | Yes | Yes |
+| Security Guardian: vulnerability counts | Yes | Yes | Yes | Yes | Yes |
+| Security Guardian: findings, integrity and malware scans, protection, virtual patches, security tools over MCP (read) | — | Yes | Yes | Yes | Yes |
+| Scheduled security scans | — | Weekly | Daily | Daily | Hourly |
+| Fix actions | — | Quarantine a file | All | All | All |
+| Cloud browser checks, 1-minute uptime, Cloudflare edge firewall, AI cleanups | — | — | Yes (5 cleanups/month) | Yes (20/month) | Yes (100/month) |
+| Security writes over MCP, advanced SEO | — | — | Yes | Yes | Yes |
+| Alerts | Dashboard | + Email | + Slack, Teams, webhook | + Slack, Teams, webhook | + priority alerts |
+| Client reports | — | Basic | White label | White label, emailed automatically | Client portal |
+| Single sign-on (SSO) | — | — | — | — | Yes |
+
+Care has a 14-day trial. Pro plugin licences bought before Cloud Pro launched keep the Cloud features they had (updates, bulk actions, policies, SEO report) until their current term ends; lifetime licences keep them for 12 months. A Pro plugin licence never includes Security Guardian.
+
+**Security Guardian** matches every connected site's plugins, themes and WordPress version against a daily vulnerability feed, so one new advisory shows every affected site without a rescan. Sites on Free 1.19.0 or newer also run background file-integrity and malware scans, and every fix goes through a human approval in Cloud and can be undone. **Site Rescue** finds why a site is down or erroring and walks through a reversible recovery.
+
+[Plans and prices](https://gobuildwp.com/cloud) · [Sign up](https://app.gobuildwp.com/register)
 
 ## GoBuildWP Pro integrations
 

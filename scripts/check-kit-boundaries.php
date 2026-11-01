@@ -342,7 +342,7 @@ function check_portable(array $tokens, array $lines, string $where, ?string $own
             continue;
         }
 
-        if (in_array($id, [T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED], true) && preg_match('/^\\\\?WPPilot\\\\/i', $text) === 1 && !$in_allowed($text)) {
+        if (in_array($id, [T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED], true) && preg_match('/^\\\\?(WPPilot|GoBuildWP)\\\\/i', $text) === 1 && !$in_allowed($text)) {
             $report->add($where, $line, "{$text} is outside the kit and the runtime; the export will not have it");
         }
 
@@ -462,8 +462,9 @@ function check_manifest(array $manifest, string $slug, string $tier, string $whe
     if (is_string($manifest['version'] ?? null) && preg_match('/^\d+\.\d+\.\d+$/', $manifest['version']) !== 1) {
         $report->add($where, 0, 'kit.json version must be MAJOR.MINOR.PATCH');
     }
-    if (is_string($manifest['namespace'] ?? null) && preg_match('/^WPPilot\\\\Kits\\\\[A-Z][A-Za-z0-9]*$/', $manifest['namespace']) !== 1) {
-        $report->add($where, 0, 'kit.json namespace must be WPPilot\\Kits\\<Name>');
+    // Older kits keep WPPilot\Kits\<Name>; kits added since the rebrand use GoBuildWP\Kits\<Name>.
+    if (is_string($manifest['namespace'] ?? null) && preg_match('/^(WPPilot|GoBuildWP)\\\\Kits\\\\[A-Z][A-Za-z0-9]*$/', $manifest['namespace']) !== 1) {
+        $report->add($where, 0, 'kit.json namespace must be WPPilot\\Kits\\<Name> or GoBuildWP\\Kits\\<Name>');
     }
     if (($manifest['namespace'] ?? null) === 'WPPilot\\Kits\\Runtime') {
         $report->add($where, 0, 'kit.json namespace must not be the runtime\'s');
@@ -624,8 +625,8 @@ function check(string $free, string $pro): array
             $declared = [];
             foreach (is_array($manifest['abilities'] ?? null) ? $manifest['abilities'] : [] as $ability) {
                 $name = is_array($ability) ? (string) ($ability['name'] ?? '') : '';
-                if (preg_match(ABILITY_NAME_PATTERN, $name) !== 1 || !str_starts_with($name, 'wppilot/')) {
-                    $report->add($kit_where . '/kit.json', 0, "ability name '{$name}' must be wppilot/<name> within WordPress's " . ABILITY_NAME_PATTERN);
+                if (preg_match(ABILITY_NAME_PATTERN, $name) !== 1 || (!str_starts_with($name, 'wppilot/') && !str_starts_with($name, 'gobuildwp/'))) {
+                    $report->add($kit_where . '/kit.json', 0, "ability name '{$name}' must be wppilot/<name> or gobuildwp/<name> within WordPress's " . ABILITY_NAME_PATTERN);
                 }
                 $declared[$name] = true;
             }

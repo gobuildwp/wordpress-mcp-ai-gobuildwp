@@ -97,6 +97,12 @@ function wppilot_cloud_handle_signed_response(array|WP_Error $response, string|i
 
     if ($response['status'] === 404 && ($response['body']['error'] ?? null) === 'unknown_site') {
         wppilot_cloud_forget_link($site_id);
+        return;
+    }
+
+    // Sites paired before the Cloud signed its requests learn its key here.
+    if ($response['status'] === 200 && is_array($response['body'] ?? null)) {
+        gobuildwp_cloud_signing_accept($response['body']['cloud_signing'] ?? null, $site_id);
     }
 }
 

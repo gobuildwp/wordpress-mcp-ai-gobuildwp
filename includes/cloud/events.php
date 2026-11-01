@@ -29,7 +29,7 @@ if (!defined('ABSPATH')) {
 }
 
 /** Events the Cloud understands, most significant first. */
-const WPPILOT_CLOUD_EVENTS = ['backup_failed', 'backup_finished', 'update_finished', 'extension_changed', 'site_kit_changed'];
+const WPPILOT_CLOUD_EVENTS = ['security_live', 'backup_failed', 'backup_finished', 'update_finished', 'extension_changed', 'site_kit_changed'];
 
 /** Minimum seconds between two event pushes. */
 const WPPILOT_CLOUD_EVENT_DEBOUNCE = 30;
