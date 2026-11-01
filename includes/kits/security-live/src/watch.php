@@ -409,6 +409,20 @@ function finish_cycle(array &$cursor, int $now): void
 }
 
 /**
+ * Record a new must-use plugin or wp-content PHP file: high, unless a GoBuildWP plugin
+ * vouches for it. The `gobuildwp_live_known_file` filter returns a note when the file is
+ * one it wrote, byte for byte (GoBuildWP Pro's Site Rescue); that is logged as info.
+ */
+function record_added(string $abs, string $path, string $area, string $rule, ?int $now = null): bool
+{
+    $known = apply_filters('gobuildwp_live_known_file', null, $abs, $path);
+    if (is_string($known) && $known !== '') {
+        return record('info', 'file_added', $path, ['path' => $path, 'area' => $area, 'result' => 'added', 'rule_id' => $rule, 'note' => $known], $now) > 0;
+    }
+    return record('high', 'file_added', $path, ['path' => $path, 'area' => $area, 'result' => 'added', 'rule_id' => $rule], $now) > 0;
+}
+
+/**
  * Read one new or changed file with the scan's own checks and record what they find. Null when
  * the run's budget can't take the file (it is checked first thing next run).
  *
@@ -442,7 +456,7 @@ function check_file(string $abs, string $path, string $name, array $bucket, bool
     $count = 0;
     if ($is_new && SI\is_php_name($name) && ($area === 'mu_plugins' || $area === 'content')) {
         $rule = $area === 'mu_plugins' ? 'live.mu_plugin_added' : (in_array(strtolower($name), DROPINS, strict: true) ? 'live.dropin_added' : 'live.content_php_added');
-        $count += record('high', 'file_added', $path, ['path' => $path, 'area' => $area, 'result' => 'added', 'rule_id' => $rule]) > 0 ? 1 : 0;
+        $count += record_added($abs, $path, $area, $rule) ? 1 : 0;
     }
     foreach ($out->items as $item) {
         $count += record_item($item) ? 1 : 0;
@@ -579,7 +593,7 @@ function check_extras(int $now, bool $force = false): int
             [$path, $area] = explode('|', $new, 2);
             $name = basename($path);
             $rule = $area === 'mu_plugins' ? 'live.mu_plugin_added' : (in_array(strtolower($name), DROPINS, strict: true) ? 'live.dropin_added' : 'live.content_php_added');
-            $count += record('high', 'file_added', $path, ['path' => $path, 'area' => $area, 'result' => 'added', 'rule_id' => $rule], $now) > 0 ? 1 : 0;
+            $count += record_added(rtrim($area === 'content' ? $roots['content'] : $roots['mu_plugins'], '/\\') . '/' . $name,$path, $area, $rule, $now) ? 1 : 0;
         }
     }
     update_option('gobuildwp_kit_sl_extras', ['at' => $now, 'files' => array_slice($seen, 0, 500)], false);

@@ -123,6 +123,8 @@ function wppilot_cloud_rest_status(): WP_REST_Response|WP_Error
         // enforced once the Cloud's key is stored; unavailable where PHP cannot verify Ed25519.
         'cloud_signing' => gobuildwp_cloud_signing_status(),
     ];
+    // Still no key: the heartbeat queued here brings it within one more status check, not the hour.
+    gobuildwp_cloud_heartbeat_for_key();
     // The site-issues kit's summary: counts, newest fatal, newest few issues. Left out (not null)
     // when the kit is not loaded, which is what older plugins send too.
     if (function_exists('WPPilot\Kits\SiteIssues\cloud_summary')) {

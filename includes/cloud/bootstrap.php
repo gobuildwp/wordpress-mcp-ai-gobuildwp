@@ -54,6 +54,9 @@ const WPPILOT_CLOUD_SEEN_VERSION_OPTION = 'wppilot_cloud_seen_version';
 
 const WPPILOT_CLOUD_HEARTBEAT_HOOK = 'wppilot_cloud_heartbeat';
 
+/** When a status check last queued a heartbeat to fetch Cloud's signing key (heartbeat.php). */
+const GOBUILDWP_CLOUD_KEY_HEARTBEAT_OPTION = 'gobuildwp_cloud_key_heartbeat_at';
+
 /** Transient prefix for a pairing in flight, §1. */
 const WPPILOT_CLOUD_PAIR_TRANSIENT_PREFIX = 'wppilot_cloud_pair_';
 

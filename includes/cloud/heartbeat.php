@@ -186,3 +186,26 @@ function wppilot_cloud_on_upgrade(mixed $upgrader, mixed $options = []): void
         wp_schedule_single_event(time(), WPPILOT_CLOUD_HEARTBEAT_HOOK);
     }
 }
+
+/**
+ * The status check Cloud sends every few minutes: when the site still has no
+ * Cloud signing key, queue a heartbeat for the next request, whose answer carries it.
+ *
+ * Sites connected before Cloud had a key otherwise wait for the hourly heartbeat,
+ * and Cloud's security scans are refused until then. At most one every 15 minutes,
+ * so a Cloud without a key does not turn every status check into a heartbeat.
+ */
+function gobuildwp_cloud_heartbeat_for_key(?int $now = null): bool
+{
+    $now ??= time();
+    if (gobuildwp_cloud_signing_status() !== 'none' || wppilot_cloud_link() === null) {
+        return false;
+    }
+    $last = (int) get_option(GOBUILDWP_CLOUD_KEY_HEARTBEAT_OPTION, default_value: 0);
+    if ($now - $last < 900) {
+        return false;
+    }
+    update_option(GOBUILDWP_CLOUD_KEY_HEARTBEAT_OPTION, $now, autoload: false);
+
+    return wp_schedule_single_event($now, WPPILOT_CLOUD_HEARTBEAT_HOOK) !== false;
+}

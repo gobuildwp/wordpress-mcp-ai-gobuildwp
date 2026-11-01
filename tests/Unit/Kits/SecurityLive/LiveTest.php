@@ -263,6 +263,21 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             self::assertSame(['high file_added live.mu_plugin_added wp-content/mu-plugins/x.php'], self::events());
         }
 
+        public function test_a_file_a_gobuildwp_plugin_vouches_for_is_info(): void
+        {
+            add_filter('gobuildwp_live_known_file', static fn($known, string $abs, string $path) => str_ends_with($path, '/gobuildwp-rescue.php') && is_file($abs) ? 'ours' : $known, 10, 3);
+            $this->core();
+            $this->pass();
+            SL\check_extras(self::NOW, true);
+            $this->site->put('wp-content/mu-plugins/gobuildwp-rescue.php', "<?php // rescue\n");
+            $this->site->put('wp-content/mu-plugins/other.php', "<?php // other\n");
+            self::assertSame(2, SL\check_extras(self::NOW + 301, true));
+            self::assertSame([
+                'high file_added live.mu_plugin_added wp-content/mu-plugins/other.php',
+                'info file_added live.mu_plugin_added wp-content/mu-plugins/gobuildwp-rescue.php',
+            ], self::sorted(self::events()));
+        }
+
         public function test_watch_resumes_across_runs_with_a_small_budget(): void
         {
             $this->core();

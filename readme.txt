@@ -4,7 +4,7 @@ Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.19.0
+Stable tag: 1.19.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,10 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 
 == Changelog ==
 
+= 1.19.1 =
+* Fixed: a site connected to GoBuildWP Cloud before Cloud had a signing key could wait up to an hour for it, and security scans were refused until then. When Cloud's status check finds no key, the site now asks for it right away, at most once every 15 minutes.
+* Fixed: the live security watch reported GoBuildWP Pro's own Site Rescue file (wp-content/mu-plugins/gobuildwp-rescue.php) as a high-severity new code file. When Pro confirms the file is byte for byte its own copy, the event is recorded as information. Any other content at that path is still high.
+
 = 1.19.0 =
 * New: GoBuildWP Cloud security scans read the site through the plugin. A file integrity scan compares WordPress core, and plugins and themes from WordPress.org, with their official checksums, and looks for PHP where it does not belong: uploads, image files carrying code, folders beside WordPress and known backdoor patterns. A database scan looks for injected scripts and spam links in posts, comments, options, post meta and cron. Both run in the background in small steps and report progress, so a large site does not hit the PHP time limit.
 * New: fixes for what a scan finds, each with an undo: quarantine a file, restore a core, plugin or theme file from its official copy, clean an infected file or setting, demote an unexpected administrator and unpublish an injected post.
@@ -232,6 +236,9 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.19.1 =
+Security scans start working sooner on sites connected before GoBuildWP Cloud had a signing key, and Pro's own Site Rescue file is no longer reported as a high-severity alert.
 
 = 1.19.0 =
 Adds what GoBuildWP Cloud's Security Guardian needs on the site: integrity and database scans with undoable fixes, a firewall, login protection, virtual patches, live security events and two-factor sign-in. Update together with GoBuildWP Pro 1.14.0.
