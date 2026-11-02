@@ -21,9 +21,23 @@ if (!defined('ABSPATH')) {
  *
  * Patterns are written so that their own source does not contain the call they look for.
  *
- * @return array<string, array{0: string, 1: string}> rule id => [pattern, severity_hint]
+ * The built-in rules plus the rules of the last GoBuildWP Cloud rule pack this site accepted
+ * (pack.php). A built-in rule keeps its id when the pack names the same one. A pack rule carries
+ * two more fields: which files it reads (php, js or any) and whether it reads comments too.
+ *
+ * @return array<string, array{0: string, 1: string, 2?: string, 3?: bool}> rule id => [pattern, severity_hint, applies_to, raw]
  */
 function rules(): array
+{
+    return builtin_rules() + pack()['rules'];
+}
+
+/**
+ * The rules shipped with the plugin.
+ *
+ * @return array<string, array{0: string, 1: string}> rule id => [pattern, severity_hint]
+ */
+function builtin_rules(): array
 {
     $request = '\$_(?:POST|GET|REQUEST|COOKIE|SERVER|FILES)\b';
     $user_input = '\$_(?:POST|GET|REQUEST|COOKIE)\b';
@@ -100,8 +114,15 @@ function scan_text(string $text, bool $is_php = true): array
     $previous = ini_get('pcre.backtrack_limit');
     ini_set('pcre.backtrack_limit', '100000');
     try {
-        foreach (rules() as $rule => [$pattern, $severity]) {
-            if (preg_match($pattern, in_array($rule, RAW_RULES, strict: true) ? $text : $code, $match, PREG_OFFSET_CAPTURE) === 1) {
+        foreach (rules() as $rule => $entry) {
+            [$pattern, $severity] = $entry;
+            $applies = $entry[2] ?? 'any';
+            if (($applies === 'php' && !$is_php) || ($applies === 'js' && $is_php)) {
+                continue;
+            }
+            $raw = ($entry[3] ?? false) === true || in_array($rule, RAW_RULES, strict: true);
+            // A pack pattern that errors at match time (backtrack limit, bad UTF-8) answers false: no hit.
+            if (@preg_match($pattern, $raw ? $text : $code, $match, PREG_OFFSET_CAPTURE) === 1) {
                 $hits[] = ['rule_id' => $rule, 'line' => line_at($text, (int) $match[0][1]), 'severity_hint' => $severity];
             }
         }

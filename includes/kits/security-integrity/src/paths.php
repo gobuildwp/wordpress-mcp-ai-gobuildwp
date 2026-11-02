@@ -38,6 +38,17 @@ function denied_dir(string $name): bool
         || str_starts_with($name, 'backwpup-');
 }
 
+/**
+ * Of the denied folders, those a walk still enters for PHP files only: cache, upgrade and backup
+ * folders hold no code of their own, which is why attackers hide shells there.
+ */
+function php_only_dir(string $name): bool
+{
+    $name = strtolower($name);
+    return in_array($name, ['cache', 'upgrade', 'updraft', 'ai1wm-backups'], strict: true)
+        || str_starts_with($name, 'backwpup-');
+}
+
 /** Extensions a web server may hand to PHP. */
 function is_php_extension(string $extension): bool
 {
@@ -183,8 +194,10 @@ function clip(string $path): string
  * each regular file and returns false when the step's budget ran out before it could handle it;
  * the walk then stops on that entry and returns false. Returns true once the queue is empty.
  *
- * @param array{queue: list<array{0: string, 1: string}>, offset: int, flat?: list<string>} $walk
- *        `flat` lists dirs whose subfolders are not entered.
+ * @param array{queue: list<array{0: string, 1: string, 2?: bool}>, offset: int, flat?: list<string>, skip?: list<string>} $walk
+ *        `flat` lists dirs whose subfolders are not entered, `skip` dirs never entered (scanned by
+ *        another phase). A queued dir with a true third element, a php_only_dir() or one inside it,
+ *        hands $file only its PHP files.
  * @param callable(string, string, string): bool $file absolute path, result path, file name
  * @param callable(string, string): void $skipped result path, reason ('symlink' or 'denied')
  */
@@ -192,6 +205,7 @@ function walk(array &$walk, Budget $budget, callable $file, callable $skipped): 
 {
     while ($walk['queue'] !== []) {
         [$dir, $name] = $walk['queue'][0];
+        $php_only = (bool) ($walk['queue'][0][2] ?? false);
         $entries = @scandir($dir);
         if (!is_array($entries)) {
             $skipped($name, 'unreadable');
@@ -215,17 +229,17 @@ function walk(array &$walk, Budget $budget, callable $file, callable $skipped): 
                 continue;
             }
             if (is_dir($path)) {
-                if ($flat) {
+                if ($flat || in_array($path, $walk['skip'] ?? [], strict: true)) {
                     continue;
                 }
-                if (denied_dir($entry)) {
+                if (denied_dir($entry) && !php_only_dir($entry)) {
                     $skipped($result_name, 'denied');
                     continue;
                 }
-                $walk['queue'][] = [$path, $result_name];
+                $walk['queue'][] = [$path, $result_name, $php_only || php_only_dir($entry)];
                 continue;
             }
-            if (!is_file($path)) {
+            if (!is_file($path) || ($php_only && !is_php_name($entry) && !has_inner_php_extension($entry))) {
                 continue;
             }
             if (denied_file($entry)) {

@@ -245,6 +245,30 @@ final class DatabaseTest extends TestCase
         self::assertSame($whole, self::content_lines(self::scan('full')['items']));
     }
 
+    public function test_a_spam_run_held_for_moderation_is_reported_once_with_counts_only(): void
+    {
+        $this->seed_content();
+        $held = static fn(array $items): array => array_values(array_filter($items, static fn(array $i): bool => $i['rule_id'] === 'comments.held_spam'));
+        for ($id = 100; $id < 100 + SI\HELD_LINKED_MIN - 3; $id++) {
+            $this->db->commentRows[$id] = ['content' => 'Great post', 'url' => 'https://pinco-casino.example.shop/', 'approved' => '0'];
+        }
+        $this->db->commentRows[200] = ['content' => 'old https://x.example/', 'approved' => '0', 'days' => 30];
+        $this->db->commentRows[201] = ['content' => 'thanks, no link', 'approved' => '0'];
+        $this->db->commentRows[202] = ['content' => 'see www.x.example', 'approved' => 'spam'];
+        self::assertSame([], $held(self::scan('full')['items']), 'one short: comments 2 and 3 plus 22 recent, linked ones');
+
+        $this->db->commentRows[300] = ['content' => 'visit https://x.example/', 'approved' => '0'];
+        $items = $held(self::scan('full')['items']);
+        self::assertCount(1, $items);
+        self::assertSame('low', $items[0]['severity_hint']);
+        self::assertSame('posts', $items[0]['area']);
+        self::assertSame(['table' => 'wp_comments', 'id' => 'held', 'label' => 'comments waiting for moderation'], $items[0]['entity']);
+        $detail = (array) $items[0]['detail'];
+        self::assertSame(SI\HELD_LINKED_MIN, $detail['count']);
+        self::assertStringContainsString('(27 waiting in all)', $detail['reason']);
+        self::assertStringNotContainsString('pinco', (string) json_encode($items), 'no comment content leaves the site');
+    }
+
     public function test_link_classifier_needs_a_hidden_or_spam_link_to_another_site(): void
     {
         $host = 'example.test';
@@ -265,6 +289,8 @@ final class DatabaseTest extends TestCase
         self::assertSame([], SI\classify_links('<div style="display:none"><a href="https://other.example/">a</a>', $host), 'no closing tag: not judged');
         self::assertSame([['spam_link', 'medium']], SI\classify_links('<a href="https://other.example/p?x=payday-loans">rates</a>', $host));
         self::assertSame([], SI\classify_links('<a href="https://other.example/">Casinoroyale review</a>', $host), 'whole words only');
+        self::assertSame([['spam_link', 'medium']], SI\classify_links('<a href="https://pinco-official.example.shop/">Pinco aviator</a>', $host));
+        self::assertSame([['spam_link', 'medium']], SI\classify_links('<a href="https://x.example/">online betting bonus</a>', $host));
         self::assertSame([], SI\classify_links('<a href="https://example.test/porn-filter">porn filter</a>', $host), 'own-site links are not spam');
         self::assertSame([], SI\classify_content('<script>var a = "<a href=\'https://x.example\'>casino</a>";</script>', $host, links: false));
     }

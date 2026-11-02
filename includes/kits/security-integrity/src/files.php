@@ -23,7 +23,8 @@ if (!defined('ABSPATH')) {
  *
  * A deep scan (payload deep=true) also reads, with the rules, every PHP and JavaScript file that
  * no published checksum covers: premium and custom plugins and themes, must-use plugins, and the
- * drop-ins and other PHP files in the wp-content folder itself (its own 'content' phase).
+ * drop-ins and other PHP files in the wp-content folder and its other folders (its own 'content'
+ * phase). Cache, upgrade and backup folders are entered for their PHP files only.
  *
  * The cursor lives in $state['files'] and is saved after every step, so a step can stop on any
  * file and the next one continues from there.
@@ -263,6 +264,12 @@ function inspect(string $abs, string $path, string $area, bool $is_php, bool $bl
     $state['bytes_read'] = (int) ($state['bytes_read'] ?? 0) + strlen($text);
     $out->count('suspicious', 'checked');
     $hits = 0;
+    // A file Cloud's rule pack lists by its sha256 is known malware, whatever the rules say.
+    $bad = in_array(KNOWN_BAD_RULE, $except, strict: true) ? null : known_bad_file($abs, $text, $budget);
+    if ($bad !== null) {
+        $out->add(file_item($path, $area, 'suspicious', KNOWN_BAD_RULE, 'critical', $component, ['sha256' => $bad]));
+        $hits++;
+    }
     foreach (scan_text($text, $is_php) as $hit) {
         if ((!$blobs && in_array($hit['rule_id'], ['susp.base64_blob', 'susp.hex_blob'], strict: true))
             || ($serious && !in_array($hit['severity_hint'], ['high', 'critical'], strict: true))
@@ -874,9 +881,10 @@ function phase_mu_plugins(array &$fs, Budget $budget, Collector $out, array &$st
 }
 
 /**
- * The PHP files in the wp-content folder itself, deep scans only: drop-ins (object-cache.php,
- * advanced-cache.php, db.php and the like) and anything else put there. None has a published
- * checksum; they are read with the rules.
+ * The PHP files in the wp-content folder and its folders other than plugins, must-use plugins,
+ * themes and uploads, deep scans only: drop-ins (object-cache.php, advanced-cache.php, db.php and
+ * the like), languages, cache folders and anything else put there. None has a published checksum;
+ * they are read with the rules.
  *
  * @param array<string, mixed> $fs
  * @param array<string, mixed> $state
@@ -888,7 +896,14 @@ function phase_content(array &$fs, Budget $budget, Collector $out, array &$state
         return true;
     }
     $dir = normalize($content);
-    $walk = is_array($fs['walk']) ? $fs['walk'] : ['queue' => [[$dir, root_name($content, 'wp-content')]], 'offset' => 0, 'flat' => [$dir]];
+    // Every folder under wp-content except the ones other phases walk: a shell in wp-content/cache
+    // or in a folder an attacker made is read like a drop-in.
+    $roots = roots();
+    $skip = array_values(array_filter(array_map(
+        static fn(string $d): string => $d === '' ? '' : normalize($d),
+        [(string) $roots['plugins'], (string) $roots['mu_plugins'], themes_root(), uploads_root()],
+    )));
+    $walk = is_array($fs['walk']) ? $fs['walk'] : ['queue' => [[$dir, root_name($content, 'wp-content')]], 'offset' => 0, 'flat' => [], 'skip' => $skip];
     $done = walk(
         $walk,
         $budget,

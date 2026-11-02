@@ -74,6 +74,12 @@ final class EngineTest extends TestCase
             self::assertTrue(SI\denied_dir($name), $name);
         }
         self::assertFalse(SI\denied_dir('includes'));
+        foreach (['cache', 'Upgrade', 'updraft', 'ai1wm-backups', 'backwpup-abc'] as $name) {
+            self::assertTrue(SI\php_only_dir($name), $name);
+        }
+        foreach (['.git', 'node_modules', 'wppilot-kit-safe-updates', 'includes'] as $name) {
+            self::assertFalse(SI\php_only_dir($name), $name);
+        }
         foreach (['a.php', 'a.PHP5', 'a.phtml', 'a.phar', 'a.pht'] as $name) {
             self::assertTrue(SI\is_php_name($name), $name);
         }
@@ -179,6 +185,7 @@ final class EngineTest extends TestCase
         $this->site->put('robots.txt', 'User-agent: *');
         $this->site->put('wp-config.php', '<?php // secrets');
         $this->site->put('wp-includes/cache/x.php', self::evil('webshell'));
+        $this->site->put('wp-includes/node_modules/y.php', self::evil('webshell'));
         TestNet::$transients[SI\core_transient(SI\wp_version(), 'en_US')] = [
             'index.php' => md5($index),
             'wp-admin/index.php' => md5('<?php // original'),
@@ -197,9 +204,11 @@ final class EngineTest extends TestCase
             'core.mismatch wp-admin/index.php',
             'core.missing wp-includes/gone.php',
             'core.unexpected extra.php',
+            'core.unexpected wp-includes/cache/x.php',
             'core.unexpected wp-includes/evil.php',
             'susp.eval_base64 wp-includes/evil.php',
-        ], summary($run['items']));
+            'susp.webshell_marker wp-includes/cache/x.php',
+        ], summary($run['items']), 'a cache folder is entered for its PHP files; node_modules is not');
         $evil = array_values(array_filter($run['items'], static fn(array $i): bool => $i['rule_id'] === 'susp.eval_base64'))[0];
         self::assertSame('core', $evil['area'], 'a rule hit stays in the area of the file it is in');
         self::assertSame('suspicious', $evil['result']);

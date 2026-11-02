@@ -46,5 +46,20 @@ return [
             require_once __DIR__ . '/src/load.php';
             return step(KIND_DB, $payload, $state);
         });
+        // GoBuildWP Cloud's rule pack. The route answers only a request whose Cloud signature
+        // verified (src/pack.php accept_pack); the engine loads only when it is called.
+        add_action('rest_api_init', static function (): void {
+            if (!function_exists('register_rest_route') || !function_exists('wppilot_cloud_rest_permission')) {
+                return;
+            }
+            register_rest_route('gobuildwp/v1', '/cloud/rules', [
+                'methods' => 'POST',
+                'callback' => static function ($request) {
+                    require_once __DIR__ . '/src/load.php';
+                    return rest_rules($request);
+                },
+                'permission_callback' => 'wppilot_cloud_rest_permission',
+            ]);
+        });
     },
 ];

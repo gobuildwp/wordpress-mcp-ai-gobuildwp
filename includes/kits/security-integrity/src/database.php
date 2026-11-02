@@ -662,8 +662,8 @@ function classify_content(string $content, string $site_host, bool $blobs = fals
  * Words that mark a link as paid spam when they appear, as whole words, in its text or address.
  * SPAM_LINK_WORDS are the same words as plain substrings, for the database pre-filter.
  */
-const SPAM_LINK_PATTERN = '/\b(?:viagra|cialis|levitra|kamagra|casinos?|payday[\s_-]*loans?|porn(?:o|hub)?|replicas?|essay[\s_-]*writ(?:ing|ers?)|xanax|tramadol|phentermine)\b/i';
-const SPAM_LINK_WORDS = ['viagra', 'cialis', 'levitra', 'kamagra', 'casino', 'payday', 'porn', 'replica', 'essay', 'xanax', 'tramadol', 'phentermine'];
+const SPAM_LINK_PATTERN = '/\b(?:viagra|cialis|levitra|kamagra|casinos?|gambling|betting|sportsbook|roulette|mostbet|1win|pinco|payday[\s_-]*loans?|porn(?:o|hub)?|replicas?|essay[\s_-]*writ(?:ing|ers?)|xanax|tramadol|phentermine)\b/i';
+const SPAM_LINK_WORDS = ['viagra', 'cialis', 'levitra', 'kamagra', 'casino', 'gambling', 'betting', 'sportsbook', 'roulette', 'mostbet', '1win', 'pinco', 'payday', 'porn', 'replica', 'essay', 'xanax', 'tramadol', 'phentermine'];
 
 /** Inline style fragments that may hide an element, for the database pre-filter; HIDDEN_STYLE decides. */
 const HIDDEN_STYLE_HINTS = [
@@ -907,7 +907,7 @@ function area_posts(array &$db, Budget $budget, Collector $out, array &$state): 
 /**
  * Approved and pending comments, judged like post content. Spam and trashed comments are never
  * shown, so they are not read; a spam link in a pending comment is the moderation queue doing
- * its job, so only approved comments are reported for one.
+ * its job, so only approved comments are reported for one (held_comments() reports a spam run).
  *
  * @param array<string, mixed> $db
  * @param array<string, mixed> $state
@@ -954,10 +954,50 @@ function area_comments(array &$db, Budget $budget, Collector $out, array &$state
         }
         $db['cursor'] = count($rows) >= $budget->limits['rows'] ? $last : $to;
     }
+    held_comments($out);
     $db['sub'] = 'postmeta';
     $db['cursor'] = 0;
     $db['max'] = (int) $wpdb->get_var("SELECT MAX(meta_id) FROM {$wpdb->postmeta}");
     return true;
+}
+
+/** Held comments with links in the last HELD_WINDOW_DAYS that mark a spam run reaching the site. */
+const HELD_WINDOW_DAYS = 7;
+const HELD_LINKED_MIN = 25;
+
+/**
+ * A spam run held for moderation. One held spam comment is the queue doing its job, so the
+ * per-comment check skips them; dozens a week with links means bots have found the site, the
+ * queue fills faster than anyone clears it, and one wrong click publishes them. Counts only, no
+ * content: a link in the text or in the author's website field is what this spam carries.
+ */
+function held_comments(Collector $out): void
+{
+    global $wpdb;
+    $since = gmdate('Y-m-d H:i:s', time() - HELD_WINDOW_DAYS * 86400);
+    $linked = (int) $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$wpdb->comments}
+         WHERE comment_approved = %s AND comment_date_gmt >= %s
+           AND (comment_content LIKE %s OR comment_content LIKE %s OR comment_author_url <> %s)",
+        '0',
+        $since,
+        '%' . $wpdb->esc_like('http') . '%',
+        '%' . $wpdb->esc_like('www.') . '%',
+        '',
+    ));
+    if ($linked < HELD_LINKED_MIN) {
+        return;
+    }
+    $waiting = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_approved = %s", '0'));
+    $out->add(db_item('posts', 'comments.held_spam', 'low', $wpdb->comments, 'held', 'comments waiting for moderation', [
+        'count' => $linked,
+        'reason' => sprintf(
+            '%d comments with links arrived for moderation in the last %d days (%d waiting in all): spam is reaching the site. A spam filter would stop it before the queue.',
+            $linked,
+            HELD_WINDOW_DAYS,
+            max($waiting, $linked),
+        ),
+    ]));
 }
 
 /**

@@ -4,7 +4,7 @@ Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.19.1
+Stable tag: 1.19.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,11 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 
 == Changelog ==
 
+= 1.19.2 =
+* New: GoBuildWP Cloud can send the site extra security scan rules and the fingerprints of confirmed malware files. The site accepts them only from a request signed by GoBuildWP Cloud, checks every rule and drops any it cannot use; the built-in rules always run. A file that matches a known malware fingerprint is reported as critical.
+* Changed: the file scan now reads PHP files in cache, upgrade and backup folders (UpdraftPlus, All-in-One WP Migration, BackWPup), which it used to skip, and the deep scan checks every folder in wp-content, not just the top level.
+* Changed: the database scan reports a run of linked comments held for moderation (25 or more in the last 7 days) as comment spam. Counts only; the comments are not returned.
+
 = 1.19.1 =
 * Fixed: a site connected to GoBuildWP Cloud before Cloud had a signing key could wait up to an hour for it, and security scans were refused until then. When Cloud's status check finds no key, the site now asks for it right away, at most once every 15 minutes.
 * Fixed: the live security watch reported GoBuildWP Pro's own Site Rescue file (wp-content/mu-plugins/gobuildwp-rescue.php) as a high-severity new code file. When Pro confirms the file is byte for byte its own copy, the event is recorded as information. Any other content at that path is still high.
@@ -236,6 +241,9 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.19.2 =
+Security scans read PHP in cache and backup folders, catch comment spam waiting for moderation, and can use rules and malware fingerprints sent by GoBuildWP Cloud.
 
 = 1.19.1 =
 Security scans start working sooner on sites connected before GoBuildWP Cloud had a signing key, and Pro's own Site Rescue file is no longer reported as a high-severity alert.

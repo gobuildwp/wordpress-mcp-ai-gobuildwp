@@ -619,6 +619,8 @@ function status(): array
         'pass_progress' => $buckets > 0 ? round(min(1, (int) ($cursor['pos'] ?? 0) / $buckets), 3) : 0.0,
         'too_many_files' => array_values(array_map('strval', (array) ($cursor['last_truncated'] ?? []))),
         'last_event_id' => last_event_id(),
+        // The Cloud rule pack this site holds ('' for none), so the Cloud sends a newer one.
+        'rule_pack_version' => SI\pack_version(),
     ];
 }
 

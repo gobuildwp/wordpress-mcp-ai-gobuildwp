@@ -17,6 +17,7 @@ if (!defined('ABSPATH')) {
 require_once __DIR__ . '/kinds.php';
 require_once __DIR__ . '/common.php';
 require_once __DIR__ . '/paths.php';
+require_once __DIR__ . '/pack.php';
 require_once __DIR__ . '/rules.php';
 require_once __DIR__ . '/checksums.php';
 require_once __DIR__ . '/files.php';

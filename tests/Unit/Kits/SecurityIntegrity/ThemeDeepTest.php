@@ -288,6 +288,32 @@ final class ThemeDeepTest extends TestCase
         self::assertSame(9, $coverage['checked']);
     }
 
+    public function test_deep_scan_reads_php_in_wp_content_folders_and_cache_folders(): void
+    {
+        $this->site->put('wp-content/cache/object/x1.php', self::evil('shell_request'));
+        $this->site->put('wp-content/cache/page/index.html', self::evil('shell_request'));
+        $this->site->put('wp-content/hidden-dir/a.php', self::evil('shell_request'));
+        $this->site->put('wp-content/upgrade/tmp/b.php.jpg', self::evil('shell_request'));
+        $this->site->put('wp-content/languages/plugins/x-en_US.l10n.php', "<?php
+return ['messages' => []];
+");
+        $this->site->put('wp-content/.git/hooks/c.php', self::evil('shell_request'));
+        $this->site->put('wp-content/node_modules/pkg/d.php', self::evil('shell_request'));
+        $this->site->put('wp-content/plugins/premium/premium.php', '<?php /* Plugin Name: Premium */');
+        $this->site->put('wp-content/plugins/premium/cache/e.php', self::evil('shell_request'));
+        $this->site->put('wp-content/plugins/premium/cache/notes.txt', self::evil('shell_request'));
+        TestNet::$plugins = ['premium/premium.php' => ['Version' => '3.0']];
+
+        $deep = run_files(['scope' => 'all', 'deep' => true]);
+        $hits = array_values(array_filter(summary($deep['items']), static fn(string $s): bool => str_starts_with($s, 'susp.')));
+        self::assertSame([
+            'susp.shell_request wp-content/cache/object/x1.php',
+            'susp.shell_request wp-content/hidden-dir/a.php',
+            'susp.shell_request wp-content/plugins/premium/cache/e.php',
+            'susp.shell_request wp-content/upgrade/tmp/b.php.jpg',
+        ], $hits, 'PHP in cache, upgrade and unknown folders is read once; html, text, .git and node_modules are not');
+    }
+
     public function test_deep_scan_needs_plugins_or_themes_in_scope(): void
     {
         $run = run_files(['scope' => 'uploads', 'deep' => true]);

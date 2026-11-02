@@ -415,6 +415,18 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityIntegrity {
                 }
                 return (string) $sum;
             }
+            if (str_contains($query, "SELECT COUNT(*) FROM wp_comments")) {
+                // Rows may carry 'days' (age) and 'url' (author website); held spam is linked and recent.
+                $since = preg_match("/comment_date_gmt >= '([^']+)'/", $query, $match) === 1 ? strtotime($match[1] . ' UTC') : null;
+                $count = 0;
+                foreach ($this->commentRows as $row) {
+                    $linked = str_contains($row['content'], 'http') || str_contains($row['content'], 'www.') || ($row['url'] ?? '') !== '';
+                    if ($row['approved'] === '0' && ($since === null || (time() - ($row['days'] ?? 0) * 86400 >= $since && $linked))) {
+                        $count++;
+                    }
+                }
+                return (string) $count;
+            }
             if (str_contains($query, 'MAX(comment_ID)')) {
                 return (string) ($this->commentRows === [] ? 0 : max(array_keys($this->commentRows)));
             }
@@ -684,6 +696,8 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityIntegrity {
             delete_option($name);
         }
         unset($GLOBALS['wp_filter']['gobuildwp_kit_security_integrity_budgets']);
+        delete_option(SI\PACK_OPTION);
+        SI\pack_reset();
         SI\TestNet::reset();
     }
 
