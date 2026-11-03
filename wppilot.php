@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Plugin Name: GoBuildWP
  * Plugin URI: https://gobuildwp.com
  * Description: WordPress MCP server with free Elementor MCP editing. Connects Claude, Codex, Cursor and other AI clients to typed WordPress abilities over MCP, with OAuth 2.1, safety profiles, change evidence and rollback.
- * Version: 1.19.2
+ * Version: 1.19.3
  * Requires at least: 6.9
  * Requires PHP: 8.0
  * Update URI: https://gobuildwp.com/wppilot/
@@ -121,6 +121,7 @@ require_once __DIR__ . '/includes/foreign-gate.php';
 require_once __DIR__ . '/includes/change-log.php';
 require_once __DIR__ . '/includes/change-log-table.php';
 require_once __DIR__ . '/includes/change-sessions.php';
+require_once __DIR__ . '/includes/restore-points.php';
 require_once __DIR__ . '/includes/clients.php';
 require_once __DIR__ . '/includes/connections.php';
 require_once __DIR__ . '/includes/tokens.php';
@@ -237,6 +238,7 @@ add_filter(
 add_action('wp_before_execute_ability', callback: 'wppilot_change_before', priority: 10, accepted_args: 3);
 add_action('wp_after_execute_ability', callback: 'wppilot_change_after', priority: 10, accepted_args: 4);
 wppilot_changes_register_hooks();
+wppilot_restore_points_register_hooks();
 
 \WPPilot\Context\boot_context_admin();
 wppilot_register_wordpress_compatibility_notice();

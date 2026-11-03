@@ -176,6 +176,12 @@ function wppilot_deactivate_current_site(): void
     // Re-created on the next admin request after reactivation while the site is still paired.
     wp_clear_scheduled_hook(WPPILOT_CLOUD_HEARTBEAT_HOOK);
     wp_clear_scheduled_hook(WPPILOT_CHANGES_PRUNE_HOOK);
+    // Expired restore points are copies of site files under uploads; a deactivated plugin no longer
+    // runs the hourly cleanup, so drop them now. Unexpired ones stay for undo after reactivation.
+    wp_clear_scheduled_hook('gobuildwp_restore_points_cleanup');
+    if (function_exists('wppilot_restore_points_cleanup')) {
+        wppilot_restore_points_cleanup();
+    }
 
     // Report the deactivation before dropping the schedule, then drop it.
     // Without the report an abandoned install reads as active until it falls

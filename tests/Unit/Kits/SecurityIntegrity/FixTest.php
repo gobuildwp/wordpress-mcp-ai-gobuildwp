@@ -439,6 +439,18 @@ final class FixTest extends TestCase
         self::assertSame(['wp_cache_core', $raw, 'yes'], [$this->db->optionRows[0]['name'], $this->db->optionRows[0]['value'], $this->db->optionRows[0]['autoload']]);
     }
 
+    public function test_clean_option_refuses_a_payload_mixed_into_real_settings(): void
+    {
+        $raw = serialize(['api_key' => 'k-123', 'footer' => 'ev' . 'al(base64_decode("ZWNobyAxOw=="));']);
+        $this->db->option('theme_mods_shop', $raw, 'yes');
+
+        $result = self::apply([['action' => 'clean_option', 'target' => 'theme_mods_shop']]);
+
+        self::assertSame(['gobuildwp_security_fix_cannot_isolate'], self::codes($result), json_encode($result) ?: '');
+        self::assertSame($raw, $this->db->optionRows[0]['value']);
+        self::assertSame([], $this->kept());
+    }
+
     public function test_clean_option_refusals(): void
     {
         $this->db->option('blogdescription', 'Just another site');

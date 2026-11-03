@@ -1,3 +1,14 @@
+v1.19.3
+* New: gobuildwp/wporg-status-check tells you which installed plugins and themes WordPress.org has closed, with the date and the reason it gives (for example a security issue), and which have had no release in over two years. WordPress keeps showing a closed plugin as up to date, but it gets no more fixes, so a hole found later is never patched. Components WordPress.org cannot vouch for (premium, custom, or answering with another name) are reported as unknown rather than fine. Works without GoBuildWP Cloud.
+* New: website protection takes a trusted_proxies setting, so a site behind a load balancer or reverse proxy can name it from GoBuildWP Cloud instead of editing wp-config.php. Without it every visitor shared the proxy's address and one block locked them all out. Ranges wider than /8 (IPv4) or /32 (IPv6) are refused. The protection status now shows the address the guard sees for the current request, the trusted proxies in effect, and whether protection is switched off.
+* New: define GOBUILDWP_DISABLE_PROTECTION as true in wp-config.php to switch all website protection off if it ever locks you out.
+* New: an update GoBuildWP Pro held for review (the plugin changed owner, or the new code looks risky) shows in the site issues report and in GoBuildWP Cloud.
+* Fixed: the X-Forwarded-For and CF-Connecting-IP headers were believed from any visitor, so an attacker could pick the address the firewall and login lockout saw, and get someone else blocked. CF-Connecting-IP is now believed only from Cloudflare's own addresses, and X-Forwarded-For only from proxies you name.
+* Fixed: an IP block could cover a whole network or the address you are signed in from. Blocks wider than /16 (IPv4) or /48 (IPv6) and blocks covering your own address are refused.
+* Fixed: restore points stored copied files, including wp-config.php, as a readable zip in the uploads folder. wp-config.php is no longer copied, the zip is encrypted with a key derived from the site's salts, and an expired restore point's files are deleted.
+* Fixed: undoing a change overwrote edits made after it without warning. Undo now refuses when the item changed since, unless you ask it to force.
+* Fixed: cleaning an infected setting could delete a whole option when only part of it was malicious. The option is removed only when the injected code is all it holds.
+
 v1.19.2
 * New: GoBuildWP Cloud can send the site extra security scan rules and the fingerprints of confirmed malware files. The site accepts them only from a request signed by GoBuildWP Cloud, checks every rule and drops any it cannot use; the built-in rules always run. A file that matches a known malware fingerprint is reported as critical.
 * Changed: the file scan now reads PHP files in cache, upgrade and backup folders (UpdraftPlus, All-in-One WP Migration, BackWPup), which it used to skip, and the deep scan checks every folder in wp-content, not just the top level.

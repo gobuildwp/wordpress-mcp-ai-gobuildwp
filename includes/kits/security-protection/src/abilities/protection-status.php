@@ -33,6 +33,9 @@ wp_register_ability('gobuildwp/protection-status', [
             'settings' => ['type' => 'object'],
             'counters' => ['type' => 'object'],
             'client_ip_source' => ['type' => 'string'],
+            'client_ip' => ['type' => 'string'],
+            'trusted_proxies' => ['type' => 'array', 'items' => ['type' => 'string']],
+            'protection_disabled' => ['type' => 'boolean'],
             'proxy_headers_seen' => ['type' => 'array', 'items' => ['type' => 'string']],
             'recent' => ['type' => 'array', 'items' => ['type' => 'object']],
             'virtual_patches' => [

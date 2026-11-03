@@ -130,7 +130,7 @@ register_core_ability('wppilot/deactivate-plugin', [
 register_core_ability('wppilot/update-plugin', [
     'label' => __('Update Plugin', domain: 'wppilot'),
     'description' => __(
-        'Updates one installed plugin to the latest version its update source offers, refreshing the update check first. Replaces code on the server and can introduce breaking changes, so it requires explicit confirmation. Returns the version before and after; when no update is available it reports that without touching the files. Not reversible through the change ledger — the previous version is not retained.',
+        'Updates one installed plugin to the latest version its update source offers, refreshing the update check first. Replaces code on the server and can introduce breaking changes, so it requires explicit confirmation. Returns the version before and after; when no update is available it reports that without touching the files. Before it runs, the previous version is saved as a restore point, so the change can be undone from the change ledger until the restore point expires (one hour, or the Cloud plan\'s undo window); after that, reinstall the earlier version.',
         domain: 'wppilot',
     ),
     'category' => 'wordpress',
@@ -149,7 +149,7 @@ register_core_ability('wppilot/update-plugin', [
 register_core_ability('wppilot/update-theme', [
     'label' => __('Update Theme', domain: 'wppilot'),
     'description' => __(
-        'Updates one installed theme to the latest version its update source offers, refreshing the update check first. Overwrites theme files — customizations made directly to a non-child theme are lost — so it requires explicit confirmation. Returns the version before and after. Not reversible through the change ledger.',
+        'Updates one installed theme to the latest version its update source offers, refreshing the update check first. Overwrites theme files — customizations made directly to a non-child theme are lost — so it requires explicit confirmation. Returns the version before and after. Before it runs, the previous theme files are saved as a restore point, so the change can be undone from the change ledger until the restore point expires (one hour, or the Cloud plan\'s undo window).',
         domain: 'wppilot',
     ),
     'category' => 'wordpress',
@@ -187,7 +187,7 @@ register_core_ability('wppilot/switch-theme', [
 register_core_ability('wppilot/install-plugin', [
     'label' => __('Install Plugin', domain: 'wppilot'),
     'description' => __(
-        'Downloads and installs a plugin from the WordPress.org directory by slug, or from an explicit HTTPS ZIP URL. Writes executable code to the server, so it is a critical operation: blocked by Production Safe and Read Only, available in Developer Full Access with explicit confirmation. The plugin is left INACTIVE — review it, then call wppilot/activate-plugin separately. Resolve the slug with wppilot/search-extensions first. Not reversible through the change ledger; remove it with wppilot/delete-plugin.',
+        'Downloads and installs a plugin from the WordPress.org directory by slug, or from an explicit HTTPS ZIP URL. Writes executable code to the server, so it is a critical operation: blocked by Production Safe and Read Only, available in Developer Full Access with explicit confirmation. The plugin is left INACTIVE — review it, then call wppilot/activate-plugin separately. Resolve the slug with wppilot/search-extensions first. Undoing it from the change ledger removes the plugin folder while its restore point lasts; after that, remove it with wppilot/delete-plugin.',
         domain: 'wppilot',
     ),
     'category' => 'wordpress',
@@ -208,7 +208,7 @@ register_core_ability('wppilot/install-plugin', [
 register_core_ability('wppilot/install-theme', [
     'label' => __('Install Theme', domain: 'wppilot'),
     'description' => __(
-        'Downloads and installs a theme from the WordPress.org directory by slug, or from an explicit HTTPS ZIP URL. Writes code to the server, so it is a critical operation: blocked by Production Safe and Read Only, available in Developer Full Access with explicit confirmation. The theme is installed but NOT activated — call wppilot/switch-theme separately once the site is ready for it. Not reversible through the change ledger; remove it with wppilot/delete-theme.',
+        'Downloads and installs a theme from the WordPress.org directory by slug, or from an explicit HTTPS ZIP URL. Writes code to the server, so it is a critical operation: blocked by Production Safe and Read Only, available in Developer Full Access with explicit confirmation. The theme is installed but NOT activated — call wppilot/switch-theme separately once the site is ready for it. Undoing it from the change ledger removes the theme folder while its restore point lasts; after that, remove it with wppilot/delete-theme.',
         domain: 'wppilot',
     ),
     'category' => 'wordpress',

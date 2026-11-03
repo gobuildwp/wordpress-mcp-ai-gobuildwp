@@ -36,6 +36,7 @@ return [
         __DIR__ . '/src/abilities/security-fix-apply.php',
         __DIR__ . '/src/abilities/security-fix-undo.php',
         __DIR__ . '/src/abilities/security-fix-list.php',
+        __DIR__ . '/src/abilities/wporg-status-check.php',
     ],
     'boot' => static function (Host $host): void {
         $host->jobs()->register(KIND_FILES, static function (array $payload, array $state): array {

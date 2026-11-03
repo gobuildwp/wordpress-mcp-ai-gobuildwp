@@ -34,6 +34,12 @@ function wppilot_cloud_register_routes(): void
         'permission_callback' => 'wppilot_cloud_rest_permission',
     ]);
 
+    register_rest_route('wppilot/v1', '/cloud/retention', [
+        'methods' => 'POST',
+        'callback' => 'gobuildwp_cloud_rest_retention',
+        'permission_callback' => 'wppilot_cloud_rest_permission',
+    ]);
+
     register_rest_route('wppilot/v1', '/cloud/unlink', [
         'methods' => 'POST',
         'callback' => 'wppilot_cloud_rest_unlink',
@@ -122,6 +128,8 @@ function wppilot_cloud_rest_status(): WP_REST_Response|WP_Error
         'inventory_hash' => gobuildwp_cloud_inventory_hash(),
         // enforced once the Cloud's key is stored; unavailable where PHP cannot verify Ed25519.
         'cloud_signing' => gobuildwp_cloud_signing_status(),
+        // Hours a new restore point is kept; the Cloud sends cloud/retention when its plan differs.
+        'snapshot_hours' => function_exists('wppilot_restore_point_hours') ? wppilot_restore_point_hours() : 0,
     ];
     // Still no key: the heartbeat queued here brings it within one more status check, not the hour.
     gobuildwp_cloud_heartbeat_for_key();
@@ -132,6 +140,24 @@ function wppilot_cloud_rest_status(): WP_REST_Response|WP_Error
     }
 
     return new WP_REST_Response($status, 200);
+}
+
+/**
+ * POST /wppilot/v1/cloud/retention. Body: {"hours": 1-168}, the undo window the site's Cloud plan
+ * pays for. Signed like every Cloud write. Restore points already taken keep their expiry.
+ */
+function gobuildwp_cloud_rest_retention(WP_REST_Request $request): WP_REST_Response|WP_Error
+{
+    if (wppilot_cloud_link() === null) {
+        return new WP_Error('wppilot_cloud_forbidden', __('This site is not connected to GoBuildWP Cloud.', domain: 'wppilot'), ['status' => 403]);
+    }
+    $body = $request->get_json_params();
+    $hours = is_array($body) ? ($body['hours'] ?? null) : null;
+    if (!is_int($hours) || !function_exists('wppilot_restore_point_set_hours')) {
+        return new WP_Error('wppilot_cloud_retention_invalid', 'Send {"hours": <whole number of hours>}.', ['status' => 400]);
+    }
+
+    return new WP_REST_Response(['snapshot_hours' => wppilot_restore_point_set_hours($hours)], 200);
 }
 
 /**

@@ -23,6 +23,10 @@ const OPT_HITS = 'gobuildwp_kit_sp_hits';
 const MAX_EVENTS = 500;
 const MAX_BLOCKS = 2000;
 const MAX_ALLOWLIST = 100;
+const MAX_TRUSTED_PROXIES = 20;
+/** The widest ranges a block may cover: a /16 of IPv4, a /48 of IPv6 (one site or office). */
+const MIN_BLOCK_PREFIX_V4 = 16;
+const MIN_BLOCK_PREFIX_V6 = 48;
 const EVENT_DAYS = 30;
 
 const EVENT_TYPES = ['firewall', 'login', 'block', 'enumeration', 'flood', 'settings'];
@@ -42,6 +46,7 @@ function default_settings(): array
         'flood' => ['enabled' => false, 'max_404_per_minute' => 60],
         'ip_source' => 'remote_addr',
         'allowlist' => [],
+        'trusted_proxies' => [],
     ];
 }
 
@@ -150,6 +155,27 @@ function sanitize_settings(array $change, array $base): array|WP_Error
                 }
                 $out['allowlist'] = array_keys($list);
                 break;
+            case 'trusted_proxies':
+                // Owners behind a load balancer or reverse proxy rarely can edit wp-config.php, and
+                // without this every visitor shares the proxy's address: one block locks out them all.
+                if (!is_array($value) || count($value) > MAX_TRUSTED_PROXIES) {
+                    return $bad('trusted_proxies must be a list of at most ' . MAX_TRUSTED_PROXIES . ' addresses');
+                }
+                $list = [];
+                foreach ($value as $entry) {
+                    $cidr = is_string($entry) ? normalize_cidr($entry) : '';
+                    if ($cidr === '') {
+                        return $bad('trusted_proxies entries must be IP addresses or CIDR ranges');
+                    }
+                    // Trusting a huge range lets anyone inside it pick the address the guard sees.
+                    $bits = str_contains($cidr, '/') ? (int) substr($cidr, (int) strrpos($cidr, '/') + 1) : 128;
+                    if ($bits < (str_contains($cidr, ':') ? 32 : 8)) {
+                        return $bad('trusted_proxies ranges must be /8 (IPv4) or /32 (IPv6) or narrower');
+                    }
+                    $list[$cidr] = true;
+                }
+                $out['trusted_proxies'] = array_keys($list);
+                break;
             default:
                 return $bad("$key is unknown");
         }
@@ -244,8 +270,25 @@ function add_block(string $ip, int $minutes, string $reason, string $source, ?in
     if ($minutes < 0 || $minutes > 525600) {
         return new WP_Error('gobuildwp_protection_invalid', 'Invalid setting: minutes must be 0–525600.');
     }
+    // A /8 or a /32 of IPv6 shuts out whole providers, the owner's own office among them.
+    if (str_contains($cidr, '/')) {
+        $bits = (int) substr($cidr, (int) strpos($cidr, '/') + 1);
+        $min = str_contains($cidr, ':') ? MIN_BLOCK_PREFIX_V6 : MIN_BLOCK_PREFIX_V4;
+        if ($bits < $min) {
+            return new WP_Error('gobuildwp_protection_invalid', sprintf('Invalid setting: a blocked range must be /%d or narrower.', $min));
+        }
+    }
     if (ip_in_list($cidr, settings()['allowlist'])) {
         return new WP_Error('gobuildwp_protection_allowlisted', 'That address is on the allowlist; remove it there first.');
+    }
+    // A block asked for by a person or an agent must not shut out the person asking: the address of
+    // this request, or the addresses the signed-in user logged in from.
+    if ($source === 'manual') {
+        foreach (array_merge([current_ip()], login_ips(get_current_user_id())) as $own) {
+            if ($own !== '' && ip_matches($own, $cidr)) {
+                return new WP_Error('gobuildwp_protection_self_block', 'That block would lock out your own address. Block a narrower range or a different address.');
+            }
+        }
     }
     $blocks = blocks($now);
     $block = [
@@ -264,6 +307,27 @@ function add_block(string $ip, int $minutes, string $reason, string $source, ?in
     update_option(OPT_BLOCKS, $blocks, true);
     record_event('block', 'blocked', $cidr, null, '', $source . ($block['reason'] !== '' ? ': ' . $block['reason'] : ''));
     return $block;
+}
+
+/**
+ * Addresses the user's live sessions were opened from, as WordPress records them on login.
+ *
+ * @return list<string>
+ */
+function login_ips(int $user_id): array
+{
+    if ($user_id <= 0) {
+        return [];
+    }
+    $tokens = get_user_meta($user_id, 'session_tokens', true);
+    $ips = [];
+    foreach (is_array($tokens) ? $tokens : [] as $session) {
+        $ip = is_array($session) && is_string($session['ip'] ?? null) ? trim($session['ip']) : '';
+        if (is_ip($ip)) {
+            $ips[] = normalize_ip($ip);
+        }
+    }
+    return array_values(array_unique($ips));
 }
 
 function remove_block(string $ip): bool
@@ -438,6 +502,9 @@ function status(array $server): array
         'settings' => $settings,
         'counters' => counters(),
         'client_ip_source' => $settings['ip_source'],
+        'client_ip' => client_ip($server, $settings['ip_source']),
+        'trusted_proxies' => trusted_proxies(),
+        'protection_disabled' => defined('GOBUILDWP_DISABLE_PROTECTION') && constant('GOBUILDWP_DISABLE_PROTECTION') === true,
         'proxy_headers_seen' => proxy_headers_seen($server),
         'recent' => events(20),
     ];

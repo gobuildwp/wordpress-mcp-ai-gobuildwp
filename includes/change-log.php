@@ -393,6 +393,21 @@ function wppilot_change_for_output(array $entry): array
             $entry[$key] = wppilot_redact_for_output($entry[$key]);
         }
     }
+    $rollback = $entry['rollback'] ?? null;
+    if (is_array($rollback) && function_exists('wppilot_restore_point_public')) {
+        // What was saved, until when, and every restore attempt with its result.
+        $restore_point = wppilot_restore_point_public(wppilot_string_keyed_array($rollback), with_files: true);
+        if ($restore_point !== null) {
+            $entry['restore_point'] = $restore_point;
+        }
+    }
+    // A restore point's storage id names its folder under uploads. Undo finds it from this row,
+    // so it never needs to leave the server.
+    foreach (['rollback', 'redo'] as $key) {
+        if (is_array($entry[$key] ?? null) && is_array($entry[$key]['snapshot'] ?? null) && ($entry[$key]['snapshot']['type'] ?? '') === 'files/snapshot') {
+            unset($entry[$key]['snapshot']['id']);
+        }
+    }
     return $entry;
 }
 
@@ -780,12 +795,13 @@ function wppilot_change_after(string $ability_name, mixed $input, mixed $result,
     $ability = wppilot_change_resolve_ability($ability_name, $ability);
     $risk = $ability instanceof WP_Ability ? wppilot_ability_risk($ability) : 'write';
     $user = wp_get_current_user();
+    $change_id = wp_generate_uuid4();
 
     wppilot_store_change([
         // 'audit-read' rows are a record of access, not of a change; the Changes screen and the
         // export filter on it, and nothing offers to undo one.
         'kind' => $audit_read ? 'audit-read' : 'change',
-        'id' => wp_generate_uuid4(),
+        'id' => $change_id,
         'ability' => $ability_name,
         'risk' => $risk,
         'recorded_at' => gmdate('c'),
@@ -810,6 +826,11 @@ function wppilot_change_after(string $ability_name, mixed $input, mixed $result,
         'design' => wppilot_change_design_findings($ability_name),
         'confirmation' => wppilot_change_confirmation($ability_name, clear: true),
     ]);
+    if (($rollback['type'] ?? null) === 'files/snapshot' && function_exists('wppilot_restore_point_link')) {
+        // The restore point's own record names the row it undoes; one no row claims is removed.
+        $snapshot = wppilot_string_keyed_array($rollback['snapshot'] ?? null);
+        wppilot_restore_point_link((string) ($snapshot['id'] ?? ''), $change_id);
+    }
 }
 
 /**
@@ -1065,6 +1086,15 @@ function wppilot_capture_core_before_image(string $ability_name, array $input): 
             'values' => $values,
             'fingerprint' => wppilot_snapshot_fingerprint($values),
         ];
+    }
+    if (function_exists('wppilot_restore_point_before_image')) {
+        // Plugin and theme folders and single files: a restore point zips what the call is about
+        // to touch. Without one, a file ability falls through to the capture filter (Pro's ledger
+        // map says why it cannot be undone) and an extension ability to the marker below.
+        $restore_point = wppilot_restore_point_before_image($ability_name, $input);
+        if ($restore_point !== null) {
+            return $restore_point;
+        }
     }
     if (in_array($ability_name, [
         'wppilot/install-plugin',
@@ -1868,7 +1898,7 @@ function wppilot_string_list_of_arrays(mixed $value): array
 
 /** @return array<string, mixed>|WP_Error */
 // @mago-expect lint:cyclomatic-complexity -- The rollback transaction validates every terminal state.
-function wppilot_rollback_change(string $id): array|WP_Error
+function wppilot_rollback_change(string $id, bool $force = false): array|WP_Error
 {
     $entry = wppilot_get_change($id);
     if ($entry === null) {
@@ -1891,8 +1921,14 @@ function wppilot_rollback_change(string $id): array|WP_Error
     // The state this undo is about to replace, kept so the undo can itself be undone (redo-session).
     // Taken before the restore, which is the only moment it still exists.
     $redo = function_exists('wppilot_change_redo_image') ? wppilot_change_redo_image($rollback) : null;
-    $result = wppilot_change_run_restore($rollback, $entry);
+    // `force` lets a file undo overwrite what changed after the AI's change (changed_since).
+    $result = wppilot_change_run_restore($rollback, $force ? ['force' => true] + $entry : $entry);
     if ($result instanceof WP_Error) {
+        $redo_snapshot = is_array($redo['snapshot'] ?? null) ? $redo['snapshot'] : [];
+        if (($redo_snapshot['type'] ?? '') === 'files/snapshot' && function_exists('wppilot_restore_point_forget')) {
+            // Nothing was undone, so the copy of the current files taken for redo is not needed.
+            wppilot_restore_point_forget((string) ($redo_snapshot['id'] ?? ''));
+        }
         return $result;
     }
     if (($result['verified'] ?? false) !== true) {

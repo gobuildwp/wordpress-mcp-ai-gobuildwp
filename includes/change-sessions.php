@@ -486,6 +486,10 @@ function wppilot_session_note_written(array &$written, string $target, ?array $a
 function wppilot_change_redo_image(array $rollback): array
 {
     $type = (string) ($rollback['type'] ?? '');
+    if ($type === 'files/snapshot' && function_exists('wppilot_restore_point_redo_image')) {
+        // Files are kept as a second restore point of the AI's version, not inline in the row.
+        return wppilot_restore_point_redo_image($rollback);
+    }
     if ($type === 'delete-created-term' || $type === 'delete-created-comment') {
         return ['available' => false, 'reason' => 'The undo deletes what this change created permanently, so it cannot be redone. Make the change again instead.'];
     }

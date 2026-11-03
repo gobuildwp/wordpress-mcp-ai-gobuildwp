@@ -1,7 +1,7 @@
 # GoBuildWP: WordPress MCP server and AI website builder for Claude, ChatGPT, Cursor and Codex
 
 <!-- current-releases:start -->
-Current releases: **GoBuildWP Free 1.19.0 / Pro 1.14.1**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.19.3 / Pro 1.14.3**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
 [![Version](https://img.shields.io/github/v/release/gobuildwp/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
@@ -104,7 +104,7 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 
 ## What the free plugin can do
 
-233 registered abilities, plus one MCP prompt per skill you save. The WooCommerce, SEO, form, backup, security and Site Kit abilities register only while their plugin is active, and developer abilities only under Developer Full Access, so a fresh install with none of those plugins registers 167 on the default profile. Each ability can be switched off individually on the Abilities screen.
+236 registered abilities, plus one MCP prompt per skill you save. The WooCommerce, SEO, form, backup, security and Site Kit abilities register only while their plugin is active, and developer abilities only under Developer Full Access, so a fresh install with none of those plugins registers 170 on the default profile. Each ability can be switched off individually on the Abilities screen.
 
 <details>
 <summary><strong>Full table of free abilities by domain</strong></summary>
@@ -488,7 +488,7 @@ Yes. Free reads the catalogue, store settings, orders and customers and edits on
 That is what the safety model is for. Start on Read Only and verify one call before allowing writes. Production Safe blocks raw PHP, WP-CLI, filesystem, database and extension installation; destructive calls need confirmation, optionally from a person; WordPress capabilities still apply; and supported changes can be undone.
 
 **Do I need Pro or Cloud?**
-No. The free plugin is a complete WordPress MCP server with 233 abilities and needs no licence, activation key or account. Pro and Cloud are optional.
+No. The free plugin is a complete WordPress MCP server with 236 abilities and needs no licence, activation key or account. Pro and Cloud are optional.
 
 **How does it relate to the WordPress Abilities API and the MCP Adapter?**
 It is built on both. Abilities are registered through the Abilities API, and the MCP Adapter is bundled to serve the legacy protocol revision. GoBuildWP adds authentication, safety profiles, confirmation gates, rate limiting, the change ledger with undo, and the abilities themselves.

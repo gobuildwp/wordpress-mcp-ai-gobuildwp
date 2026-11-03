@@ -16,9 +16,15 @@ if (!defined('ABSPATH')) {
 /**
  * Wire the guard into this request. Only the parts that are on are hooked; with everything off
  * and no blocks, this reads the settings and returns.
+ *
+ * GOBUILDWP_DISABLE_PROTECTION (true in wp-config.php) switches all of it off, for an owner whose
+ * own address got blocked and who can no longer reach the dashboard to lift the block.
  */
 function install_hooks(): void
 {
+    if (defined('GOBUILDWP_DISABLE_PROTECTION') && constant('GOBUILDWP_DISABLE_PROTECTION') === true) {
+        return;
+    }
     $settings = settings();
     $has_blocks = get_option(OPT_BLOCKS, []) !== [];
     if (has_virtual_patches()) {

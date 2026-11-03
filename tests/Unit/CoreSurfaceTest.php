@@ -128,6 +128,26 @@ final class CoreSurfaceTest extends TestCase
         self::assertSame([], $wrong);
     }
 
+    /**
+     * Updates and installs take a restore point first, so their descriptions must not tell an
+     * agent the change cannot be undone.
+     */
+    public function testRestorePointAbilitiesDoNotClaimToBeIrreversible(): void
+    {
+        $checked = 0;
+        foreach (WPPILOT_TEST_BOOT_REGISTRATIONS as $registration) {
+            if (!in_array($registration['name'], ['wppilot/update-plugin', 'wppilot/update-theme', 'wppilot/install-plugin', 'wppilot/install-theme'], true)) {
+                continue;
+            }
+            $description = (string) ($registration['args']['description'] ?? '');
+            self::assertStringNotContainsString('Not reversible', $description, $registration['name']);
+            self::assertMatchesRegularExpression('/restore point/', $description, $registration['name']);
+            $checked++;
+        }
+
+        self::assertSame(4, $checked);
+    }
+
     // -------------------------------------------------------- permission gate
 
     public function testCorePermissionRequiresLoginAndEnabledPlugin(): void

@@ -701,6 +701,7 @@ final class CloudPairingTest extends TestCase
             ],
             'inventory_hash' => gobuildwp_cloud_inventory_hash(),
             'cloud_signing' => 'none',
+            'snapshot_hours' => 1,
         ], $response->data);
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $response->data['inventory_hash']);
     }

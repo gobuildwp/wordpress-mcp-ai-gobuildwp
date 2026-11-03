@@ -171,6 +171,7 @@ final class SiteIssuesTest extends TestCase
         add_filter(S\COLLECT_FILTER, static function (array $items): array {
             $items[] = ['kind' => 'update_rolled_back', 'id' => 'abc123', 'at' => time() - 30, 'summary' => 'CMB2 2.13.4 rolled back: / went from 200 to 500', 'source' => 'cmb2'];
             $items[] = ['kind' => 'update_rolled_back', 'id' => 'old', 'at' => 5, 'summary' => 'too old'];
+            $items[] = ['kind' => 'update_held_for_review', 'id' => 'held1', 'at' => time() - 20, 'summary' => 'The update of Foo to 2.0 was held for review and not installed: new owner', 'source' => 'foo'];
             $items[] = 'not an item';
             return $items;
         });
@@ -182,13 +183,15 @@ final class SiteIssuesTest extends TestCase
         self::assertSame('broken', $report['paused_extensions'][0]['slug']);
         self::assertSame('wp-content/plugins/broken/broken.php', $report['paused_extensions'][0]['file']);
         self::assertSame('abc123', $report['update_failures'][0]['id']);
+        self::assertCount(1, $report['update_failures']);
+        self::assertSame('held1', $report['update_holds'][0]['id']);
 
         $summary = S\cloud_summary();
         self::assertSame($report['counts'], $summary['counts']);
         self::assertSame(gmdate('c', $now - 60), $summary['newest_fatal_at']);
         $kinds = array_column($summary['recent'], 'kind');
         sort($kinds);
-        self::assertSame(['paused_extension', 'php_fatal', 'update_rolled_back'], $kinds);
+        self::assertSame(['paused_extension', 'php_fatal', 'update_held_for_review', 'update_rolled_back'], $kinds);
         foreach ($summary['recent'] as $item) {
             self::assertSame(['id', 'kind', 'first_at', 'last_at', 'count', 'summary', 'source', 'file', 'line', 'url_path'], array_keys($item));
             self::assertMatchesRegularExpression('/^\d{4}-\d\d-\d\dT/', $item['last_at']);

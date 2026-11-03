@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('gobuildwp/protection-block-ip', [
     'label' => __('Block an IP Address', domain: 'wppilot'),
     'description' => __(
-        "Blocks an IPv4 or IPv6 address or a CIDR range from the whole site, for minutes (0 = until unblocked). Allowlisted addresses can't be blocked, and signed-in administrators are never blocked. Undo with gobuildwp/protection-unblock-ip.",
+        "Blocks an IPv4 or IPv6 address or a CIDR range from the whole site, for minutes (0 = until unblocked). Ranges wider than /16 (IPv4) or /48 (IPv6) are refused, as is any block that covers the caller's own address or an address the signed-in user logged in from. Allowlisted addresses can't be blocked, and signed-in administrators are never blocked. Undo with gobuildwp/protection-unblock-ip.",
         domain: 'wppilot',
     ),
     'category' => 'security-protection',
@@ -58,6 +58,9 @@ wp_register_ability('gobuildwp/protection-block-ip', [
         'mcp' => ['public' => true],
         'annotations' => [
             'readonly' => false,
+            // Not destructive: GoBuildWP Cloud never sends confirm=true, so a confirm step here would
+            // refuse every block. A block is undone with protection-unblock-ip, and add_block() refuses
+            // wide ranges and any block covering the caller's or the signed-in user's address.
             'destructive' => false,
             'idempotent' => true,
         ],

@@ -623,7 +623,8 @@ function clean_file(string $path): array|\WP_Error
 function whole_file_malware(string $code, bool $is_php): bool
 {
     $lines = count(array_filter(preg_split('/
-||
+|
+|
 /', $code) ?: [], static fn(string $l): bool => trim($l) !== '' && trim($l) !== '<?php'));
     foreach (serious_hits($code, $is_php) as $hit) {
         if ($hit['rule_id'] === 'susp.webshell_marker' || ($hit['severity_hint'] === 'critical' && $lines <= 3)) {
@@ -962,6 +963,11 @@ function clean_option(string $name): array|\WP_Error
         $mode = 'stripped';
         $written = (string) maybe_serialize($value);
     } elseif (stripos($raw, 'eval(') !== false || stripos($raw, 'base64_decode') !== false) {
+        // Deleting drops every setting in the row, so only a row that is nothing but the payload
+        // goes. Code tucked inside real settings is left for a person, as clean_file does.
+        if (!option_is_only_payload($value)) {
+            return fix_error('cannot_isolate', 'The code is mixed in with real settings in this option, so it could not be removed on its own. Edit the option by hand or restore it from a backup.');
+        }
         $mode = 'deleted';
         $written = null;
     } else {
@@ -988,6 +994,19 @@ function clean_option(string $name): array|\WP_Error
         $detail['elements_removed'] = $count;
     }
     return ['undo' => $undo, 'detail' => $detail];
+}
+
+/**
+ * Whether an option value is a single code payload and nothing else: a plain string that, without
+ * its PHP tags, is one eval( or base64_decode( call.
+ */
+function option_is_only_payload(mixed $value): bool
+{
+    if (!is_string($value)) {
+        return false;
+    }
+    $code = trim((string) preg_replace(['/^\s*<\?(?:php)?/i', '/\?>\s*$/'], '', $value));
+    return preg_match('/^@?(?:eval|base64_decode)\s*\(.*\)\s*;?$/is', $code) === 1;
 }
 
 /**

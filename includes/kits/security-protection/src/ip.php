@@ -12,31 +12,100 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Cloudflare's published edge ranges (cloudflare.com/ips). A CF-Connecting-IP header is only
+ * believed when the connection itself comes from one of these; anyone else can set the header.
+ */
+const CLOUDFLARE_RANGES = [
+    '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22', '141.101.64.0/18',
+    '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22', '198.41.128.0/17',
+    '162.158.0.0/15', '104.16.0.0/13', '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+    '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32', '2405:8100::/32',
+    '2a06:98c0::/29', '2c0f:f248::/32',
+];
+
+/**
  * The visitor's address, from REMOTE_ADDR unless the site says it sits behind Cloudflare or a
- * proxy that appends X-Forwarded-For. With X-Forwarded-For the rightmost valid address is used:
- * the proxy appends the address it saw, and anything to its left was sent by the client and can
- * be forged.
+ * proxy that appends X-Forwarded-For, and this connection really comes from that proxy. A forged
+ * header sent straight to the server would otherwise let anyone pick their own address, dodge
+ * every block and get someone else's address blocked. With X-Forwarded-For the rightmost address
+ * that isn't one of the trusted proxies is used: each proxy appends the address it saw, and
+ * anything to its left was sent by the client and can be forged.
  *
  * @param array<string, mixed> $server
  */
 function client_ip(array $server, string $source): string
 {
     $remote = is_string($server['REMOTE_ADDR'] ?? null) ? trim($server['REMOTE_ADDR']) : '';
-    if ($source === 'cloudflare') {
+    if (!is_ip($remote)) {
+        return '';
+    }
+    $remote = normalize_ip($remote);
+    if ($source === 'cloudflare' && ip_in_list($remote, cloudflare_ranges())) {
         $cf = is_string($server['HTTP_CF_CONNECTING_IP'] ?? null) ? trim($server['HTTP_CF_CONNECTING_IP']) : '';
         if (is_ip($cf)) {
             return normalize_ip($cf);
         }
-    } elseif ($source === 'x_forwarded_for') {
+    } elseif ($source === 'x_forwarded_for' && ($proxies = trusted_proxies()) !== [] && ip_in_list($remote, $proxies)) {
         $xff = is_string($server['HTTP_X_FORWARDED_FOR'] ?? null) ? $server['HTTP_X_FORWARDED_FOR'] : '';
         $parts = array_reverse(array_map('trim', explode(',', $xff)));
         foreach ($parts as $part) {
-            if (is_ip($part)) {
+            if (is_ip($part) && !ip_in_list($part, $proxies)) {
                 return normalize_ip($part);
             }
         }
     }
-    return is_ip($remote) ? normalize_ip($remote) : '';
+    return $remote;
+}
+
+/**
+ * Cloudflare's ranges, normalized. The gobuildwp_protection_cloudflare_ranges filter replaces the
+ * list when Cloudflare publishes new ranges before the plugin ships them.
+ *
+ * @return list<string>
+ */
+function cloudflare_ranges(): array
+{
+    $ranges = function_exists('apply_filters') ? apply_filters('gobuildwp_protection_cloudflare_ranges', CLOUDFLARE_RANGES) : CLOUDFLARE_RANGES;
+    return cidr_list($ranges);
+}
+
+/**
+ * The proxies whose X-Forwarded-For header is believed: the GOBUILDWP_TRUSTED_PROXIES constant
+ * (an array or a comma-separated string of addresses and ranges), the trusted_proxies setting, then the
+ * gobuildwp_protection_trusted_proxies filter. Empty by default, so the header is ignored until
+ * the owner names their proxy.
+ *
+ * @return list<string>
+ */
+function trusted_proxies(): array
+{
+    $list = [];
+    if (defined('GOBUILDWP_TRUSTED_PROXIES')) {
+        $constant = constant('GOBUILDWP_TRUSTED_PROXIES');
+        $list = is_array($constant) ? $constant : (is_string($constant) ? explode(',', $constant) : []);
+    }
+    if (function_exists(__NAMESPACE__ . '\settings')) {
+        $list = array_merge($list, (array) (settings()['trusted_proxies'] ?? []));
+    }
+    if (function_exists('apply_filters')) {
+        $list = apply_filters('gobuildwp_protection_trusted_proxies', $list);
+    }
+    return cidr_list($list);
+}
+
+/**
+ * @return list<string>
+ */
+function cidr_list(mixed $values): array
+{
+    $out = [];
+    foreach (is_array($values) ? $values : [] as $value) {
+        $cidr = is_string($value) ? normalize_cidr($value) : '';
+        if ($cidr !== '') {
+            $out[] = $cidr;
+        }
+    }
+    return array_values(array_unique($out));
 }
 
 /**

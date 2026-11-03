@@ -142,6 +142,10 @@ function wppilot_uninstall_options(): array
         'wppilot_cloud_policy',
         'wppilot_cloud_event_push',
         'gobuildwp_cloud_inventory_hash',
+        // includes/restore-points.php: the restore-point index and the plan's undo window. The
+        // zips themselves are removed by wppilot_uninstall_restore_points().
+        'gobuildwp_restore_points',
+        'gobuildwp_restore_point_hours',
         // includes/kits/security-live/src/logins.php: recent failed logins.
         'gobuildwp_live_login_failures',
         // includes/kits/site-issues: the PHP fatal error log.
@@ -240,7 +244,44 @@ function wppilot_uninstall_cron_hooks(): array
         // includes/kits/security-live: the change watch, and the one-off run after an update.
         'gobuildwp_kit_sl_tick',
         'gobuildwp_kit_sl_tick_soon',
+        // includes/restore-points.php
+        'gobuildwp_restore_points_cleanup',
     ];
+}
+
+/**
+ * Remove the restore-point zips under uploads. includes/ is not loaded during uninstall, so the
+ * folder name is repeated here; links inside it are removed, never followed.
+ */
+function wppilot_uninstall_restore_points(): void
+{
+    $uploads = wp_upload_dir(null, false);
+    $base = is_array($uploads) ? (string) ($uploads['basedir'] ?? '') : '';
+    if ($base === '') {
+        return;
+    }
+    $dir = rtrim(wp_normalize_path($base), '/') . '/gobuildwp-restore-points';
+    if (is_dir($dir) && !is_link($dir)) {
+        wppilot_uninstall_delete_tree($dir);
+    }
+}
+
+function wppilot_uninstall_delete_tree(string $path): void
+{
+    if (is_link($path) || is_file($path)) {
+        @unlink($path);
+        return;
+    }
+    if (!is_dir($path)) {
+        return;
+    }
+    foreach ((array) scandir($path) as $name) {
+        $name = (string) $name;
+        if ($name !== '.' && $name !== '..') {
+            wppilot_uninstall_delete_tree($path . '/' . $name);
+        }
+    }
+    @rmdir($path);
 }
 
 /**
@@ -322,6 +363,8 @@ function wppilot_uninstall_current_site(): void
             wppilot_uninstall_delete_posts($post_type);
         }
     }
+
+    wppilot_uninstall_restore_points();
 
     foreach (wppilot_uninstall_options() as $option) {
         delete_option($option);

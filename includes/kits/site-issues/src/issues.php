@@ -43,6 +43,7 @@ function report(array $input = []): array
     $paused = paused_extensions();
     $other = collected($since);
     $updates = array_values(array_filter($other, static fn(array $i): bool => $i['kind'] === 'update_rolled_back'));
+    $holds = array_values(array_filter($other, static fn(array $i): bool => $i['kind'] === 'update_held_for_review'));
     $backups = backup_failures($since);
 
     $iso = static fn(array $item): array => array_merge($item, ['at' => gmdate('c', (int) $item['at'])]);
@@ -52,6 +53,7 @@ function report(array $input = []): array
         'php_errors' => $errors,
         'paused_extensions' => $paused,
         'update_failures' => array_map($iso, array_slice($updates, 0, $limit)),
+        'update_holds' => array_map($iso, array_slice($holds, 0, $limit)),
         'backup_failures' => array_map($iso, $backups),
         'error_log' => [
             'kept' => MAX_ERRORS,
@@ -228,7 +230,9 @@ function cloud_summary(int $recent = 10): array
     $since = time() - DEFAULT_DAYS * DAY_IN_SECONDS;
     $errors = errors_since($since, MAX_ERRORS);
     $paused = paused_extensions();
-    $updates = array_values(array_filter(collected($since), static fn(array $i): bool => $i['kind'] === 'update_rolled_back'));
+    $other = collected($since);
+    $updates = array_values(array_filter($other, static fn(array $i): bool => $i['kind'] === 'update_rolled_back'));
+    $holds = array_values(array_filter($other, static fn(array $i): bool => $i['kind'] === 'update_held_for_review'));
     $backups = backup_failures($since);
 
     $items = [];
@@ -248,6 +252,9 @@ function cloud_summary(int $recent = 10): array
     }
     foreach ($updates as $u) {
         $items[] = ['id' => $u['id'], 'kind' => 'update_rolled_back', 'first_at' => $u['at'], 'last_at' => $u['at'], 'count' => 1, 'summary' => $u['summary'], 'source' => $u['source'], 'file' => '', 'line' => 0, 'url_path' => ''];
+    }
+    foreach ($holds as $h) {
+        $items[] = ['id' => $h['id'], 'kind' => 'update_held_for_review', 'first_at' => $h['at'], 'last_at' => $h['at'], 'count' => 1, 'summary' => $h['summary'], 'source' => $h['source'], 'file' => '', 'line' => 0, 'url_path' => ''];
     }
     foreach ($backups as $b) {
         $items[] = ['id' => $b['id'], 'kind' => 'backup_failed', 'first_at' => $b['at'], 'last_at' => $b['at'], 'count' => 1, 'summary' => $b['summary'], 'source' => $b['provider'], 'file' => '', 'line' => 0, 'url_path' => ''];

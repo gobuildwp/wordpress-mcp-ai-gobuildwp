@@ -25,8 +25,6 @@ const WPPILOT_NOTIFICATIONS_WIDGET = 'wppilot_notifications';
 /** How many recent changes are read; the unseen count stops there ("20+"). */
 const WPPILOT_NOTIFICATIONS_LIMIT = 20;
 
-const WPPILOT_CLOUD_PRO_URL = 'https://gobuildwp.com/cloud/';
-
 /**
  * The latest AI changes from the change ledger, newest first. Read once per request.
  *

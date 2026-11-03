@@ -115,6 +115,7 @@ require_once dirname(__DIR__) . '/includes/change-log.php';
 require_once dirname(__DIR__) . '/includes/change-log-table.php';
 // Session undo and redo, and where a session id comes from. Both register nothing at file scope.
 require_once dirname(__DIR__) . '/includes/change-sessions.php';
+require_once dirname(__DIR__) . '/includes/restore-points.php';
 require_once dirname(__DIR__) . '/includes/agent-sessions.php';
 
 // Agent identities (a token's scope and profile ceiling) and the declarative

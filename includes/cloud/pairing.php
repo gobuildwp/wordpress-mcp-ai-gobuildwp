@@ -594,6 +594,8 @@ function wppilot_cloud_clear_link(): void
     // The settings the Cloud applied stay as they are; only its right to change them goes.
     delete_option(WPPILOT_CLOUD_MANAGE_OPTION);
     delete_option(WPPILOT_CLOUD_POLICY_OPTION);
+    // The undo window came from the plan; without a link the site keeps the one-hour default.
+    delete_option('gobuildwp_restore_point_hours');
 }
 
 /**

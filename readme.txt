@@ -4,7 +4,7 @@ Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.19.2
+Stable tag: 1.19.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,17 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 
 == Changelog ==
 
+= 1.19.3 =
+* New: gobuildwp/wporg-status-check reports installed plugins and themes WordPress.org has closed, with the date and reason, and those with no release in over two years. Components WordPress.org cannot vouch for are reported as unknown.
+* New: website protection takes a trusted_proxies setting, so a site behind a load balancer or reverse proxy can name it from GoBuildWP Cloud. The protection status shows the address the guard sees, the trusted proxies in effect, and whether protection is switched off.
+* New: define GOBUILDWP_DISABLE_PROTECTION as true in wp-config.php to switch all website protection off if it ever locks you out.
+* New: an update GoBuildWP Pro held for review shows in the site issues report and in GoBuildWP Cloud.
+* Fixed: X-Forwarded-For and CF-Connecting-IP were believed from any visitor. CF-Connecting-IP is now believed only from Cloudflare's addresses, and X-Forwarded-For only from proxies you name.
+* Fixed: blocks wider than /16 (IPv4) or /48 (IPv6) and blocks covering your own address are refused.
+* Fixed: restore points no longer copy wp-config.php, the zip is encrypted with a key derived from the site's salts, and an expired restore point's files are deleted.
+* Fixed: undo refuses when the item changed since, unless you ask it to force.
+* Fixed: cleaning an infected setting removes the option only when the injected code is all it holds.
+
 = 1.19.2 =
 * New: GoBuildWP Cloud can send the site extra security scan rules and the fingerprints of confirmed malware files. The site accepts them only from a request signed by GoBuildWP Cloud, checks every rule and drops any it cannot use; the built-in rules always run. A file that matches a known malware fingerprint is reported as critical.
 * Changed: the file scan now reads PHP files in cache, upgrade and backup folders (UpdraftPlus, All-in-One WP Migration, BackWPup), which it used to skip, and the deep scan checks every folder in wp-content, not just the top level.
@@ -241,6 +252,9 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.19.3 =
+Security fix: the firewall no longer trusts forwarded IP headers from any visitor. Adds a closed-plugin check, trusted proxies and encrypted restore points.
 
 = 1.19.2 =
 Security scans read PHP in cache and backup folders, catch comment spam waiting for moderation, and can use rules and malware fingerprints sent by GoBuildWP Cloud.

@@ -65,19 +65,26 @@ wp_register_ability('wppilot/get-change', [
 wp_register_ability('wppilot/rollback-change', [
     'label' => __('Rollback GoBuildWP Change', domain: 'wppilot'),
     'description' => __(
-        'Rolls back a reversible change and verifies the observed state against the stored before-image fingerprint. It never marks success when writes fail or verification differs. Requires explicit confirmation.',
+        'Rolls back a reversible change and verifies the observed state against the stored before-image fingerprint. It never marks success when writes fail or verification differs. A file change whose files changed again afterwards is refused with changed_since, so later edits are not overwritten; pass force=true only when the person agrees to lose them. Requires explicit confirmation.',
         domain: 'wppilot',
     ),
     'category' => 'changes',
     'input_schema' => [
         'type' => 'object',
-        'properties' => ['change_id' => ['type' => 'string']],
+        'properties' => [
+            'change_id' => ['type' => 'string'],
+            'force' => [
+                'type' => 'boolean',
+                'description' => 'Undo a file change even though its files changed after it, overwriting those later changes.',
+            ],
+        ],
         'required' => ['change_id'],
         'additionalProperties' => false,
     ],
     'output_schema' => ['type' => 'object'],
     'execute_callback' => static fn(array $input): array|WP_Error => wppilot_rollback_change(
         (string) $input['change_id'],
+        ($input['force'] ?? false) === true,
     ),
     'permission_callback' => 'wppilot_permission_callback',
     'meta' => [
@@ -91,7 +98,7 @@ wp_register_ability('wppilot/rollback-change', [
 function wppilot_change_public_summary(array $entry): array
 {
     $rollback = is_array($entry['rollback'] ?? null) ? $entry['rollback'] : [];
-    return [
+    $summary = [
         'id' => (string) ($entry['id'] ?? ''),
         // Rows written before 1.14.0 carry no kind; every one of them was a change.
         'kind' => (string) ($entry['kind'] ?? 'change'),
@@ -112,4 +119,9 @@ function wppilot_change_public_summary(array $entry): array
         // than reported empty, so a clean ledger stays readable.
         'design' => is_array($entry['design'] ?? null) && $entry['design'] !== [] ? $entry['design'] : null,
     ];
+    // A row undone from a restore point says until when (undo_until, undo_window_hours), and reads
+    // as not reversible once the restore point has expired.
+    return function_exists('wppilot_restore_point_summary_fields')
+        ? array_merge($summary, wppilot_restore_point_summary_fields($entry))
+        : $summary;
 }
