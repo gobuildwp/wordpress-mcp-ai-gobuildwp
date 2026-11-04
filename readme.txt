@@ -4,7 +4,7 @@ Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.19.3
+Stable tag: 1.19.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,10 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 
 == Changelog ==
 
+= 1.19.4 =
+* Fixed: some hosts' malware scanners (for example SiteGround's) quarantined a GoBuildWP file because its security scan rules contained malware signature text, and the site then failed with "Failed to open stream: Permission denied". No plugin file carries that text any more.
+* Fixed: a security or other feature kit that fails to load is now skipped and logged instead of stopping the site.
+
 = 1.19.3 =
 * New: gobuildwp/wporg-status-check reports installed plugins and themes WordPress.org has closed, with the date and reason, and those with no release in over two years. Components WordPress.org cannot vouch for are reported as unknown.
 * New: website protection takes a trusted_proxies setting, so a site behind a load balancer or reverse proxy can name it from GoBuildWP Cloud. The protection status shows the address the guard sees, the trusted proxies in effect, and whether protection is switched off.
@@ -252,6 +256,9 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.19.4 =
+Fixes sites going down when a host's malware scanner quarantined a GoBuildWP file.
 
 = 1.19.3 =
 Security fix: the firewall no longer trusts forwarded IP headers from any visitor. Adds a closed-plugin check, trusted proxies and encrypted restore points.

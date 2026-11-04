@@ -1,7 +1,7 @@
 # GoBuildWP documentation
 
 <!-- current-releases:start -->
-Current releases: **GoBuildWP Free 1.19.3 / Pro 1.14.3**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.19.4 / Pro 1.14.3**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
 

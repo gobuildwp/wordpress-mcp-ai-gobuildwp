@@ -1,3 +1,7 @@
+v1.19.4
+* Fixed: some hosts' malware scanners (for example SiteGround's) quarantined a GoBuildWP file because the security scan rules inside it contained malware signature text, so the file could no longer be read and the site failed with "Failed to open stream: Permission denied". The detection rules are now written so that no plugin file carries that text.
+* Fixed: a feature kit (for example the security scanner) that fails to load or start is now skipped and logged instead of stopping the whole site.
+
 v1.19.3
 * New: gobuildwp/wporg-status-check tells you which installed plugins and themes WordPress.org has closed, with the date and the reason it gives (for example a security issue), and which have had no release in over two years. WordPress keeps showing a closed plugin as up to date, but it gets no more fixes, so a hole found later is never patched. Components WordPress.org cannot vouch for (premium, custom, or answering with another name) are reported as unknown rather than fine. Works without GoBuildWP Cloud.
 * New: website protection takes a trusted_proxies setting, so a site behind a load balancer or reverse proxy can name it from GoBuildWP Cloud instead of editing wp-config.php. Without it every visitor shared the proxy's address and one block locked them all out. Ranges wider than /8 (IPv4) or /32 (IPv6) are refused. The protection status now shows the address the guard sees for the current request, the trusted proxies in effect, and whether protection is switched off.
