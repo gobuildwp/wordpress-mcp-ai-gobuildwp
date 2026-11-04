@@ -119,6 +119,36 @@ final class KitRuntimeTest extends TestCase
     }
 
     /**
+     * A kit whose boot cannot load its code (a host scanner made a file unreadable) is skipped
+     * with the reason; the loader carries on and none of its abilities are queued.
+     */
+    public function testAKitThatFailsToBootIsSkippedNotFatal(): void
+    {
+        mkdir($this->dir . '/crasher');
+        file_put_contents($this->dir . '/crasher/kit.json', (string) json_encode(['slug' => 'crasher', 'runtime' => '^1.0']));
+        file_put_contents(
+            $this->dir . '/crasher/bootstrap.php',
+            "<?php return ['boot' => static function (): void { throw new \\Error('Failed opening required rules.php'); }, 'ability_files' => ['x.php']];",
+        );
+        $queued = count(Runtime\pending_kits());
+        $log = ini_set('error_log', sys_get_temp_dir() . '/wppilot-kit-boot-test.log');
+
+        try {
+            $report = Runtime\load_kits($this->dir, ['crasher', 'good']);
+        } finally {
+            ini_set('error_log', (string) $log);
+            @unlink(sys_get_temp_dir() . '/wppilot-kit-boot-test.log');
+            @unlink($this->dir . '/crasher/kit.json');
+            @unlink($this->dir . '/crasher/bootstrap.php');
+            @rmdir($this->dir . '/crasher');
+        }
+
+        self::assertSame('failed to load: Failed opening required rules.php', $report['skipped']['crasher']);
+        self::assertNotContains('crasher', $report['loaded']);
+        self::assertCount($queued + (in_array('good', $report['loaded'], true) ? 1 : 0), Runtime\pending_kits());
+    }
+
+    /**
      * The multisite kit loads its abilities on a network only; on a single site it says why not.
      */
     public function testTheMultisiteKitSkipsItselfOffANetwork(): void

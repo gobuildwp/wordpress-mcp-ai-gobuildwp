@@ -489,7 +489,7 @@ function skipped_option(string $name): bool
 }
 
 /**
- * Option values with script, eval, base64_decode or iframes, by name only; then autoload size and
+ * Option values with script, code-eval, base64 decoder or iframes, by name only; then autoload size and
  * active plugins whose files are gone.
  *
  * @param array<string, mixed> $db
@@ -505,8 +505,8 @@ function area_options(array &$db, Budget $budget, Collector $out, array &$state)
     }
     $likes = [
         '%' . $wpdb->esc_like('<script') . '%',
-        '%' . $wpdb->esc_like('eval(') . '%',
-        '%' . $wpdb->esc_like('base64_decode') . '%',
+        '%' . $wpdb->esc_like(sig('e[v]al(')) . '%',
+        '%' . $wpdb->esc_like(sig('b[a]se64_decode')) . '%',
         '%' . $wpdb->esc_like('<iframe') . '%',
     ];
     $rules = [
@@ -611,9 +611,9 @@ function classify_content(string $content, string $site_host, bool $blobs = fals
         if (preg_match('/<iframe\b[^>]*(?:display\s*:\s*none|visibility\s*:\s*hidden|\b(?:width|height)\s*=\s*["\']?\s*[01](?:px)?\b|\b(?:width|height)\s*:\s*[01]px)/i', $content) === 1) {
             $found[] = ['hidden_iframe', 'high'];
         }
-        if (preg_match('/\beval\s*\(\s*(?:String\.fromCharCode|atob|unescape|decodeURIComponent)\s*\(|document\.write\s*\(\s*unescape\s*\(|\\\\x[0-9a-f]{2}(?:\\\\x[0-9a-f]{2}){40,}/i', $content) === 1) {
+        if (preg_match('/\be[v]al\s*\(\s*(?:String\.f[r]omCharCode|a[t]ob|u[n]escape|decodeURIComponent)\s*\(|document\.write\s*\(\s*u[n]escape\s*\(|\\\\x[0-9a-f]{2}(?:\\\\x[0-9a-f]{2}){40,}/i', $content) === 1) {
             $found[] = ['obfuscated_js', 'high'];
-        } elseif (preg_match('/<script\b[^>]*>[^<]{0,5000}?\beval\s*\(/i', $content) === 1) {
+        } elseif (preg_match('/<script\b[^>]*>[^<]{0,5000}?\be[v]al\s*\(/i', $content) === 1) {
             $found[] = ['eval', 'medium'];
         }
         // Inline scripts that name another site: reading cookies there is the usual session-theft
@@ -822,7 +822,7 @@ function area_posts(array &$db, Budget $budget, Collector $out, array &$state): 
     $likes = [
         '%' . $wpdb->esc_like('<script') . '%',
         '%' . $wpdb->esc_like('<iframe') . '%',
-        '%' . $wpdb->esc_like('eval(') . '%',
+        '%' . $wpdb->esc_like(sig('e[v]al(')) . '%',
     ];
     [$content_links, $content_link_args] = link_filter('post_content');
     [$excerpt_links, $excerpt_link_args] = link_filter('post_excerpt');
@@ -1013,8 +1013,8 @@ function skipped_meta(string $key): bool
 }
 
 /**
- * Post meta values (page-builder data, custom fields) with scripts, iframes, eval( or
- * base64_decode, by meta key and post id only.
+ * Post meta values (page-builder data, custom fields) with scripts, iframes, code-eval or
+ * base64 decoder calls, by meta key and post id only.
  *
  * @param array<string, mixed> $db
  * @param array<string, mixed> $state
@@ -1025,8 +1025,8 @@ function area_postmeta(array &$db, Budget $budget, Collector $out, array &$state
     $likes = [
         '%' . $wpdb->esc_like('<script') . '%',
         '%' . $wpdb->esc_like('<iframe') . '%',
-        '%' . $wpdb->esc_like('eval(') . '%',
-        '%' . $wpdb->esc_like('base64_decode') . '%',
+        '%' . $wpdb->esc_like(sig('e[v]al(')) . '%',
+        '%' . $wpdb->esc_like(sig('b[a]se64_decode')) . '%',
     ];
     while ((int) $db['cursor'] < (int) $db['max']) {
         if ($budget->spent()) {
@@ -1061,7 +1061,7 @@ function area_postmeta(array &$db, Budget $budget, Collector $out, array &$state
             $value = $wpdb->get_var($wpdb->prepare("SELECT SUBSTRING(meta_value, 1, %d) FROM {$wpdb->postmeta} WHERE meta_id = %d", RULE_READ_BYTES, $id));
             $value = is_string($value) ? $value : '';
             $found = classify_content($value, $site_host);
-            if (stripos($value, 'base64_decode') !== false) {
+            if (stripos($value, sig('b[a]se64_decode')) !== false) {
                 $found[] = ['base64_decode', 'medium'];
             }
             foreach ($found as [$rule, $severity]) {

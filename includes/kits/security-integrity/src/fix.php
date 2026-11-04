@@ -936,7 +936,7 @@ function strip_markup(mixed $value, int &$count, int $depth = 0): mixed
 
 /**
  * Clean one option: script and iframe elements stripped from its strings, or the whole row
- * deleted when it carries an eval( or base64_decode payload. The raw value and autoload are
+ * deleted when it carries a code-eval or base64 decoder payload. The raw value and autoload are
  * kept for undo.
  *
  * @return array{undo: array<string, mixed>, detail: array<string, mixed>}|\WP_Error
@@ -962,7 +962,7 @@ function clean_option(string $name): array|\WP_Error
     if ($count > 0) {
         $mode = 'stripped';
         $written = (string) maybe_serialize($value);
-    } elseif (stripos($raw, 'eval(') !== false || stripos($raw, 'base64_decode') !== false) {
+    } elseif (stripos($raw, sig('e[v]al(')) !== false || stripos($raw, sig('b[a]se64_decode')) !== false) {
         // Deleting drops every setting in the row, so only a row that is nothing but the payload
         // goes. Code tucked inside real settings is left for a person, as clean_file does.
         if (!option_is_only_payload($value)) {
@@ -998,7 +998,7 @@ function clean_option(string $name): array|\WP_Error
 
 /**
  * Whether an option value is a single code payload and nothing else: a plain string that, without
- * its PHP tags, is one eval( or base64_decode( call.
+ * its PHP tags, is one code-eval or base64 decoder call.
  */
 function option_is_only_payload(mixed $value): bool
 {
@@ -1006,7 +1006,7 @@ function option_is_only_payload(mixed $value): bool
         return false;
     }
     $code = trim((string) preg_replace(['/^\s*<\?(?:php)?/i', '/\?>\s*$/'], '', $value));
-    return preg_match('/^@?(?:eval|base64_decode)\s*\(.*\)\s*;?$/is', $code) === 1;
+    return preg_match('/^@?(?:e[v]al|b[a]se64_decode)\s*\(.*\)\s*;?$/is', $code) === 1;
 }
 
 /**

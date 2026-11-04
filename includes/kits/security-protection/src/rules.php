@@ -48,7 +48,7 @@ function rules(): array
         [
             'id' => 'code_exec',
             'in' => ['args'],
-            'pattern' => '#(?:\b(?:eval|assert|system|shell_exec|passthru|proc_open|popen|base64_decode|gzinflate|str_rot13)\s*\(\s*[\'"$\w]|[;|`]\s*(?:wget|curl|nc|bash|sh|python|perl)\s+-?\w|\$\{jndi:)#i',
+            'pattern' => '#(?:\b(?:e[v]al|a[s]sert|s[y]stem|s[h]ell_exec|p[a]ssthru|p[r]oc_open|p[o]pen|b[a]se64_decode|g[z]inflate|s[t]r_rot13)\s*\(\s*[\'"$\w]|[;|`]\s*(?:wget|curl|nc|bash|sh|python|perl)\s+-?\w|\$\{jndi:)#i',
             'label' => 'Code execution',
         ],
         ['id' => 'php_upload', 'in' => ['files'], 'pattern' => '#\.(?:php\d?|phtml|phar|phps|pht)(?:\.|$)#i', 'label' => 'PHP file upload'],

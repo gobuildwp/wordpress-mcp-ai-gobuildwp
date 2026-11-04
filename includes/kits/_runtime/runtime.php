@@ -363,8 +363,13 @@ function load_kits(string $kits_dir, array $only = []): array
             continue;
         }
         $bootstrap = (string) $manifest['dir'] . '/bootstrap.php';
-        /** @var mixed $descriptor */
-        $descriptor = is_file($bootstrap) ? require $bootstrap : null;
+        try {
+            /** @var mixed $descriptor */
+            $descriptor = is_file($bootstrap) ? require $bootstrap : null;
+        } catch (\Throwable $error) {
+            $report['skipped'][$slug] = boot_failure($slug, $error);
+            continue;
+        }
         if (!is_array($descriptor)) {
             $report['skipped'][$slug] = 'bootstrap.php did not describe the kit';
             continue;
@@ -377,8 +382,16 @@ function load_kits(string $kits_dir, array $only = []): array
             $report['skipped'][$slug] = $skip;
             continue;
         }
+        // A kit whose code cannot load — a file a host scanner quarantined (unreadable), a partial
+        // upload — is skipped with its reason. It must never take the whole site down with it.
         if (is_callable($descriptor['boot'] ?? null)) {
-            ($descriptor['boot'])(host());
+            $kit_host = host();
+            try {
+                ($descriptor['boot'])($kit_host);
+            } catch (\Throwable $error) {
+                $report['skipped'][$slug] = boot_failure($slug, $error);
+                continue;
+            }
         }
         queue($manifest, is_array($descriptor['ability_files'] ?? null) ? $descriptor['ability_files'] : []);
         $report['loaded'][] = $slug;
@@ -459,7 +472,23 @@ function register_abilities(): void
 {
     foreach (pending_kits() as $kit) {
         foreach ($kit['files'] as $file) {
-            require_once $file;
+            try {
+                require_once $file;
+            } catch (\Throwable $error) {
+                boot_failure((string) ($kit['manifest']['slug'] ?? basename(dirname($file))), $error);
+            }
         }
     }
+}
+
+/**
+ * Log a kit that failed to load and return the reason integration health shows for it.
+ */
+function boot_failure(string $slug, \Throwable $error): string
+{
+    $reason = sprintf('failed to load: %s', $error->getMessage());
+    if (function_exists('error_log')) {
+        error_log(sprintf('GoBuildWP kit %s %s (%s:%d)', $slug, $reason, $error->getFile(), $error->getLine()));
+    }
+    return $reason;
 }
