@@ -1,3 +1,9 @@
+v1.20.0
+* New: website protection is on from activation. Login lockout, user-enumeration blocking and the firewall in log mode now work on every site, with or without GoBuildWP Cloud; before, a site had to be paired and configured first. Define GOBUILDWP_DISABLE_PROTECTION as true in wp-config.php to switch it all off.
+* New: a pre-WordPress firewall. GoBuildWP Cloud can install a small PHP file under wp-content/gobuildwp-protection that PHP loads through auto_prepend_file before WordPress and every plugin, so blocked addresses, the reputation blocklist and XML-RPC (when it is off) are refused before any plugin code runs, and keep being refused while the site is broken. Requests with a WordPress login cookie or an Authorization header are left to WordPress. It is removed on deactivation and uninstall.
+* New: GoBuildWP Cloud pushes a rule pack and a fleet-wide reputation blocklist to every paired site, so an address caught attacking another GoBuildWP site is blocked here before its first request. The feed is signed by Cloud, and the protection status reports what is in it.
+* New: gobuildwp/protection-feed and gobuildwp/protection-prepend abilities, for signed GoBuildWP Cloud requests only.
+
 v1.19.4
 * Fixed: some hosts' malware scanners (for example SiteGround's) quarantined a GoBuildWP file because the security scan rules inside it contained malware signature text, so the file could no longer be read and the site failed with "Failed to open stream: Permission denied". The detection rules are now written so that no plugin file carries that text.
 * Fixed: a feature kit (for example the security scanner) that fails to load or start is now skipped and logged instead of stopping the whole site.

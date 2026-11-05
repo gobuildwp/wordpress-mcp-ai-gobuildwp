@@ -182,6 +182,10 @@ function wppilot_deactivate_current_site(): void
     if (function_exists('wppilot_restore_points_cleanup')) {
         wppilot_restore_points_cleanup();
     }
+    // The pre-WordPress firewall is loaded by PHP from auto_prepend_file; without the plugin to
+    // refresh its state it would keep enforcing a frozen block list, so it goes too.
+    require_once __DIR__ . '/kits/security-protection/src/load.php';
+    \GoBuildWP\Kits\SecurityProtection\remove_prepend();
 
     // Report the deactivation before dropping the schedule, then drop it.
     // Without the report an abandoned install reads as active until it falls

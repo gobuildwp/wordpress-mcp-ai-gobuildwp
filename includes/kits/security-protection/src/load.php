@@ -16,3 +16,5 @@ require_once __DIR__ . '/store.php';
 require_once __DIR__ . '/rules.php';
 require_once __DIR__ . '/guard.php';
 require_once __DIR__ . '/virtual-patches.php';
+require_once __DIR__ . '/feed.php';
+require_once __DIR__ . '/prepend.php';

@@ -32,17 +32,20 @@ const EVENT_DAYS = 30;
 const EVENT_TYPES = ['firewall', 'login', 'block', 'enumeration', 'flood', 'settings'];
 
 /**
- * Everything off: the kit changes nothing until someone turns a part on.
+ * Safe defaults from activation: the firewall logs what it would block, repeated login failures
+ * lock an address out, and author/user enumeration is refused. XML-RPC stays on (lockouts cover
+ * its logins) and 404-flood blocking stays off until someone turns it on. GOBUILDWP_DISABLE_PROTECTION
+ * in wp-config.php switches every part off.
  *
  * @return array<string, mixed>
  */
 function default_settings(): array
 {
     return [
-        'firewall' => 'off',
-        'login' => ['enabled' => false, 'max_failures' => 5, 'window_minutes' => 15, 'lockout_minutes' => 30, 'generic_errors' => false],
+        'firewall' => 'log',
+        'login' => ['enabled' => true, 'max_failures' => 5, 'window_minutes' => 15, 'lockout_minutes' => 30, 'generic_errors' => false],
         'xmlrpc' => 'on',
-        'block_user_enumeration' => false,
+        'block_user_enumeration' => true,
         'flood' => ['enabled' => false, 'max_404_per_minute' => 60],
         'ip_source' => 'remote_addr',
         'allowlist' => [],
@@ -203,6 +206,7 @@ function configure(array $change): array|WP_Error
             }
         }
         record_event('settings', 'changed', '', null, '', 'Changed: ' . implode(', ', $changed));
+        sync_prepend_state();
     }
     return ['settings' => $next, 'previous' => $previous];
 }
@@ -306,6 +310,7 @@ function add_block(string $ip, int $minutes, string $reason, string $source, ?in
     }
     update_option(OPT_BLOCKS, $blocks, true);
     record_event('block', 'blocked', $cidr, null, '', $source . ($block['reason'] !== '' ? ': ' . $block['reason'] : ''));
+    sync_prepend_state();
     return $block;
 }
 
@@ -341,6 +346,7 @@ function remove_block(string $ip): bool
     update_option(OPT_BLOCKS, $blocks, true);
     clear_failures($cidr);
     record_event('block', 'unblocked', $cidr, null, '', '');
+    sync_prepend_state();
     return true;
 }
 

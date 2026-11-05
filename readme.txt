@@ -4,7 +4,7 @@ Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.19.4
+Stable tag: 1.20.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,12 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 
 == Changelog ==
 
+= 1.20.0 =
+* New: website protection is on from activation: login lockout, user-enumeration blocking and the firewall in log mode work without GoBuildWP Cloud. Define GOBUILDWP_DISABLE_PROTECTION as true in wp-config.php to switch it all off.
+* New: a pre-WordPress firewall. GoBuildWP Cloud can install a small PHP file that PHP loads before WordPress and every plugin, so blocked addresses, the reputation blocklist and XML-RPC (when it is off) are refused even while the site is broken. It is removed on deactivation and uninstall.
+* New: GoBuildWP Cloud pushes a rule pack and a fleet-wide reputation blocklist, so an address caught attacking another GoBuildWP site is blocked here before its first request.
+* New: gobuildwp/protection-feed and gobuildwp/protection-prepend abilities, for signed GoBuildWP Cloud requests only.
+
 = 1.19.4 =
 * Fixed: some hosts' malware scanners (for example SiteGround's) quarantined a GoBuildWP file because its security scan rules contained malware signature text, and the site then failed with "Failed to open stream: Permission denied". No plugin file carries that text any more.
 * Fixed: a security or other feature kit that fails to load is now skipped and logged instead of stopping the site.
@@ -256,6 +262,9 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.20.0 =
+Protection is on by default (login lockout, enumeration block, firewall in log mode). Adds a pre-WordPress firewall and a fleet-wide reputation blocklist from GoBuildWP Cloud.
 
 = 1.19.4 =
 Fixes sites going down when a host's malware scanner quarantined a GoBuildWP file.

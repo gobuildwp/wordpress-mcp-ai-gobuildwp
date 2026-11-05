@@ -165,22 +165,40 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
         // ------------------------------------------------------------ settings
 
-        public function test_defaults_are_dormant(): void
+        public function test_defaults_are_safe_but_not_blocking(): void
         {
+            $s = SP\settings();
+            self::assertSame('log', $s['firewall']);
+            self::assertTrue($s['login']['enabled']);
+            self::assertFalse($s['login']['generic_errors']);
+            self::assertSame('on', $s['xmlrpc']);
+            self::assertTrue($s['block_user_enumeration']);
+            self::assertFalse($s['flood']['enabled']);
+            self::assertSame([], $s['allowlist']);
+        }
+
+        public function test_stored_settings_from_before_the_safe_defaults_still_win(): void
+        {
+            WPPilot_Test_State::$options[SP\OPT_SETTINGS] = ['firewall' => 'off', 'login' => ['enabled' => false]];
             $s = SP\settings();
             self::assertSame('off', $s['firewall']);
             self::assertFalse($s['login']['enabled']);
-            self::assertSame('on', $s['xmlrpc']);
-            self::assertFalse($s['block_user_enumeration']);
-            self::assertFalse($s['flood']['enabled']);
-            self::assertSame([], $s['allowlist']);
+            self::assertTrue($s['block_user_enumeration']);
+        }
+
+        /** Every part off: what the kit looked like before 1.1.0, for tests of single parts. */
+        private static function all_off(): array
+        {
+            $s = SP\sanitize_settings(['firewall' => 'off', 'login' => ['enabled' => false], 'block_user_enumeration' => false], SP\default_settings());
+            self::assertIsArray($s);
+            return $s;
         }
 
         public function test_configure_merges_and_returns_previous(): void
         {
             $r = SP\configure(['firewall' => 'block', 'login' => ['enabled' => true, 'max_failures' => 4]]);
             self::assertIsArray($r);
-            self::assertSame('off', $r['previous']['firewall']);
+            self::assertSame('log', $r['previous']['firewall']);
             self::assertSame('block', $r['settings']['firewall']);
             self::assertTrue($r['settings']['login']['enabled']);
             self::assertSame(4, $r['settings']['login']['max_failures']);
@@ -200,7 +218,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             ] as $bad) {
                 self::assertInstanceOf(WP_Error::class, SP\configure($bad), json_encode($bad));
             }
-            self::assertSame('off', SP\settings()['firewall']);
+            self::assertSame('log', SP\settings()['firewall']);
         }
 
         public function test_allowlist_is_normalised(): void
@@ -377,7 +395,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
         /** @param array<string, mixed> $change */
         private static function with(array $change): array
         {
-            $s = SP\sanitize_settings($change, SP\default_settings());
+            $s = SP\sanitize_settings($change, self::all_off());
             self::assertIsArray($s);
             return $s;
         }
@@ -385,7 +403,14 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
         public function test_nothing_on_lets_everything_through(): void
         {
             $attack = self::ctx([], ['REQUEST_URI' => '/'], ['id' => '1 UNION SELECT 1']);
-            self::assertNull(SP\decide($attack, SP\default_settings(), []));
+            self::assertNull(SP\decide($attack, self::all_off(), []));
+        }
+
+        public function test_defaults_log_attacks_and_refuse_enumeration(): void
+        {
+            $attack = self::ctx([], ['REQUEST_URI' => '/'], ['id' => '1 UNION SELECT 1']);
+            self::assertSame('log', SP\decide($attack, SP\default_settings(), [])['action'] ?? null);
+            self::assertSame('author_query', SP\decide(self::ctx(['author_query' => true]), SP\default_settings(), [])['rule'] ?? null);
         }
 
         public function test_firewall_block_and_log_modes(): void
@@ -408,13 +433,13 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             $ctx = self::ctx(['is_rest' => true, 'has_auth_header' => true], ['REQUEST_URI' => '/wp-json/x'], ['id' => '1 UNION SELECT 1']);
             self::assertSame('defer', SP\decide($ctx, self::with(['firewall' => 'block']), [])['action'] ?? null);
             $blocks = ['198.51.100.20' => ['ip' => '198.51.100.20', 'reason' => '', 'source' => 'manual', 'created_at' => 1, 'expires_at' => null]];
-            self::assertSame('defer', SP\decide(self::ctx(['is_rest' => true, 'has_auth_header' => true]), SP\default_settings(), $blocks)['action'] ?? null);
+            self::assertSame('defer', SP\decide(self::ctx(['is_rest' => true, 'has_auth_header' => true]), self::all_off(), $blocks)['action'] ?? null);
         }
 
         public function test_blocked_address_is_stopped_everywhere(): void
         {
             $blocks = ['198.51.100.20' => ['ip' => '198.51.100.20', 'reason' => '', 'source' => 'manual', 'created_at' => 1, 'expires_at' => null]];
-            $d = SP\decide(self::ctx(), SP\default_settings(), $blocks);
+            $d = SP\decide(self::ctx(), self::all_off(), $blocks);
             self::assertSame('block', $d['action'] ?? null);
             self::assertSame('manual', $d['rule'] ?? null);
         }

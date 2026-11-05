@@ -129,12 +129,17 @@ function flatten(array $in, array &$out, int &$budget, int $depth): void
  *
  * @param array{path: string, args: list<string>, ua: string, files: list<string>} $parts
  * @param list<string> $skip Rule ids not to apply (script injection for signed-in authors), or
- *   `id:where` to skip one rule in one place only (`sensitive_file:args`).
+ *   `id:where` to skip one rule in one place only (`sensitive_file:args`). The Cloud feed's rules
+ *   (feed.php) run after the built-in ones, with `feed:` ids.
  * @return array{id: string, label: string, in: string}|null
  */
 function firewall_match(array $parts, array $skip = []): ?array
 {
-    foreach (rules() as $rule) {
+    $rules = rules();
+    if (function_exists(__NAMESPACE__ . '\feed_rules')) {
+        $rules = array_merge($rules, feed_rules());
+    }
+    foreach ($rules as $rule) {
         if (in_array($rule['id'], $skip, true)) {
             continue;
         }

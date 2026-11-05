@@ -32,8 +32,13 @@ function install_hooks(): void
     }
     $patches = active_virtual_patches();
     $login = $settings['login'];
+    $prepend = prepend_record() !== null;
+    if ($prepend) {
+        ingest_prepend_events();
+    }
     $any = $has_blocks
         || $patches !== []
+        || feed_has_content()
         || $settings['firewall'] !== 'off'
         || $login['enabled']
         || $login['generic_errors']
@@ -133,9 +138,11 @@ function request_context(array $settings): array
  * @param array<string, mixed> $ctx
  * @param array<string, mixed> $settings
  * @param array<string, array{ip: string, reason: string, source: string, created_at: int, expires_at: int|null}> $blocks
+ * @param list<array{ip: string, reason: string, expires_at: int|null}>|null $blocklist The Cloud
+ *   feed's reputation blocklist; null reads the stored one.
  * @return array{action: string, type: string, rule: string, detail: string}|null
  */
-function decide(array $ctx, array $settings, array $blocks): ?array
+function decide(array $ctx, array $settings, array $blocks, ?array $blocklist = null): ?array
 {
     $ip = (string) $ctx['ip'];
     if ($ip === '' || $ctx['admin'] || ip_in_list($ip, $settings['allowlist'])) {
@@ -146,6 +153,9 @@ function decide(array $ctx, array $settings, array $blocks): ?array
     if ($block !== null) {
         $detail = $block['source'] === 'login_lockout' ? 'Too many failed logins' : 'Address is blocked';
         return ['action' => $defer ? 'defer' : 'block', 'type' => 'block', 'rule' => $block['source'], 'detail' => $detail];
+    }
+    if (feed_block_for($ip, $blocklist ?? feed_blocklist()) !== null) {
+        return ['action' => $defer ? 'defer' : 'block', 'type' => 'block', 'rule' => 'reputation', 'detail' => 'Address is on the reputation blocklist'];
     }
     if ($settings['xmlrpc'] === 'off' && $ctx['is_xmlrpc']) {
         return ['action' => 'block', 'type' => 'firewall', 'rule' => 'xmlrpc_off', 'detail' => 'XML-RPC is turned off'];
@@ -176,7 +186,8 @@ function guard_request(array $settings): void
 {
     $ctx = request_context($settings);
     $blocks = blocks();
-    $decision = decide($ctx, $settings, $blocks);
+    $blocklist = feed_blocklist();
+    $decision = decide($ctx, $settings, $blocks, $blocklist);
     if ($decision === null) {
         return;
     }
@@ -185,7 +196,7 @@ function guard_request(array $settings): void
     if ($signed_in) {
         $ctx['signed_in'] = true;
         $ctx['admin'] = $admin;
-        $decision = decide($ctx, $settings, $blocks);
+        $decision = decide($ctx, $settings, $blocks, $blocklist);
         if ($decision === null) {
             return;
         }

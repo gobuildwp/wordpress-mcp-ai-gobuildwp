@@ -1,6 +1,6 @@
 {
     "slug": "security-protection",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "namespace": "GoBuildWP\\Kits\\SecurityProtection",
     "tier": "free",
     "runtime": "^1.4",
@@ -11,7 +11,7 @@
     "categories": {
         "security-protection": {
             "label": "Website protection",
-            "description": "A request firewall (path traversal, SQL injection, script injection, PHP wrappers, code execution, PHP uploads, scanner tools), login protection that locks out an address after repeated failed logins, IP blocks, XML-RPC and user-enumeration blocking, and 404-flood blocking. Everything is off until it is turned on. Administrators who are signed in are never blocked. Events record the address, rule and path, never the request's values."
+            "description": "A request firewall (path traversal, SQL injection, script injection, PHP wrappers, code execution, PHP uploads, scanner tools), login protection that locks out an address after repeated failed logins, IP blocks, XML-RPC and user-enumeration blocking, and 404-flood blocking. From activation the firewall logs, repeated failed logins lock an address out and user enumeration is refused; firewall blocking, XML-RPC blocking and 404-flood blocking are turned on by the owner or GoBuildWP Cloud. Cloud can also push a request-rule pack and a fleet-wide reputation blocklist, and install a pre-WordPress firewall (auto_prepend_file) that keeps blocks working while WordPress is broken. Administrators who are signed in are never blocked. Events record the address, rule and path, never the request's values."
         }
     },
     "abilities": [
@@ -53,6 +53,18 @@
         },
         {
             "name": "gobuildwp/protection-virtual-patches",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/protection-feed",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/protection-prepend",
             "readonly": false,
             "destructive": false,
             "ledger": "self"

@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('gobuildwp/protection-status', [
     'label' => __('Website Protection Status', domain: 'wppilot'),
     'description' => __(
-        "Shows this site's website protection: firewall mode, login protection, XML-RPC, user-enumeration and 404-flood settings, the allowlist, counts for the last 24 hours, the number of active blocks, the 20 newest events, and how many virtual patches are stored and active. Read-only.",
+        "Shows this site's website protection: firewall mode, login protection, XML-RPC, user-enumeration and 404-flood settings, the allowlist, counts for the last 24 hours, the number of active blocks, the 20 newest events, how many virtual patches are stored and active, the Cloud feed (rule pack and reputation blocklist) counts and digest, and whether the pre-WordPress firewall is installed and active. Read-only.",
         domain: 'wppilot',
     ),
     'category' => 'security-protection',
@@ -46,6 +46,8 @@ wp_register_ability('gobuildwp/protection-status', [
                     'active_ids' => ['type' => 'array', 'items' => ['type' => 'string']],
                 ],
             ],
+            'feed' => ['type' => 'object'],
+            'prepend' => ['type' => 'object'],
         ],
     ],
     'execute_callback' => static function (array $input = []): array {
@@ -53,6 +55,8 @@ wp_register_ability('gobuildwp/protection-status', [
         $active = array_map(static fn(array $rule): string => (string) $rule['id'], active_virtual_patches());
         return status($_SERVER) + [
             'virtual_patches' => ['stored' => count(stored_virtual_patches()['rules']), 'active' => count($active), 'active_ids' => $active],
+            'feed' => feed_summary(),
+            'prepend' => prepend_status(),
         ];
     },
     'permission_callback' => static fn(): bool => Runtime\can_run() && current_user_can('manage_options'),

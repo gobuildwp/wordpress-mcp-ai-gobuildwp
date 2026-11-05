@@ -283,6 +283,42 @@ function wppilot_uninstall_restore_points(): void
     }
 }
 
+/**
+ * The security-protection kit's pre-WordPress firewall: its auto_prepend_file lines in the site's
+ * .user.ini and .htaccess, and its folder under wp-content. The markers and folder name are
+ * repeated from includes/kits/security-protection/src/prepend.php.
+ */
+function wppilot_uninstall_prepend_firewall(): void
+{
+    $root = rtrim(wp_normalize_path(ABSPATH), '/');
+    $ini_name = (string) ini_get('user_ini.filename');
+    $files = [
+        [$root . '/.htaccess', '# BEGIN GoBuildWP protection', '# END GoBuildWP protection'],
+    ];
+    if ($ini_name !== '' && $ini_name !== '0') {
+        $files[] = [$root . '/' . $ini_name, '; BEGIN GoBuildWP protection', '; END GoBuildWP protection'];
+    }
+    foreach ($files as [$file, $begin, $end]) {
+        if (is_link($file) || !is_file($file)) {
+            continue;
+        }
+        $content = (string) file_get_contents($file);
+        $kept = (string) preg_replace('/[ \t]*' . preg_quote($begin, '/') . '.*?' . preg_quote($end, '/') . '[ \t]*(?:\r?\n|$)/s', '', $content);
+        if ($kept === $content) {
+            continue;
+        }
+        if (trim($kept) === '') {
+            @unlink($file);
+        } else {
+            @file_put_contents($file, $kept, LOCK_EX);
+        }
+    }
+    $dir = rtrim(wp_normalize_path((string) WP_CONTENT_DIR), '/') . '/gobuildwp-protection';
+    if (is_dir($dir) && !is_link($dir) && is_file($dir . '/firewall.php')) {
+        wppilot_uninstall_delete_tree($dir);
+    }
+}
+
 function wppilot_uninstall_delete_tree(string $path): void
 {
     if (is_link($path) || is_file($path)) {
@@ -382,6 +418,7 @@ function wppilot_uninstall_current_site(): void
     }
 
     wppilot_uninstall_restore_points();
+    wppilot_uninstall_prepend_firewall();
 
     foreach (wppilot_uninstall_options() as $option) {
         delete_option($option);

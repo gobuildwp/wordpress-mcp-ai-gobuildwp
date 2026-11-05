@@ -1,7 +1,7 @@
 # GoBuildWP: WordPress MCP server and AI website builder for Claude, ChatGPT, Cursor and Codex
 
 <!-- current-releases:start -->
-Current releases: **GoBuildWP Free 1.19.4 / Pro 1.14.3**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.20.0 / Pro 1.14.4**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
 [![Version](https://img.shields.io/github/v/release/gobuildwp/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
@@ -135,6 +135,8 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 | **Site header** | `1` | Build the site-wide header: logo and title, the menu (a menu button on tablets and phones), a language dropdown, an optional button and the cart, one header per Polylang language. It checks the served header before reporting success and can be undone. Needs Elementor Pro (Elementor's own paid plugin), or a block theme. |
 | **Block Notes** | `4` | Leave a note on a block for a person, reply, resolve, and read the notes they resolved. Every one can be undone. |
 | **Site tools** | `8` | WP-Cron list, run and delete (undoable), Site Health tests, transient flush, and, on Developer Full Access and audited, an options explorer and a read-only database SELECT with redaction. |
+| **Database cleanup** | `2` | Preview, then permanently remove spam comments, trashed comments and post revisions older than a number of days, oldest first and up to a limit, with undo through the change log. |
+| **404 log** | `1` | The paths visitors hit that returned 404, most-hit first, with the referring host and when each was last seen, to find broken links and moved pages that need a redirect. |
 | **Multisite** | `2` | List a network's sites and run an ability on one of them through that site's own safety profile and gates. Loads only on a multisite network. |
 | **WooCommerce** | `13` | Check the setup, list and read products, variations, categories, tags and store settings, read orders and customers, and edit one product's name, description, prices and stock with undo. |
 | **SEO** | `14` | One post's SEO title, meta description and robots in Yoast SEO, Rank Math, All in One SEO, SEOPress, The SEO Framework, Slim SEO and SmartCrawl, read and set with undo. |
