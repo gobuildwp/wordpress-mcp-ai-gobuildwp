@@ -32,6 +32,14 @@ if (!defined('ABSPATH')) {
 /** First line of every signed message. */
 const GOBUILDWP_CLOUD_SIGNING_VERSION = 'gobuildwp-cloud-request-v1';
 
+/**
+ * First line of the site-bound message. The v1 message names no site, so a signature
+ * captured from one site would verify on any other site the same Cloud key signs for.
+ * The Cloud also sends `X-GoBuildWP-Site-Sig` over the same lines plus this site's Cloud
+ * site id. Once one has verified here, the site-bound form is required from then on.
+ */
+const GOBUILDWP_CLOUD_SITE_SIGNING_VERSION = 'gobuildwp-cloud-request-v2';
+
 /** How far the Cloud's clock may be from this site's, in seconds. */
 const GOBUILDWP_CLOUD_SIGNING_SKEW = 300;
 
@@ -95,13 +103,14 @@ function gobuildwp_cloud_signing_parse_key(mixed $value): ?array
  *
  * Read from the raw option: wppilot_cloud_parse_link() keeps only the §3.4 fields.
  *
- * @return array{kid: string, public: string, previous: array{kid: string, public: string}|null, previous_until: int, since: int}|null
+ * @return array{kid: string, public: string, previous: array{kid: string, public: string}|null, previous_until: int, since: int, site_id: string, site_bound: int}|null
  */
 function gobuildwp_cloud_signing_stored(): ?array
 {
     /** @var mixed $raw */
     $raw = get_option(WPPILOT_CLOUD_LINK_OPTION, default_value: null);
-    if (wppilot_cloud_parse_link($raw) === null || !is_array($raw)) {
+    $link = wppilot_cloud_parse_link($raw);
+    if ($link === null || !is_array($raw)) {
         return null;
     }
     $stored = is_array($raw['cloud_signing'] ?? null) ? $raw['cloud_signing'] : null;
@@ -116,6 +125,8 @@ function gobuildwp_cloud_signing_stored(): ?array
         'previous' => gobuildwp_cloud_signing_parse_key($stored['previous'] ?? null),
         'previous_until' => is_int($stored['previous_until'] ?? null) ? $stored['previous_until'] : 0,
         'since' => is_int($stored['since'] ?? null) ? $stored['since'] : 0,
+        'site_id' => (string) $link['site_id'],
+        'site_bound' => is_int($stored['site_bound'] ?? null) ? $stored['site_bound'] : 0,
     ];
 }
 
@@ -131,7 +142,29 @@ function gobuildwp_cloud_signing_save(array $signing): void
     if (!is_array($raw)) {
         return;
     }
+    // A key change never forgets that the site-bound form is required.
+    $bound = is_array($raw['cloud_signing'] ?? null) && is_int($raw['cloud_signing']['site_bound'] ?? null) ? $raw['cloud_signing']['site_bound'] : 0;
+    if ($bound > 0 && !isset($signing['site_bound'])) {
+        $signing['site_bound'] = $bound;
+    }
     $raw['cloud_signing'] = $signing;
+    update_option(WPPILOT_CLOUD_LINK_OPTION, $raw, autoload: false);
+}
+
+/**
+ * Remember that a site-bound signature has verified: from now on the v1 form alone is refused.
+ */
+function gobuildwp_cloud_signing_bind_site(int $now): void
+{
+    /** @var mixed $raw */
+    $raw = get_option(WPPILOT_CLOUD_LINK_OPTION, default_value: null);
+    if (!is_array($raw) || !is_array($raw['cloud_signing'] ?? null)) {
+        return;
+    }
+    if (is_int($raw['cloud_signing']['site_bound'] ?? null) && $raw['cloud_signing']['site_bound'] > 0) {
+        return;
+    }
+    $raw['cloud_signing']['site_bound'] = $now;
     update_option(WPPILOT_CLOUD_LINK_OPTION, $raw, autoload: false);
 }
 
@@ -250,6 +283,27 @@ function gobuildwp_cloud_signing_message(
         $op,
         $approval,
     ]);
+}
+
+/**
+ * The site-bound message: the v1 lines under the v2 version line, then the Cloud site id.
+ */
+function gobuildwp_cloud_signing_site_message(
+    string $method,
+    string $path,
+    string $body,
+    string $ts,
+    string $nonce,
+    string $request_id,
+    string $op,
+    string $approval,
+    string $site_id,
+): string {
+    $lines = explode("\n", gobuildwp_cloud_signing_message($method, $path, $body, $ts, $nonce, $request_id, $op, $approval));
+    $lines[0] = GOBUILDWP_CLOUD_SITE_SIGNING_VERSION;
+    $lines[] = $site_id;
+
+    return implode("\n", $lines);
 }
 
 /**
@@ -374,6 +428,7 @@ function gobuildwp_cloud_signing_verify(WP_REST_Request $request, array $signing
     $op = $header('X-GoBuildWP-Op');
     $kid = $header('X-GoBuildWP-Key-Id');
     $sig = $header('X-GoBuildWP-Sig');
+    $site_sig = $header('X-GoBuildWP-Site-Sig');
     // An empty header may not survive every proxy; it signs as "" either way.
     $approval = $header('X-GoBuildWP-Approval') ?? '';
 
@@ -421,16 +476,39 @@ function gobuildwp_cloud_signing_verify(WP_REST_Request $request, array $signing
     if (!is_string($signature) || strlen($signature) !== 64 || !is_string($key) || strlen($key) !== 32) {
         return gobuildwp_cloud_signing_error('gobuildwp_signature_invalid');
     }
-    $message = gobuildwp_cloud_signing_message(
-        $request->get_method(),
-        $request->get_route(),
-        $request->get_body(),
-        $ts,
-        $nonce,
-        $request_id,
-        $op,
-        $approval,
-    );
+    $bound = ($signing['site_bound'] ?? 0) > 0;
+    if ($site_sig === null && $bound) {
+        // This site has seen the site-bound form: a signature that names no site could have been captured elsewhere.
+        return gobuildwp_cloud_signing_error('gobuildwp_site_signature_required');
+    }
+    if ($site_sig !== null) {
+        $signature = base64_decode($site_sig, strict: true);
+        if (!is_string($signature) || strlen($signature) !== 64) {
+            return gobuildwp_cloud_signing_error('gobuildwp_signature_invalid');
+        }
+        $message = gobuildwp_cloud_signing_site_message(
+            $request->get_method(),
+            $request->get_route(),
+            $request->get_body(),
+            $ts,
+            $nonce,
+            $request_id,
+            $op,
+            $approval,
+            (string) ($signing['site_id'] ?? ''),
+        );
+    } else {
+        $message = gobuildwp_cloud_signing_message(
+            $request->get_method(),
+            $request->get_route(),
+            $request->get_body(),
+            $ts,
+            $nonce,
+            $request_id,
+            $op,
+            $approval,
+        );
+    }
     try {
         $valid = sodium_crypto_sign_verify_detached($signature, $message, $key);
     } catch (Throwable) {
@@ -438,6 +516,9 @@ function gobuildwp_cloud_signing_verify(WP_REST_Request $request, array $signing
     }
     if (!$valid) {
         return gobuildwp_cloud_signing_error('gobuildwp_signature_invalid');
+    }
+    if ($site_sig !== null && !$bound) {
+        gobuildwp_cloud_signing_bind_site($now);
     }
 
     // Only after the signature holds, so a forged request cannot use up a nonce.
@@ -517,6 +598,7 @@ function gobuildwp_cloud_signing_error(string $code): WP_Error
 {
     $messages = [
         'gobuildwp_signature_required' => __('This GoBuildWP Cloud request must be signed.', domain: 'wppilot'),
+        'gobuildwp_site_signature_required' => __('This GoBuildWP Cloud request must carry a signature bound to this site.', domain: 'wppilot'),
         'gobuildwp_replay' => __('This GoBuildWP Cloud request was already used.', domain: 'wppilot'),
         'gobuildwp_stale' => __('This GoBuildWP Cloud request is too old or too far in the future.', domain: 'wppilot'),
     ];

@@ -117,7 +117,7 @@ final class CloudRequestSigningTest extends TestCase
      * @param array<string, string> $signed
      * @return array<string, string>
      */
-    private function sign(string $method, string $path, string $body, string $op, array $signed = [], ?int $ts = null, string $seed_hex = self::SEED_HEX, ?string $kid = null): array
+    private function sign(string $method, string $path, string $body, string $op, array $signed = [], ?int $ts = null, string $seed_hex = self::SEED_HEX, ?string $kid = null, ?string $site_id = null): array
     {
         $ts ??= time();
         $nonce = rtrim(strtr(base64_encode(str_pad((string) ++$this->nonceCounter, 18, 'n', STR_PAD_LEFT)), '+/', '-_'), '=');
@@ -133,8 +133,23 @@ final class CloudRequestSigningTest extends TestCase
             '',
         );
         $keypair = self::keypair($seed_hex);
+        $site_sig = [];
+        if ($site_id !== null) {
+            $site_message = gobuildwp_cloud_signing_site_message(
+                $signed['method'] ?? $method,
+                $signed['path'] ?? $path,
+                $signed['body'] ?? $body,
+                (string) $ts,
+                $nonce,
+                $request_id,
+                $op,
+                '',
+                $site_id,
+            );
+            $site_sig = ['X-GoBuildWP-Site-Sig' => base64_encode(sodium_crypto_sign_detached($site_message, sodium_crypto_sign_secretkey($keypair)))];
+        }
 
-        return [
+        return $site_sig + [
             'X-GoBuildWP-Ts' => (string) $ts,
             'X-GoBuildWP-Nonce' => $nonce,
             'X-GoBuildWP-Request-Id' => $request_id,
@@ -580,6 +595,47 @@ final class CloudRequestSigningTest extends TestCase
         self::assertNull($result->data['id']);
         self::assertSame('gobuildwp_signature_required', $result->data['error']['message']);
         self::assertNull(self::dispatch(self::MCP, '[' . $read . ',' . $read . ']', []));
+    }
+
+    public function testTheSiteBoundMessageAddsTheSiteIdUnderAV2Header(): void
+    {
+        $message = gobuildwp_cloud_signing_site_message('post', self::POLICY . '/', self::VECTOR_BODY, (string) self::VECTOR_TS, self::VECTOR_NONCE, self::VECTOR_REQUEST_ID, 'cloud/policy', '', 'site-1');
+        self::assertSame(
+            "gobuildwp-cloud-request-v2\nPOST\n/wppilot/v1/cloud/policy\n928d92441865948baf5e5b5491f05c04cdce0344d05f3a3ec5d295cdd924cf26\n1767225600\nAAECAwQFBgcICQoLDA0ODxAR\n123e4567-e89b-42d3-a456-426614174000\ncloud/policy\n\nsite-1",
+            $message,
+        );
+    }
+
+    public function testASiteBoundSignatureBindsTheSiteAndRefusesOtherSitesAndTheOldForm(): void
+    {
+        self::trustVectorKey();
+        $body = '{"policy":{"id":"p"}}';
+        self::assertSame(0, gobuildwp_cloud_signing_stored()['site_bound']);
+
+        // Before any site-bound signature, the v1 form still passes (older Cloud).
+        self::assertNull(self::dispatch(self::POLICY, $body, $this->sign('POST', self::POLICY, $body, 'cloud/policy')));
+
+        // A signature bound to another site is refused outright.
+        self::assertRefused('gobuildwp_signature_invalid', self::dispatch(self::POLICY, $body, $this->sign('POST', self::POLICY, $body, 'cloud/policy', site_id: 'site-2')));
+        self::assertSame(0, gobuildwp_cloud_signing_stored()['site_bound']);
+
+        // One bound to this site verifies and latches.
+        self::assertNull(self::dispatch(self::POLICY, $body, $this->sign('POST', self::POLICY, $body, 'cloud/policy', site_id: 'site-1')));
+        self::assertGreaterThan(0, gobuildwp_cloud_signing_stored()['site_bound']);
+
+        // From now on a signature that names no site is refused, even a fresh valid one.
+        self::assertRefused('gobuildwp_site_signature_required', self::dispatch(self::POLICY, $body, $this->sign('POST', self::POLICY, $body, 'cloud/policy')));
+        self::assertNull(self::dispatch(self::POLICY, $body, $this->sign('POST', self::POLICY, $body, 'cloud/policy', site_id: 'site-1')));
+
+        // A tampered site-bound signature fails even though the v1 header beside it is good.
+        $headers = $this->sign('POST', self::POLICY, $body, 'cloud/policy', site_id: 'site-1');
+        $headers['X-GoBuildWP-Site-Sig'] = base64_encode(str_repeat("", 64));
+        self::assertRefused('gobuildwp_signature_invalid', self::dispatch(self::POLICY, $body, $headers));
+
+        // The latch survives a key rotation.
+        $next = self::offer('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+        self::assertSame('rotated', gobuildwp_cloud_signing_accept($next + ['previous' => self::offer()], 'site-1'));
+        self::assertGreaterThan(0, gobuildwp_cloud_signing_stored()['site_bound']);
     }
 
     public function testStatusReportsCloudSigning(): void
