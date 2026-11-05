@@ -215,6 +215,10 @@ function wordpress_create_post(array $input): array|WP_Error
     if ($guard !== null) {
         return $guard;
     }
+    $protected = wordpress_protected_meta_error(is_array($input['meta'] ?? null) ? $input['meta'] : [], 0);
+    if ($protected !== null) {
+        return $protected;
+    }
     $breakdance_gate = wordpress_breakdance_content_gate($input);
     if ($breakdance_gate !== null) {
         return $breakdance_gate;

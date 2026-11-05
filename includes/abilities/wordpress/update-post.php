@@ -234,12 +234,20 @@ function wordpress_update_post(array $input): array|WP_Error
     if ($status_error !== null) {
         return $status_error;
     }
+    $author_error = wordpress_update_author_capability_error($post, $input);
+    if ($author_error !== null) {
+        return $author_error;
+    }
 
     // Builder-managed content and builder storage meta are never written
     // through this generic wrapper — reject before touching anything.
     $guard = wordpress_builder_write_guard($input);
     if ($guard !== null) {
         return $guard;
+    }
+    $protected = wordpress_protected_meta_error(is_array($input['meta'] ?? null) ? $input['meta'] : [], $post_id);
+    if ($protected !== null) {
+        return $protected;
     }
     $breakdance_gate = wordpress_breakdance_content_gate($input, $post_id);
     if ($breakdance_gate !== null) {

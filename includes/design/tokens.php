@@ -330,7 +330,7 @@ function prose_typography(string $raw): array
     [$heading_family, $body_family] = resolve_prose_families($raw, $heading_family, $body_family);
     $out = [];
     foreach ($sized as $role => $props) {
-        $is_heading = preg_match('/^(display|h[1-6]|headline|title|heading|hero|kicker)/', $role) === 1;
+        $is_heading = preg_match('/^(display|h[1-6]|headline|title|heading|hero|kicker)/', (string) $role) === 1;
         $family = $is_heading && $heading_family !== '' ? $heading_family : $body_family;
         $row = [];
         if ($family !== '') {
@@ -727,7 +727,7 @@ function shadow_rgb(string $word, array $palette): string
         return '255, 255, 255';
     }
     foreach ($palette as $name => $hex) {
-        if (str_contains(str_replace(search: '-', replace: ' ', subject: strtolower($name)), $needle)) {
+        if (str_contains(str_replace(search: '-', replace: ' ', subject: strtolower((string) $name)), $needle)) {
             return hex_to_rgb($hex);
         }
     }
@@ -960,7 +960,8 @@ function pick_value(array $map, array $keys): string
 {
     $lower = [];
     foreach ($map as $map_key => $map_value) {
-        $lower_key = strtolower($map_key);
+        // A numeric name (`50:` in a colour scale) arrives as an int key.
+        $lower_key = strtolower((string) $map_key);
         if (!array_key_exists($lower_key, $lower)) {
             $lower[$lower_key] = $map_value;
         }
@@ -992,7 +993,7 @@ function pick_typography_prop(array $typography, array $roles, string $prop): st
 {
     $lower = [];
     foreach ($typography as $role_key => $props) {
-        $lower_key = strtolower($role_key);
+        $lower_key = strtolower((string) $role_key);
         if (!array_key_exists($lower_key, $lower)) {
             $lower[$lower_key] = $props;
         }
@@ -1007,7 +1008,7 @@ function pick_typography_prop(array $typography, array $roles, string $prop): st
     // as a display role and body-md as a body role.
     foreach ($roles as $role) {
         foreach ($lower as $role_key => $props) {
-            if (str_starts_with($role_key, $role) && ($props[$prop] ?? '') !== '') {
+            if (str_starts_with((string) $role_key, $role) && ($props[$prop] ?? '') !== '') {
                 return css_value($props[$prop]);
             }
         }

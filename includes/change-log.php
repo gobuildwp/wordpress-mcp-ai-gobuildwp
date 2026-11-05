@@ -1767,7 +1767,7 @@ function wppilot_restore_plugin_state_snapshot(array $snapshot): array|WP_Error
             return $activated;
         }
     } else {
-        deactivate_plugins([$file], silent: false, network_wide: $network_active ? true : null);
+        deactivate_plugins([$file], silent: false, network_wide: $network_active);
     }
 
     $now_active = is_plugin_active($file) || is_plugin_active_for_network($file);

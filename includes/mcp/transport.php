@@ -156,6 +156,22 @@ function caller_may_use_mcp(WP_REST_Request $request): bool
  */
 function respond(array $outcome): WP_REST_Response
 {
+    if ($outcome['status'] === 202) {
+        // WP_REST_Server would otherwise echo "null" (or "[]") for the data; the
+        // transport says 202 Accepted has no body, so serve it ourselves after
+        // WordPress has sent the headers.
+        $response = new WP_REST_Response(null, 202);
+        $response->header('MCP-Protocol-Version', VERSION_MODERN);
+        add_filter(
+            'rest_pre_serve_request',
+            static fn (mixed $served, mixed $result): mixed => $result === $response ? true : $served,
+            10,
+            2,
+        );
+
+        return $response;
+    }
+
     $response = new WP_REST_Response($outcome['body'], $outcome['status']);
     $response->header('Content-Type', 'application/json; charset=utf-8');
     $response->header('MCP-Protocol-Version', VERSION_MODERN);
@@ -183,6 +199,14 @@ function handle_modern(WP_REST_Request $request, array $body): array
     // believe it had set a log level or kept a session alive when it had not.
     if (is_removed_in_modern($method)) {
         return removed_method_error($method, $id);
+    }
+
+    // A JSON-RPC notification carries no id, and the Streamable HTTP transport
+    // answers it with 202 Accepted and no body. Without this a client's
+    // notifications/cancelled or notifications/progress got a 404
+    // method_not_found error addressed to a null id.
+    if (is_notification($body)) {
+        return accepted();
     }
 
     // The revision requires both _meta fields on every request. An empty
@@ -224,6 +248,27 @@ function handle_modern(WP_REST_Request $request, array $body): array
         'prompts/get' => get_prompt($params, $id),
         default => method_not_found_error($method, $id),
     };
+}
+
+/**
+ * Whether a modern body is a JSON-RPC notification: a method with no id.
+ *
+ * @param array<string, mixed> $body
+ */
+function is_notification(array $body): bool
+{
+    return !array_key_exists('id', $body) && is_string($body['method'] ?? null) && $body['method'] !== '';
+}
+
+/**
+ * The 202 Accepted outcome a notification gets. The body is empty; respond()
+ * turns this status into a bodiless HTTP response.
+ *
+ * @return array{status: int, body: array<string, mixed>}
+ */
+function accepted(): array
+{
+    return ['status' => 202, 'body' => []];
 }
 
 /**

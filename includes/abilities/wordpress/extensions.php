@@ -432,7 +432,17 @@ function wordpress_deactivate_plugin(array $input): array|WP_Error
         return ['file' => $file, 'active' => false, 'result' => 'already_inactive'] + wordpress_plugin_summary($file);
     }
 
-    deactivate_plugins([$file], silent: false, network_wide: $network_wide ? true : null);
+    if (!$network_wide && !is_plugin_active($file)) {
+        return new WP_Error(
+            'wppilot_plugin_network_active',
+            __('This plugin is network-activated. Pass network_wide=true to deactivate it for the whole network.', domain: 'wppilot'),
+            ['status' => 409],
+        );
+    }
+
+    // false, not null: null means "this site and the network", which would undo a network
+    // activation without the manage_network_plugins check that network_wide=true runs above.
+    deactivate_plugins([$file], silent: false, network_wide: $network_wide);
 
     if (is_plugin_active($file)) {
         return new WP_Error(

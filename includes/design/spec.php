@@ -331,7 +331,8 @@ function normalize(array $raw): array|WP_Error
 
     $sections = normalize_sections(
         is_array($raw['sections'] ?? null) ? $raw['sections'] : [],
-        array_keys($surfaces),
+        // A numeric surface name becomes an int key; the section check compares strictly.
+        array_map('strval', array_keys($surfaces)),
     );
     if ($sections instanceof WP_Error) {
         return $sections;

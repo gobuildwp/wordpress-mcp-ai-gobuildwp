@@ -11,14 +11,19 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use WP_Ability;
+use WP_REST_Request;
+use WP_REST_Response;
 
 use function WPPilot\Mcp\ability_for_tool;
 use function WPPilot\Mcp\advertise_confirmation;
 use function WPPilot\Mcp\client_ready_tool;
 use function WPPilot\Mcp\empty_input_for;
+use function WPPilot\Mcp\handle_modern;
+use function WPPilot\Mcp\is_notification;
 use function WPPilot\Mcp\is_mcp_route;
 use function WPPilot\Mcp\normalize_schema;
 use function WPPilot\Mcp\repair_tool_list;
+use function WPPilot\Mcp\respond;
 use function WPPilot\Mcp\route_is_served;
 use function WPPilot\Mcp\tool_name;
 
@@ -427,5 +432,70 @@ final class TransportTest extends TestCase
             new WP_Ability('acf/list', input_schema: ['type' => 'null']),
             ['id' => 1],
         ));
+    }
+
+    // ---- notifications
+
+    /** @return array<string, array<int, string>> */
+    private static function modernHeaders(string $method): array
+    {
+        return [
+            'mcp_protocol_version' => ['2026-07-28'],
+            'mcp_method' => [$method],
+        ];
+    }
+
+    public function testANotificationIsAcceptedWithoutABody(): void
+    {
+        $GLOBALS['wp_filter'] = [];
+        $body = [
+            'jsonrpc' => '2.0',
+            'method' => 'notifications/cancelled',
+            'params' => [
+                'requestId' => 7,
+                '_meta' => ['io.modelcontextprotocol/protocolVersion' => '2026-07-28'],
+            ],
+        ];
+
+        $outcome = handle_modern(new WP_REST_Request($body, [], self::modernHeaders('notifications/cancelled')), $body);
+
+        self::assertSame(202, $outcome['status']);
+        self::assertSame([], $outcome['body']);
+
+        $response = respond($outcome);
+        self::assertSame(202, $response->status);
+        self::assertNull($response->data);
+        self::assertArrayNotHasKey('Content-Type', $response->headers);
+        // The REST server would echo "null" for null data; the transport serves the empty body itself.
+        self::assertTrue(apply_filters('rest_pre_serve_request', false, $response));
+        self::assertFalse(apply_filters('rest_pre_serve_request', false, new WP_REST_Response([], 200)));
+    }
+
+    public function testARequestWithAnIdIsStillAnsweredWithAnError(): void
+    {
+        $body = [
+            'jsonrpc' => '2.0',
+            'id' => 3,
+            'method' => 'no/such',
+            'params' => ['_meta' => [
+                'io.modelcontextprotocol/protocolVersion' => '2026-07-28',
+                'io.modelcontextprotocol/clientCapabilities' => [],
+            ]],
+        ];
+
+        $outcome = handle_modern(new WP_REST_Request($body, [], self::modernHeaders('no/such')), $body);
+
+        self::assertNotSame(202, $outcome['status']);
+        self::assertSame(3, $outcome['body']['id']);
+        self::assertArrayHasKey('error', $outcome['body']);
+    }
+
+    public function testIsNotificationNeedsAMethodAndNoId(): void
+    {
+        self::assertTrue(is_notification(['method' => 'notifications/progress']));
+        self::assertFalse(is_notification(['id' => null, 'method' => 'notifications/progress']));
+        self::assertFalse(is_notification(['id' => 1, 'method' => 'tools/list']));
+        self::assertFalse(is_notification(['method' => '']));
+        self::assertFalse(is_notification([]));
     }
 }

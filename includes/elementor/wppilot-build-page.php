@@ -186,15 +186,27 @@ function elementor_build_page(array $input): array
     // Parsing the node descriptions is not enough: it proves each node looks
     // like an element and says nothing about whether the styles on it are
     // values Elementor accepts.
-    if ($dry_run) {
-        $existing_for_check = [];
-        if (!$replace) {
-            [$current] = el_read_page($post_id);
-            $existing_for_check = is_array($current) ? $current : [];
+    $existing = [];
+    if (!$replace) {
+        [$current, $error] = el_read_page($post_id);
+        if ($current === null && !$dry_run) {
+            return ['success' => false, 'error' => $error ?? 'Unknown error.'];
         }
+        $existing = is_array($current) ? $current : [];
+    }
 
+    // An `element_id` may repeat one used elsewhere in the description or,
+    // when appending, one already on the page. Either would leave two nodes
+    // answering to one id, so the build is refused with the ids named.
+    $duplicate_ids = el_check_unique_ids($nodes, $existing);
+    if ($duplicate_ids !== null) {
+        $refused = el_duplicate_ids_response($duplicate_ids);
+        return $dry_run ? array_merge($refused, ['dry_run' => true]) : $refused;
+    }
+
+    if ($dry_run) {
         $checked = elementor_prepare_content(
-            [...$existing_for_check, ...$nodes],
+            [...$existing, ...$nodes],
             (string) ($input['on_invalid'] ?? 'refuse'),
         );
         if (($checked['success'] ?? false) !== true) {
@@ -213,15 +225,7 @@ function elementor_build_page(array $input): array
     // whole document server-side and returns the offending widget's schema
     // inline, which is the behaviour that makes a failed build correctable in
     // one more call instead of leaving elements already written.
-    $existing = [];
-    if (!$replace) {
-        [$current, $error] = el_read_page($post_id);
-        if ($current === null) {
-            return ['success' => false, 'error' => $error ?? 'Unknown error.'];
-        }
-        $existing = $current;
-    }
-
+    //
     // set-content names the document "content", not "elements". Passing the
     // wrong key is silently accepted as an empty document.
     /** @var array{success: bool, error?: string} $result */

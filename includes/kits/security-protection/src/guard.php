@@ -112,7 +112,8 @@ function request_context(array $settings): array
         'is_login' => $script === 'wp-login.php',
         'is_xmlrpc' => (defined('XMLRPC_REQUEST') && XMLRPC_REQUEST) || $script === 'xmlrpc.php',
         // Only the front controller serves REST; ?rest_route= on xmlrpc.php or wp-comments-post.php is not REST.
-        'is_rest' => $script === 'index.php' && (str_starts_with($path, rest_path_prefix()) || isset($_GET['rest_route'])),
+        // parse_request also reads rest_route from the form body, so a POST that carries it there is REST too.
+        'is_rest' => $script === 'index.php' && (str_starts_with($path, rest_path_prefix()) || isset($_GET['rest_route']) || isset($_POST['rest_route'])),
         'is_admin_area' => str_contains($path, '/wp-admin/'),
         'has_auth_header' => !empty($_SERVER['HTTP_AUTHORIZATION']) || !empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) || !empty($_SERVER['PHP_AUTH_USER']),
         'author_query' => isset($_GET['author']) && is_scalar($_GET['author']) && preg_match('/^\s*-?\d+/', (string) $_GET['author']) === 1,
@@ -153,8 +154,10 @@ function decide(array $ctx, array $settings, array $blocks): ?array
         return ['action' => 'block', 'type' => 'enumeration', 'rule' => 'author_query', 'detail' => 'User enumeration'];
     }
     if ($settings['firewall'] !== 'off') {
-        // Signed-in users write posts and comments with markup; WordPress filters that itself.
-        $hit = firewall_match($ctx['parts'], $ctx['signed_in'] ? ['xss'] : []);
+        // Signed-in users write posts and comments with markup; WordPress filters that itself. Their
+        // prose also legitimately names wp-config.php or .env, so the sensitive-file rule only
+        // watches the path for them, not form fields.
+        $hit = firewall_match($ctx['parts'], $ctx['signed_in'] ? ['xss', 'sensitive_file:args'] : []);
         if ($hit !== null) {
             $action = $settings['firewall'] === 'log' ? 'log' : ($defer ? 'defer' : 'block');
             return ['action' => $action, 'type' => 'firewall', 'rule' => $hit['id'], 'detail' => $hit['label'] . ' in ' . $hit['in']];

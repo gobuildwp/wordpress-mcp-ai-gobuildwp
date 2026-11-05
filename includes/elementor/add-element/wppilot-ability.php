@@ -256,7 +256,11 @@ function el_prepare_tree_for_insert(array $tree): array
     // wrapped style props. Then the universal pipeline (ensure ids,
     // normalize widget types, coerce settings, normalize breakpoints,
     // sanitize CSS class ids, sync classes) finishes the job.
-    $tree = el_ensure_tree_ids($tree);
+    //
+    // Every id is regenerated, as the tool contract promises: a subtree
+    // read from this page (or inserted twice) would otherwise collide with
+    // the nodes it came from. Element-derived style ids move with them.
+    $tree = el_regenerate_tree_ids($tree);
     $tree = el_split_boxed_containers($tree);
     $tree = el_translate_v3_container_settings($tree);
 

@@ -437,6 +437,19 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             self::assertNotNull(SP\decide($sqli, $s, []));
         }
 
+        public function test_signed_in_users_may_name_sensitive_files_in_fields_but_not_in_the_path(): void
+        {
+            $s = self::with(['firewall' => 'block']);
+            $prose = self::ctx(['signed_in' => true], ['REQUEST_URI' => '/wp-admin/post.php'], ['content' => 'Edit wp-config.php and your .env. file']);
+            self::assertNull(SP\decide($prose, $s, []), 'an editor writing about wp-config.php is not an attack');
+            self::assertNotNull(SP\decide(self::ctx([], ['REQUEST_URI' => '/'], ['content' => 'see wp-config.php']), $s, []), 'anonymous fields are still checked');
+            $path = self::ctx(['signed_in' => true], ['REQUEST_URI' => '/wp-content/plugins/x/../../wp-config.php']);
+            self::assertNotNull(SP\decide($path, $s, []), 'a sensitive path is blocked for everyone');
+            $parts = SP\request_parts(['REQUEST_URI' => '/'], [], ['c' => '/etc/passwd'], []);
+            self::assertNotNull(SP\firewall_match($parts, ['sensitive_file:path']));
+            self::assertNull(SP\firewall_match($parts, ['sensitive_file:args']));
+        }
+
         // ------------------------------------------------------------ events and counters
 
         public function test_events_counters_and_status(): void

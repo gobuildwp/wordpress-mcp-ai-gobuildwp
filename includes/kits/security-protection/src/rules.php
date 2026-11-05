@@ -128,7 +128,8 @@ function flatten(array $in, array &$out, int &$budget, int $depth): void
  * The first rule the request breaks, or null.
  *
  * @param array{path: string, args: list<string>, ua: string, files: list<string>} $parts
- * @param list<string> $skip Rule ids not to apply (script injection for signed-in authors).
+ * @param list<string> $skip Rule ids not to apply (script injection for signed-in authors), or
+ *   `id:where` to skip one rule in one place only (`sensitive_file:args`).
  * @return array{id: string, label: string, in: string}|null
  */
 function firewall_match(array $parts, array $skip = []): ?array
@@ -138,6 +139,9 @@ function firewall_match(array $parts, array $skip = []): ?array
             continue;
         }
         foreach ($rule['in'] as $where) {
+            if (in_array($rule['id'] . ':' . $where, $skip, true)) {
+                continue;
+            }
             $haystack = match ($where) {
                 'path' => [$parts['path']],
                 'args' => $parts['args'],

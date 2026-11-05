@@ -150,13 +150,10 @@ function inspect(string $url, int $timeout = 20, array $cookies = []): array|WP_
     $started = microtime(true);
     // wp_safe_remote_get validates every redirect hop, not only the first URL,
     // so a public page cannot bounce the fetch onto an internal address.
-    $response = wp_safe_remote_get($url, [
-        'timeout' => max(5, min(30, $timeout)),
+    $response = wp_safe_remote_get($url, fetch_args($timeout, MAX_BYTES, [
         'redirection' => $with_session ? 0 : 3,
-        'sslverify' => !\wppilot_likely_self_signed_https(),
-        'user-agent' => 'GoBuildWP/' . (defined('WPPILOT_VERSION') ? WPPILOT_VERSION : 'dev') . ' (rendered-check)',
         'cookies' => $with_session ? session_cookies($cookies) : [],
-    ]);
+    ]));
     $elapsed = (int) round((microtime(true) - $started) * 1000);
 
     if (is_wp_error($response)) {
@@ -201,9 +198,8 @@ function inspect(string $url, int $timeout = 20, array $cookies = []): array|WP_
     }
     if ($bytes > MAX_BYTES) {
         return new WP_Error('wppilot_rendered_too_large', sprintf(
-            /* translators: 1: page size, 2: the limit. */
-            __('The page is %1$d bytes, past the %2$d byte limit for this check.', domain: 'wppilot'),
-            $bytes,
+            /* translators: %d: the byte limit. */
+            __('The page is larger than the %d byte limit for this check.', domain: 'wppilot'),
             MAX_BYTES,
         ));
     }
@@ -827,11 +823,7 @@ function stylesheets(string $html, string $page_url, int $timeout): array
             continue;
         }
 
-        $response = wp_safe_remote_get($resolved, [
-            'timeout' => $timeout,
-            'redirection' => 2,
-            'user-agent' => 'GoBuildWP/rendered-check',
-        ]);
+        $response = wp_safe_remote_get($resolved, fetch_args($timeout, MAX_STYLESHEET_BYTES, ['redirection' => 2]));
         if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) !== 200) {
             $skipped++;
             continue;
@@ -846,6 +838,27 @@ function stylesheets(string $html, string $page_url, int $timeout): array
     }
 
     return ['css' => $css, 'urls' => $urls, 'read' => count($urls), 'skipped' => $skipped];
+}
+
+/**
+ * Request arguments shared by the page fetch and every stylesheet fetch.
+ *
+ * The response is cut off one byte past $max_bytes, so an oversized body is
+ * never downloaded in full and the caller's `> $max_bytes` check still sees it
+ * as too large.
+ *
+ * @param array<string, mixed> $overrides
+ * @return array<string, mixed>
+ */
+function fetch_args(int $timeout, int $max_bytes, array $overrides = []): array
+{
+    return $overrides + [
+        'timeout' => max(5, min(30, $timeout)),
+        'redirection' => 3,
+        'sslverify' => !\wppilot_likely_self_signed_https(),
+        'limit_response_size' => $max_bytes + 1,
+        'user-agent' => 'GoBuildWP/' . (defined('WPPILOT_VERSION') ? WPPILOT_VERSION : 'dev') . ' (rendered-check)',
+    ];
 }
 
 /** Scheme and host of a URL, or '' when it has neither. */

@@ -262,3 +262,91 @@ function el_sync_style_classes(array $node): array
 
     return $node;
 }
+
+/**
+ * Give every node in a subtree a fresh id, carrying its own styles along.
+ *
+ * Per-element style ids are named after the element: `s-<id>` for the ones
+ * GoBuildWP writes, `e-<id>-<suffix>` for the ones Elementor's editor writes.
+ * A copy that gets a new id but keeps those keys emits its CSS under the
+ * original's class, so restyling the original restyles the copy, and the two
+ * fight over one selector. Each node's own matching style keys, the `id`
+ * inside those entries, and the references in its `settings.classes` are
+ * renamed with it. Global classes and style ids not derived from the element
+ * id are left as they are.
+ *
+ * @param array<string, mixed> $node
+ * @return array<string, mixed>
+ */
+function el_regenerate_tree_ids(array $node): array
+{
+    /** @var mixed $old_id */
+    $old_id = $node['id'] ?? null;
+    $new_id = el_generate_id();
+    $node['id'] = $new_id;
+
+    if (is_string($old_id) && $old_id !== '') {
+        $node = el_remap_element_style_ids($node, $old_id, $new_id);
+    }
+
+    /** @var list<array<string, mixed>> $children */
+    $children = is_array($node['elements'] ?? null) ? array_values($node['elements']) : [];
+    $new_children = [];
+    foreach ($children as $child) {
+        $new_children[] = is_array($child) ? el_regenerate_tree_ids($child) : $child;
+    }
+    $node['elements'] = $new_children;
+
+    return $node;
+}
+
+/**
+ * Rename one node's element-derived style ids from `$old_id` to `$new_id`:
+ * `s-<old>` and `s-<old>-*`, `e-<old>` and `e-<old>-*`. Updates the `styles`
+ * keys, the `id` inside each renamed entry, and `settings.classes`.
+ *
+ * @param array<string, mixed> $node
+ * @return array<string, mixed>
+ */
+function el_remap_element_style_ids(array $node, string $old_id, string $new_id): array
+{
+    /** @var array<string, mixed> $styles */
+    $styles = is_array($node['styles'] ?? null) ? $node['styles'] : [];
+
+    /** @var array<string, string> $renames */
+    $renames = [];
+    foreach (array_keys($styles) as $key) {
+        $key = (string) $key;
+        foreach (['s-', 'e-'] as $prefix) {
+            $base = $prefix . $old_id;
+            if ($key === $base || str_starts_with($key, $base . '-')) {
+                $renames[$key] = $prefix . $new_id . substr($key, strlen($base));
+                break;
+            }
+        }
+    }
+
+    if ($renames === []) {
+        return $node;
+    }
+
+    /** @var array<string, mixed> $new_styles */
+    $new_styles = [];
+    foreach (array_keys($styles) as $key) {
+        $key = (string) $key;
+        $new_key = $renames[$key] ?? $key;
+        /** @var mixed $value */
+        $value = $styles[$key];
+        if (is_array($value) && ($value['id'] ?? null) === $key) {
+            $value['id'] = $new_key;
+        }
+        $new_styles[$new_key] = $value;
+    }
+    $node['styles'] = $new_styles;
+
+    /** @var array<string, mixed> $settings */
+    $settings = is_array($node['settings'] ?? null) ? $node['settings'] : [];
+    $node['settings'] = el_apply_class_renames_to_settings($settings, $renames);
+
+    return $node;
+}

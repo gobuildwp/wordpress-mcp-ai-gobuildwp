@@ -112,6 +112,22 @@ function wppilot_uninstall_options(): array
         // includes/admin/instructions.php
         'wppilot_instructions_enabled',
         'wppilot_instructions_content',
+        // Pre-rename Pro instructions, still read as a fallback.
+        'wppilot_pro_instructions_enabled',
+        'wppilot_pro_instructions_content',
+        // includes/confirmation.php: the mode, pending requests (raw ability inputs and logins)
+        // and the one-time nonces that approve them.
+        'wppilot_confirmation_mode',
+        'wppilot_confirmation_requests',
+        'wppilot_confirmation_nonces',
+        // includes/foreign-gate.php
+        'wppilot_foreign_mcp_gate',
+        // includes/kits/pagespeed: the site owner's Google API key.
+        'wppilot_kit_pagespeed_api_key',
+        // includes/kits/content-audit: the job index.
+        'wppilot_kit_content_audit_jobs',
+        // includes/kits/search-replace: the plan index (plans and locks are prefix-swept below).
+        'wppilot_kit_sr_plans',
         // includes/design/cpt.php
         'wppilot_active_design',
         // includes/design/gate.php
@@ -142,6 +158,7 @@ function wppilot_uninstall_options(): array
         'wppilot_cloud_policy',
         'wppilot_cloud_event_push',
         'gobuildwp_cloud_inventory_hash',
+        'gobuildwp_cloud_key_heartbeat_at',
         // includes/restore-points.php: the restore-point index and the plan's undo window. The
         // zips themselves are removed by wppilot_uninstall_restore_points().
         'gobuildwp_restore_points',
@@ -377,6 +394,11 @@ function wppilot_uninstall_current_site(): void
         // includes/kits/scheduled-audits: the routines, and each routine's state, reports and lock
         // (wppilot_kit_routines_state_<id>, _report_<id>, _lock_<id>).
         'wppilot_kit_routines',
+        // includes/kits/_runtime/jobs: one option per background job.
+        'wppilot_kit_job_',
+        // includes/kits/search-replace: each plan and its apply lock.
+        'wppilot_kit_sr_plan_',
+        'wppilot_kit_sr_lock_',
         // includes/kits/security-integrity: the scan index, stored result pages and start mutexes.
         'gobuildwp_kit_si_',
         // includes/kits/security-protection: settings, blocks, events, counters and hit transients.

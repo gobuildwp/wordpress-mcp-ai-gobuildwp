@@ -707,8 +707,17 @@ function purple_in_gradient(string $output, array $purples): bool
  */
 function inter_font(string $output, array $allowed_fonts): array
 {
-    $uses_inter =
-        preg_match('/font-family[^;{}]*\binter\b/i', $output) === 1 || preg_match('/[\'"]inter[\'"]/i', $output) === 1;
+    $uses_inter = preg_match('/[\'"]inter[\'"]/i', $output) === 1;
+    if (!$uses_inter) {
+        // Declarations only: a style attribute ends at its quote, so
+        // "Inter Milan tickets" in the element's text is not a font.
+        foreach (font_family_values($output) as $value) {
+            if (preg_match('/\binter\b/i', $value) === 1) {
+                $uses_inter = true;
+                break;
+            }
+        }
+    }
     if (!$uses_inter) {
         return [];
     }
@@ -935,7 +944,7 @@ function collect_allowed_fonts(array $typography): array
             $fonts[$family] = true;
         }
     }
-    return array_keys($fonts);
+    return array_map('strval', array_keys($fonts));
 }
 
 /**
@@ -964,15 +973,53 @@ function split_families(string $value): array
 function font_families(string $output): array
 {
     $out = [];
+    foreach (font_family_values($output) as $declaration) {
+        foreach (split_families($declaration) as $family) {
+            $out[$family] = true;
+        }
+    }
+    // A numeric family name comes back from array_keys() as an int.
+    return array_map('strval', array_keys($out));
+}
+
+/**
+ * The value of every `font-family:` declaration in the output.
+ *
+ * Inline style attributes are read on their own, each only up to its closing
+ * quote, so `style="font-family:Fraunces" class="lead">Inter Milan` yields
+ * `Fraunces` and nothing from the next attribute or the element's text. Quotes
+ * cannot simply end the value everywhere: in a stylesheet they wrap family
+ * names (`font-family: "Work Sans", serif`), so the remaining CSS, with the
+ * style attributes removed, keeps them and stops at a declaration or tag end.
+ *
+ * @return list<string>
+ */
+function font_family_values(string $output): array
+{
+    $attribute = '/(?<![\w-])style\s*=\s*(?:"([^"]*)"|\'([^\']*)\')/i';
+    $sources = [];
     $m = [];
-    if (preg_match_all('/font-family\s*:\s*([^;{}>]+)/i', $output, $m) !== false) {
-        foreach ($m[1] as $declaration) {
-            foreach (split_families($declaration) as $family) {
-                $out[$family] = true;
+    if (preg_match_all($attribute, $output, $m, PREG_SET_ORDER) > 0) {
+        foreach ($m as $match) {
+            $style = ($match[1] ?? '') !== '' ? $match[1] : ($match[2] ?? '');
+            if ($style !== '') {
+                $sources[] = html_entity_decode($style, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             }
         }
     }
-    return array_keys($out);
+    $rest = preg_replace($attribute, '', $output);
+    $sources[] = is_string($rest) ? $rest : $output;
+
+    $values = [];
+    foreach ($sources as $css) {
+        $d = [];
+        if (preg_match_all('/font-family\s*:\s*([^;{}<>]+)/i', $css, $d) > 0) {
+            foreach ($d[1] as $value) {
+                $values[] = $value;
+            }
+        }
+    }
+    return $values;
 }
 
 /**
@@ -1223,7 +1270,7 @@ function extract_allows(string $md): array
             $allows[$id] = true;
         }
     }
-    return array_keys($allows);
+    return array_map('strval', array_keys($allows));
 }
 
 /**

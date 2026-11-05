@@ -31,7 +31,7 @@ wp_register_ability('wppilot/elementor-set-content', [
             ],
             'content' => [
                 'type' => 'array',
-                'description' => 'Top-level Elementor elements (containers/sections). Each element uses either `element_type` (consistent with add-element: "container", "widget", "e-flexbox", "e-div-block", or the classic "section" / "column" that elementor-get-content returns for pre-container pages) or the native Elementor `elType` key — both are accepted. Widget elements also accept `widget_type` or `widgetType`. Settings and optional nested `elements` children complete each node. IDs are auto-generated where missing.',
+                'description' => 'Top-level Elementor elements (containers/sections). Each element uses either `element_type` (consistent with add-element: "container", "widget", "e-flexbox", "e-div-block", or the classic "section" / "column" that elementor-get-content returns for pre-container pages) or the native Elementor `elType` key — both are accepted. Widget elements also accept `widget_type` or `widgetType`. Settings and optional nested `elements` children complete each node. IDs are auto-generated where missing; supplied ids must be unique, and a document that repeats one is refused.',
                 'items' => ['type' => 'object'],
             ],
             'template_type' => [
@@ -56,6 +56,11 @@ wp_register_ability('wppilot/elementor-set-content', [
                 'description' => 'Element IDs that were auto-generated for elements that did not provide one. Empty when every element carried its own id.',
             ],
             'error' => ['type' => 'string'],
+            'duplicate_ids' => [
+                'type' => 'array',
+                'items' => ['type' => 'string'],
+                'description' => 'On a refused write: the element ids the document uses more than once.',
+            ],
         ],
         'required' => ['success'],
     ],
@@ -97,6 +102,14 @@ function elementor_prepare_content(array $content, string $on_invalid = 'refuse'
     $assigned = [];
     $normalized = el_normalize_tree($content, $assigned);
 
+    // Supplied ids are kept as given, so two nodes can arrive with the same
+    // one. Refused rather than silently renumbered: the caller chose those ids
+    // and may be about to address one of them.
+    $duplicate_ids = el_check_unique_ids($normalized);
+    if ($duplicate_ids !== null) {
+        return el_duplicate_ids_response($duplicate_ids);
+    }
+
     // Run the same universal atomic pipeline add-element does, so a
     // page written from scratch via set-content gets the same wrapping,
     // CSS-id sanitization, breakpoint normalization, and classes sync.
@@ -133,6 +146,22 @@ function elementor_prepare_content(array $content, string $on_invalid = 'refuse'
     }
 
     return ['success' => true, 'tree' => $validation['tree'], 'assigned' => $assigned];
+}
+
+/**
+ * The ability-shaped failure for a refused duplicate-id write.
+ *
+ * @return array{success: false, error: string, duplicate_ids: list<string>}
+ */
+function el_duplicate_ids_response(\WP_Error $error): array
+{
+    /** @var array{duplicate_ids?: list<string>} $data */
+    $data = (array) $error->get_error_data();
+    return [
+        'success' => false,
+        'error' => $error->get_error_message(),
+        'duplicate_ids' => $data['duplicate_ids'] ?? [],
+    ];
 }
 
 function elementor_set_content(array $input): array

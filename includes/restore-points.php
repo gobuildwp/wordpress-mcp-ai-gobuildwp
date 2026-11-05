@@ -173,6 +173,45 @@ function wppilot_restore_point_protect_storage(string $dir): bool
     return is_writable($dir);
 }
 
+/**
+ * Run an index read-modify-write under a MySQL named lock, as the ledger does.
+ *
+ * Two changes finishing at once (a parallel MCP call, a cron cleanup during an undo) each read
+ * the index, add or drop their own record and save, and the second save erased the first one's
+ * row: its undo then said the restore point was no longer kept and the next cleanup deleted the
+ * orphaned zip. GET_LOCK is re-entrant per connection, so a writer may call another.
+ *
+ * @template T
+ * @param callable(): T $write
+ * @return T
+ */
+function wppilot_with_restore_point_lock(callable $write): mixed
+{
+    global $wpdb;
+
+    $lock = null;
+    if (is_object($wpdb) && method_exists($wpdb, 'get_var') && method_exists($wpdb, 'prepare')) {
+        $lock = $wpdb->prefix . 'wppilot_restore_points';
+        $acquired = (string) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lock, 5)) === '1';
+        if (!$acquired) {
+            $lock = null;
+        }
+    }
+    // The option is autoload=no but cached once read, and a persistent object cache shares that
+    // copy across requests; re-read it from the table or the lock protects a stale index.
+    if (function_exists('wp_cache_delete')) {
+        wp_cache_delete(WPPILOT_RESTORE_POINT_INDEX_OPTION, 'options');
+    }
+
+    try {
+        return $write();
+    } finally {
+        if ($lock !== null) {
+            $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
+        }
+    }
+}
+
 /** @return array<string, array<string, mixed>> */
 function wppilot_restore_point_index(): array
 {
@@ -222,9 +261,11 @@ function wppilot_restore_point_get(string $id): ?array
 /** @param array<string, mixed> $record */
 function wppilot_restore_point_put(string $id, array $record): void
 {
-    $index = wppilot_restore_point_index();
-    $index[$id] = $record;
-    wppilot_restore_point_save_index($index);
+    wppilot_with_restore_point_lock(static function () use ($id, $record): void {
+        $index = wppilot_restore_point_index();
+        $index[$id] = $record;
+        wppilot_restore_point_save_index($index);
+    });
 }
 
 function wppilot_restore_point_dir_for(string $id): string
@@ -241,11 +282,13 @@ function wppilot_restore_point_forget(string $id): void
     if ($dir !== '' && is_dir($dir)) {
         wppilot_restore_point_delete_tree($dir);
     }
-    $index = wppilot_restore_point_index();
-    if (isset($index[$id])) {
-        unset($index[$id]);
-        wppilot_restore_point_save_index($index);
-    }
+    wppilot_with_restore_point_lock(static function () use ($id): void {
+        $index = wppilot_restore_point_index();
+        if (isset($index[$id])) {
+            unset($index[$id]);
+            wppilot_restore_point_save_index($index);
+        }
+    });
 }
 
 // ---------------------------------------------------------------- targets
@@ -1420,13 +1463,8 @@ function wppilot_restore_point_current_fingerprint(array $record): string
 /** @param array<string, mixed>|WP_Error $result */
 function wppilot_restore_point_record_attempt(string $id, string $op, array|WP_Error $result): void
 {
-    $index = wppilot_restore_point_index();
-    if (!isset($index[$id])) {
-        return;
-    }
-    $attempts = wppilot_restore_point_list($index[$id]['attempts'] ?? null);
     $user = function_exists('wp_get_current_user') ? wp_get_current_user() : null;
-    $attempts[] = [
+    $attempt = [
         'at' => gmdate('c'),
         'op' => $op,
         'result' => $result instanceof WP_Error ? 'failed' : (($result['verified'] ?? false) === true ? 'restored' : 'unverified'),
@@ -1434,18 +1472,28 @@ function wppilot_restore_point_record_attempt(string $id, string $op, array|WP_E
         'mismatched' => $result instanceof WP_Error ? [] : wppilot_string_list($result['mismatched'] ?? null),
         'user' => is_object($user) ? (string) ($user->user_login ?? '') : '',
     ];
-    $index[$id]['attempts'] = array_slice($attempts, -WPPILOT_RESTORE_POINT_MAX_ATTEMPTS);
-    wppilot_restore_point_save_index($index);
+    wppilot_with_restore_point_lock(static function () use ($id, $attempt): void {
+        $index = wppilot_restore_point_index();
+        if (!isset($index[$id])) {
+            return;
+        }
+        $attempts = wppilot_restore_point_list($index[$id]['attempts'] ?? null);
+        $attempts[] = $attempt;
+        $index[$id]['attempts'] = array_slice($attempts, -WPPILOT_RESTORE_POINT_MAX_ATTEMPTS);
+        wppilot_restore_point_save_index($index);
+    });
 }
 
 /** Tie a restore point to the ledger row it undoes, so the record names its change. */
 function wppilot_restore_point_link(string $id, string $change_id): void
 {
-    $index = wppilot_restore_point_index();
-    if (isset($index[$id]) && ($index[$id]['change_id'] ?? '') === '') {
-        $index[$id]['change_id'] = $change_id;
-        wppilot_restore_point_save_index($index);
-    }
+    wppilot_with_restore_point_lock(static function () use ($id, $change_id): void {
+        $index = wppilot_restore_point_index();
+        if (isset($index[$id]) && ($index[$id]['change_id'] ?? '') === '') {
+            $index[$id]['change_id'] = $change_id;
+            wppilot_restore_point_save_index($index);
+        }
+    });
 }
 
 // ---------------------------------------------------------------- redo and sessions

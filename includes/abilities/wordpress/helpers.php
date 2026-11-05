@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace WPPilot\Abilities\WordPress;
 
 use WP_Error;
+use WP_Post;
 use WP_Post_Type;
 
 if (!defined('ABSPATH')) {
@@ -163,6 +164,54 @@ function wordpress_builder_write_guard(array $input): ?WP_Error
         /** @var array<string, mixed> $meta_map */
         $meta_map = $input['meta'];
         return wordpress_builder_meta_error($meta_map);
+    }
+
+    return null;
+}
+
+/**
+ * Refuse meta keys the caller may not write.
+ *
+ * Keys WordPress protects (a leading underscore, or anything a plugin marks protected) are the
+ * storage of other features: `_wp_page_template`, `_wp_old_slug`, builder data, membership
+ * flags. WordPress only lets them through when the `edit_post_meta` meta capability says so,
+ * which by default nobody has unless an `auth_post_meta_<key>` filter grants it. The read side
+ * already hides these keys; this keeps the write side to the same line.
+ *
+ * @param array<string, mixed> $meta
+ * @param int $post_id The post being updated, or 0 for a post about to be created.
+ */
+function wordpress_protected_meta_error(array $meta, int $post_id): ?WP_Error
+{
+    foreach (array_keys($meta) as $meta_key) {
+        $meta_key = (string) $meta_key;
+        $protected = function_exists('is_protected_meta')
+            ? is_protected_meta($meta_key, 'post')
+            : str_starts_with($meta_key, '_');
+        if (!$protected) {
+            continue;
+        }
+        if ($post_id > 0) {
+            $allowed = current_user_can('edit_post_meta', $post_id, $meta_key);
+        } else {
+            // No post yet, so map_meta_cap() cannot answer; apply the same filter it would.
+            $allowed = (bool) apply_filters(
+                "auth_post_meta_{$meta_key}",
+                false,
+                $meta_key,
+                0,
+                get_current_user_id(),
+                'edit_post_meta',
+                [],
+            );
+        }
+        if (!$allowed) {
+            return new WP_Error(
+                'protected_meta',
+                sprintf('Meta key "%s" is protected and cannot be written through this ability.', $meta_key),
+                ['status' => 403],
+            );
+        }
     }
 
     return null;
@@ -748,6 +797,45 @@ function wordpress_update_status_capability_error(object $post, array $input): ?
                 'You are not allowed to publish content of type "%s". Leave the status unchanged or set it to draft.',
                 (string) $post->post_type,
             ),
+            ['status' => 403],
+        );
+    }
+
+    return null;
+}
+
+/**
+ * Enforce the edit-others grant when an update reassigns a post's author.
+ *
+ * Creating a post already refuses to attribute it to someone else without
+ * `edit_others_posts`; changing the author of an existing post is the same act.
+ *
+ * @param array<string, mixed> $input
+ */
+function wordpress_update_author_capability_error(WP_Post $post, array $input): ?WP_Error
+{
+    if (!array_key_exists('author', $input)) {
+        return null;
+    }
+
+    $author = (int) $input['author'];
+    if ($author === (int) $post->post_author || $author === get_current_user_id()) {
+        return null;
+    }
+
+    $object = get_post_type_object((string) $post->post_type);
+    if (!$object instanceof WP_Post_Type) {
+        return new WP_Error(
+            'invalid_post_type',
+            sprintf('Post type "%s" is not registered.', (string) $post->post_type),
+            ['status' => 404],
+        );
+    }
+
+    if (!current_user_can((string) $object->cap->edit_others_posts)) {
+        return new WP_Error(
+            'cannot_assign_author',
+            'You are not allowed to attribute content to another user.',
             ['status' => 403],
         );
     }

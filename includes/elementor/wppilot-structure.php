@@ -282,10 +282,10 @@ function elementor_duplicate_element(array $input): array
                 return "Element '{$element_id}' not found on post {$post_id}.";
             }
 
-            // Strip every id first, then regenerate: el_ensure_tree_ids only
-            // fills ids that are absent, so a copy that kept the originals would
-            // pass through it unchanged and collide with the source.
-            $copy = el_ensure_tree_ids(el_strip_tree_ids($original));
+            // Every id in the copy is replaced, and the copy's element-derived
+            // style ids (s-<id>, e-<id>-*) and class references move with it,
+            // so restyling the original does not restyle the copy.
+            $copy = el_regenerate_tree_ids($original);
             $copy_id = (string) ($copy['id'] ?? '');
 
             [$parent_id, $position] = $explicit_parent !== null

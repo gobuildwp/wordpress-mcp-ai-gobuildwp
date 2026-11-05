@@ -14,6 +14,8 @@ use WP_Post;
 use WPPilot_Test_State;
 
 use function WPPilot\Abilities\WordPress\wordpress_core_permission;
+use function WPPilot\Abilities\WordPress\wordpress_protected_meta_error;
+use function WPPilot\Abilities\WordPress\wordpress_update_author_capability_error;
 use function WPPilot\Abilities\WordPress\wordpress_core_permission_for;
 use function WPPilot\Abilities\WordPress\wordpress_restore_revision;
 use function WPPilot\Abilities\WordPress\wordpress_revision_is_autosave;
@@ -461,6 +463,77 @@ final class CoreSurfaceTest extends TestCase
 
         self::assertIsArray($before);
         self::assertSame('post', $before['type']);
+    }
+
+    // ---- author reattribution
+
+    public function testChangingAuthorToAnotherUserNeedsEditOthersPosts(): void
+    {
+        WPPilot_Test_State::add_post_type('post');
+        WPPilot_Test_State::$capabilities = ['edit_posts'];
+        WPPilot_Test_State::$current_user_id = 5;
+        $post = $this->post();
+        $post->post_author = 5;
+
+        $error = wordpress_update_author_capability_error($post, ['author' => 9]);
+
+        self::assertInstanceOf(WP_Error::class, $error);
+        self::assertSame('cannot_assign_author', $error->get_error_code());
+    }
+
+    public function testChangingAuthorIsAllowedWithEditOthersPosts(): void
+    {
+        WPPilot_Test_State::add_post_type('post');
+        WPPilot_Test_State::$capabilities = ['edit_posts', 'edit_others_posts'];
+        WPPilot_Test_State::$current_user_id = 5;
+        $post = $this->post();
+        $post->post_author = 5;
+
+        self::assertNull(wordpress_update_author_capability_error($post, ['author' => 9]));
+    }
+
+    public function testKeepingTheAuthorOrTakingOwnershipNeedsNoExtraCapability(): void
+    {
+        WPPilot_Test_State::add_post_type('post');
+        WPPilot_Test_State::$capabilities = ['edit_posts'];
+        WPPilot_Test_State::$current_user_id = 5;
+        $post = $this->post();
+        $post->post_author = 7;
+
+        self::assertNull(wordpress_update_author_capability_error($post, ['title' => 'x']));
+        self::assertNull(wordpress_update_author_capability_error($post, ['author' => 7]));
+        self::assertNull(wordpress_update_author_capability_error($post, ['author' => 5]));
+    }
+
+    // ---- protected meta
+
+    public function testProtectedMetaKeysAreRefusedWithoutTheMetaCapability(): void
+    {
+        WPPilot_Test_State::$capabilities = ['edit_posts'];
+
+        $error = wordpress_protected_meta_error(['_wp_page_template' => 'full-width'], 12);
+
+        self::assertInstanceOf(WP_Error::class, $error);
+        self::assertSame('protected_meta', $error->get_error_code());
+        self::assertSame(403, $error->get_error_data()['status']);
+    }
+
+    public function testProtectedMetaIsRefusedOnCreateToo(): void
+    {
+        WPPilot_Test_State::$capabilities = ['edit_posts'];
+
+        $error = wordpress_protected_meta_error(['_wp_old_slug' => 'x', 'plain' => 'y'], 0);
+
+        self::assertInstanceOf(WP_Error::class, $error);
+        self::assertSame('protected_meta', $error->get_error_code());
+    }
+
+    public function testOrdinaryMetaKeysPassTheProtectedMetaCheck(): void
+    {
+        WPPilot_Test_State::$capabilities = ['edit_posts'];
+
+        self::assertNull(wordpress_protected_meta_error(['subtitle' => 'x', 'price' => 3], 12));
+        self::assertNull(wordpress_protected_meta_error([], 0));
     }
 
     public function testRestoreRevisionBeforeImageIsEmptyForAnUnknownRevision(): void

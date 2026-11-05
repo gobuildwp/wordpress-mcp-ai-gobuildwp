@@ -466,23 +466,34 @@ function install_virtual_patch_hooks(): void
  *
  * @param array<string, mixed> $server
  * @param array<mixed> $get
- * @param array<mixed> $post
+ * @param array<mixed> $post The form body ($_POST), or a decoded JSON body when $json_body is true.
+ * @param bool $json_body Whether $post was decoded from a JSON body. WordPress never sees a JSON body
+ *   in $_POST, so admin-ajax.php's `$_REQUEST['action']` and parse_request's `rest_route` query var
+ *   can only come from the form body or the query string; a JSON body must not be allowed to
+ *   choose a different handler than the one WordPress will run.
  * @return array{method: string, path: string, script: string, action: string, rest_route: string|null, query: array<mixed>, body: array<mixed>}
  */
-function vp_request(array $server, array $get, array $post, string $rest_prefix = '/wp-json/'): array
+function vp_request(array $server, array $get, array $post, string $rest_prefix = '/wp-json/', bool $json_body = false): array
 {
     $uri = is_string($server['REQUEST_URI'] ?? null) ? $server['REQUEST_URI'] : '/';
     $path = strtolower(vp_normalize_path(rawurldecode((string) strtok($uri, '?'))));
-    $action = $post['action'] ?? $get['action'] ?? '';
+    // admin-ajax.php and admin-post.php dispatch on $_REQUEST['action']: the form body wins over
+    // the query string, and a JSON body counts for nothing.
+    $form = $json_body ? [] : $post;
+    $action = $form['action'] ?? $get['action'] ?? '';
     // Only the front controller serves REST. A rest_route or /wp-json/ on admin-ajax.php,
     // xmlrpc.php or any other script is not a REST call and must not be treated as one.
     $front = basename(is_string($server['SCRIPT_NAME'] ?? null) ? $server['SCRIPT_NAME'] : 'index.php') === 'index.php';
     $rest_prefix = strtolower($rest_prefix);
     $rest_route = null;
-    if ($front && str_starts_with($path, $rest_prefix)) {
+    // parse_request lets a public query var in the form body or query string override the route
+    // the permalink would give, so `/wp-json/a?rest_route=/b` serves /b. Read them in WordPress's
+    // order: form body, then query string, then the path.
+    $route_var = $form['rest_route'] ?? $get['rest_route'] ?? null;
+    if ($front && is_string($route_var)) {
+        $rest_route = strtolower(vp_normalize_path(rawurldecode($route_var)));
+    } elseif ($front && str_starts_with($path, $rest_prefix)) {
         $rest_route = '/' . substr($path, strlen($rest_prefix));
-    } elseif ($front && isset($get['rest_route']) && is_string($get['rest_route'])) {
-        $rest_route = strtolower(vp_normalize_path(rawurldecode($get['rest_route'])));
     }
     return [
         'method' => is_string($server['REQUEST_METHOD'] ?? null) ? strtoupper($server['REQUEST_METHOD']) : 'GET',
@@ -685,11 +696,13 @@ $GLOBALS['gobuildwp_sp_vp_deferred'] = null;
 function guard_virtual_patches(array $rules, array $settings): void
 {
     $body = $_POST;
+    $json_body = false;
     if ($body === [] && vp_is_json($_SERVER)) {
         $raw = file_get_contents('php://input', false, null, 0, VP_MAX_JSON_BYTES + 1);
         $body = vp_json_body(is_string($raw) ? $raw : '');
+        $json_body = true;
     }
-    $req = vp_request($_SERVER, $_GET, $body, rest_path_prefix());
+    $req = vp_request($_SERVER, $_GET, $body, rest_path_prefix(), $json_body);
     $hits = array_values(array_filter($rules, static fn(array $rule): bool => vp_matches($rule, $req)));
     if ($hits === []) {
         return;

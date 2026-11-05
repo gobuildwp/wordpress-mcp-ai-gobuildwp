@@ -336,15 +336,26 @@ if (!class_exists('WP_REST_Request')) {
     class WP_REST_Request
     {
         /** @param array<array-key, mixed> $params */
+        /**
+         * @param array<array-key, mixed> $params
+         * @param array<string, array<int, string>> $headers
+         */
         public function __construct(
             private mixed $json_params = null,
             private array $params = [],
+            private array $headers = [],
         ) {
         }
 
         public function get_json_params(): mixed
         {
             return $this->json_params;
+        }
+
+        /** @return array<string, array<int, string>> */
+        public function get_headers(): array
+        {
+            return $this->headers;
         }
 
         /** @return array<array-key, mixed> */
@@ -361,10 +372,18 @@ if (!class_exists('WP_REST_Response')) {
      */
     class WP_REST_Response
     {
+        /** @var array<string, string> */
+        public array $headers = [];
+
         public function __construct(
             public mixed $data = null,
             public int $status = 200,
         ) {
+        }
+
+        public function header(string $key, string $value): void
+        {
+            $this->headers[$key] = $value;
         }
     }
 }

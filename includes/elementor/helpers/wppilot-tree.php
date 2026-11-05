@@ -178,7 +178,8 @@ function el_element_widget_type(array $element): string
 /**
  * Check whether an element tree contains any v4 atomic elements
  * (atomic containers like e-flexbox/e-div-block, or atomic widgets
- * like e-heading/e-paragraph/e-button). Used to decide whether to
+ * like e-heading/e-paragraph/e-button, whether stored as their own elType
+ * or as `elType: widget` + `widgetType: e-*`). Used to decide whether to
  * bypass Document::save() which strips atomic widgets.
  *
  * @param list<array<string, mixed>> $elements
@@ -190,6 +191,12 @@ function el_tree_has_atomic_elements(array $elements): bool
         if (str_starts_with($el_type, 'e-')) {
             return true;
         }
+        // add-element, build-page and the finalize pipeline store atomic
+        // widgets as `elType: widget` + `widgetType: e-heading`, so the
+        // elType alone misses them and Document::save() would strip them.
+        if ($el_type === 'widget' && str_starts_with((string) ($element['widgetType'] ?? ''), 'e-')) {
+            return true;
+        }
         /** @var list<array<string, mixed>> $children */
         $children = is_array($element['elements'] ?? null) ? $element['elements'] : [];
         if ($children !== [] && el_tree_has_atomic_elements($children)) {
@@ -197,4 +204,86 @@ function el_tree_has_atomic_elements(array $elements): bool
         }
     }
     return false;
+}
+
+/**
+ * Element ids that occur more than once across the given trees.
+ *
+ * An id is a duplicate when `$elements` uses it twice, or once while the page
+ * content in `$existing` already has it. Repeats inside `$existing` alone are
+ * not reported. Nodes without a string id are ignored; the normalizer gives
+ * them one.
+ *
+ * @param list<array<string, mixed>> $elements
+ * @param list<array<string, mixed>> $existing
+ * @return list<string>
+ */
+function el_find_duplicate_ids(array $elements, array $existing = []): array
+{
+    $counts = [];
+    el_count_tree_ids($elements, $counts);
+    $on_page = [];
+    el_count_tree_ids($existing, $on_page);
+
+    // An id repeated only within the existing page is that page's problem,
+    // not the new nodes'; refusing every append for it would leave no way to
+    // add anything until the page is rewritten.
+    $duplicates = [];
+    foreach ($counts as $id => $count) {
+        if ($count > 1 || isset($on_page[$id])) {
+            $duplicates[] = (string) $id;
+        }
+    }
+    return $duplicates;
+}
+
+/**
+ * @param list<array<string, mixed>> $elements
+ * @param array<string, int>         $counts
+ */
+function el_count_tree_ids(array $elements, array &$counts): void
+{
+    foreach ($elements as $element) {
+        if (!is_array($element)) {
+            continue;
+        }
+        /** @var mixed $id */
+        $id = $element['id'] ?? null;
+        if (is_string($id) && $id !== '') {
+            $counts[$id] = ($counts[$id] ?? 0) + 1;
+        }
+        if (is_array($element['elements'] ?? null)) {
+            /** @var list<array<string, mixed>> $children */
+            $children = array_values($element['elements']);
+            el_count_tree_ids($children, $counts);
+        }
+    }
+}
+
+/**
+ * Refuse a document whose element ids are not unique.
+ *
+ * Two nodes sharing an id is not a visible error: styles keyed to the id apply
+ * to both, edits by id land on whichever is found first, and the editor writes
+ * one of them out on the next save.
+ *
+ * @param list<array<string, mixed>> $elements
+ * @param list<array<string, mixed>> $existing Content already on the page, when appending.
+ */
+function el_check_unique_ids(array $elements, array $existing = []): ?\WP_Error
+{
+    $duplicates = el_find_duplicate_ids($elements, $existing);
+    if ($duplicates === []) {
+        return null;
+    }
+
+    return new \WP_Error(
+        'wppilot_elementor_duplicate_ids',
+        sprintf(
+            'Element ids must be unique within the document, and these are used more than once%s: %s. Rename them or omit "id"/"element_id" to have one generated.',
+            $existing !== [] ? ' (counting the content already on the page)' : '',
+            implode(', ', $duplicates),
+        ),
+        ['duplicate_ids' => $duplicates],
+    );
 }

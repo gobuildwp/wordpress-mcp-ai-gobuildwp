@@ -496,4 +496,23 @@ final class RestorePointsTest extends TestCase
 
         return '';
     }
+
+    public function testIndexWritesTakeAndReleaseTheNamedLock(): void
+    {
+        $wpdb = $GLOBALS['wpdb'];
+        $wpdb->queries = [];
+        $id = str_repeat('a', 32);
+
+        wppilot_restore_point_put($id, ['expires_ts' => time() + 3600, 'zip_bytes' => 1]);
+        wppilot_restore_point_link($id, 'chg_1');
+        wppilot_restore_point_record_attempt($id, 'undo', ['verified' => true]);
+        wppilot_restore_point_forget($id);
+
+        $locks = preg_grep('/GET_LOCK\(/', $wpdb->queries);
+        $releases = preg_grep('/RELEASE_LOCK\(/', $wpdb->queries);
+        self::assertCount(4, $locks);
+        self::assertCount(4, $releases);
+        self::assertStringContainsString('wppilot_restore_points', (string) array_values($locks)[0]);
+        self::assertSame([], wppilot_restore_point_index());
+    }
 }

@@ -263,6 +263,42 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             self::assertSame('/example/v1/upload', $rest['rest_route']);
         }
 
+        public function test_a_json_body_cannot_pick_the_ajax_action_or_the_rest_route(): void
+        {
+            // admin-ajax.php dispatches on $_REQUEST['action'], which a JSON body never reaches: the
+            // handler WordPress runs is the one in the query string, so that is the one the rule sees.
+            $rule = self::clean(self::example());
+            $server = ['REQUEST_URI' => '/wp-admin/admin-ajax.php?action=example_download', 'REQUEST_METHOD' => 'POST', 'SCRIPT_NAME' => '/wp-admin/admin-ajax.php'];
+            $json = SP\vp_request($server, ['action' => 'example_download'], ['action' => 'heartbeat', 'file' => '../../wp-config.php'], '/wp-json/', true);
+            self::assertSame('example_download', $json['action']);
+            self::assertTrue(SP\vp_matches($rule, $json), 'JSON action must not hide the real handler');
+            // A form body is what $_REQUEST is built from, so there it does win over the query string.
+            $form = SP\vp_request($server, ['action' => 'example_download'], ['action' => 'heartbeat']);
+            self::assertSame('heartbeat', $form['action']);
+            // The same holds for rest_route: a JSON body cannot set the query var.
+            $rest = SP\vp_request(['REQUEST_URI' => '/wp-json/example/v1/upload', 'REQUEST_METHOD' => 'POST'], [], ['rest_route' => '/other/v1/x'], '/wp-json/', true);
+            self::assertSame('/example/v1/upload', $rest['rest_route']);
+        }
+
+        public function test_rest_route_query_var_overrides_the_wp_json_path(): void
+        {
+            // parse_request takes rest_route from the form body, then the query string, before the
+            // permalink, so the route WordPress serves is the query var's, not the path's.
+            $rule = self::clean(self::example(match: ['endpoint' => ['kind' => 'rest', 'value' => '/example/v1/upload'], 'param' => null, 'methods' => []]));
+            $get = SP\vp_request(['REQUEST_URI' => '/wp-json/wp/v2/types?rest_route=/example/v1/upload'], ['rest_route' => '/example/v1/upload'], []);
+            self::assertSame('/example/v1/upload', $get['rest_route']);
+            self::assertTrue(SP\vp_matches($rule, $get), 'query var route is the served route');
+            $hidden = SP\vp_request(['REQUEST_URI' => '/wp-json/example/v1/upload?rest_route=/wp/v2/types'], ['rest_route' => '/wp/v2/types'], []);
+            self::assertSame('/wp/v2/types', $hidden['rest_route']);
+            self::assertFalse(SP\vp_matches($rule, $hidden), 'the path alone is not the served route');
+            $post = SP\vp_request(['REQUEST_URI' => '/index.php', 'REQUEST_METHOD' => 'POST'], [], ['rest_route' => '/example/v1/upload']);
+            self::assertSame('/example/v1/upload', $post['rest_route']);
+            self::assertTrue(SP\vp_matches($rule, $post), 'form-body rest_route is REST');
+            $both = SP\vp_request(['REQUEST_URI' => '/?rest_route=/wp/v2/types', 'REQUEST_METHOD' => 'POST'], ['rest_route' => '/wp/v2/types'], ['rest_route' => '/example/v1/upload']);
+            self::assertSame('/example/v1/upload', $both['rest_route'], 'form body wins over query string');
+            self::assertNull(SP\vp_request(['REQUEST_URI' => '/wp-admin/admin-ajax.php', 'SCRIPT_NAME' => '/wp-admin/admin-ajax.php', 'REQUEST_METHOD' => 'POST'], [], ['rest_route' => '/x'])['rest_route']);
+        }
+
         public function test_json_bodies_are_read_as_parameters(): void
         {
             self::assertTrue(SP\vp_is_json(['CONTENT_TYPE' => 'application/json; charset=utf-8']));
