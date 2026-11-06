@@ -183,6 +183,14 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 * New: a pre-WordPress firewall. GoBuildWP Cloud can install a small PHP file that PHP loads before WordPress and every plugin, so blocked addresses, the reputation blocklist and XML-RPC (when it is off) are refused even while the site is broken. It is removed on deactivation and uninstall.
 * New: GoBuildWP Cloud pushes a rule pack and a fleet-wide reputation blocklist, so an address caught attacking another GoBuildWP site is blocked here before its first request.
 * New: gobuildwp/protection-feed and gobuildwp/protection-prepend abilities, for signed GoBuildWP Cloud requests only.
+* Security: a signed GoBuildWP Cloud request is now bound to the site it was made for. Once a site has seen the site-bound signature, it refuses requests that carry only the older signature, so a request captured on one site cannot be replayed on another.
+* Security: a JSON request body can no longer choose the admin-ajax or admin-post action the firewall checks, and the rest_route parameter is read the way WordPress reads it, so a crafted request cannot slip past a firewall rule.
+* Security: update-post needs the edit-others-posts capability to change a post's author, and create-post and update-post refuse protected meta keys unless the user may edit them.
+* Fixed: deactivating a plugin from one site of a multisite network no longer undoes a network activation; a plugin that is only network-active is refused instead.
+* Fixed: signed-in users are no longer blocked by the firewall for naming a sensitive file in a form field.
+* Fixed: Elementor atomic widgets are recognised, duplicate element ids are refused in set-content and build-page, and duplicated or inserted elements get fresh ids with their styles carried along.
+* Fixed: design checks no longer fail on numeric token names, font scans stop at the end of the style attribute, and page and stylesheet fetches share one size limit and timeout.
+* Fixed: an MCP notification is answered with 202 and no body, restore-point index writes no longer race, and uninstall removes the remaining GoBuildWP options.
 
 = 1.19.4 =
 * Fixed: some hosts' malware scanners (for example SiteGround's) quarantined a GoBuildWP file because its security scan rules contained malware signature text, and the site then failed with "Failed to open stream: Permission denied". No plugin file carries that text any more.
@@ -264,7 +272,7 @@ Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 == Upgrade Notice ==
 
 = 1.20.0 =
-Protection is on by default (login lockout, enumeration block, firewall in log mode). Adds a pre-WordPress firewall and a fleet-wide reputation blocklist from GoBuildWP Cloud.
+Protection is on by default (login lockout, enumeration block, firewall in log mode). Adds a pre-WordPress firewall and a fleet-wide reputation blocklist from GoBuildWP Cloud, binds Cloud requests to each site, and fixes several permission checks.
 
 = 1.19.4 =
 Fixes sites going down when a host's malware scanner quarantined a GoBuildWP file.

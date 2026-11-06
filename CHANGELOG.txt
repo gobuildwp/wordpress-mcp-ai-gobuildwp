@@ -3,6 +3,14 @@ v1.20.0
 * New: a pre-WordPress firewall. GoBuildWP Cloud can install a small PHP file under wp-content/gobuildwp-protection that PHP loads through auto_prepend_file before WordPress and every plugin, so blocked addresses, the reputation blocklist and XML-RPC (when it is off) are refused before any plugin code runs, and keep being refused while the site is broken. Requests with a WordPress login cookie or an Authorization header are left to WordPress. It is removed on deactivation and uninstall.
 * New: GoBuildWP Cloud pushes a rule pack and a fleet-wide reputation blocklist to every paired site, so an address caught attacking another GoBuildWP site is blocked here before its first request. The feed is signed by Cloud, and the protection status reports what is in it.
 * New: gobuildwp/protection-feed and gobuildwp/protection-prepend abilities, for signed GoBuildWP Cloud requests only.
+* Security: a signed GoBuildWP Cloud request is now bound to the site it was made for. The Cloud adds a site-bound signature next to the existing one; once a site has seen it verify, the site refuses requests that carry only the older signature, so a request captured on one site cannot be replayed on another site that shares the key. Sites that predate the new signature keep working.
+* Security: a JSON request body can no longer choose the admin-ajax or admin-post action the firewall checks, and the rest_route parameter is read the way WordPress reads it, so a crafted request cannot slip past a firewall rule.
+* Security: update-post needs the edit-others-posts capability to change a post's author, and create-post and update-post refuse protected meta keys unless the user may edit them.
+* Fixed: deactivating a plugin from one site of a multisite network no longer undoes a network activation; a plugin that is only network-active is refused instead.
+* Fixed: signed-in users are no longer blocked by the firewall for naming a sensitive file in a form field.
+* Fixed: Elementor atomic widgets are recognised, duplicate element ids are refused in set-content and build-page, and duplicated or inserted elements get fresh ids with their styles carried along.
+* Fixed: design checks no longer fail on numeric token names, font scans stop at the end of the style attribute, and page and stylesheet fetches share one size limit and timeout.
+* Fixed: an MCP notification is answered with 202 and no body, restore-point index writes no longer race, and uninstall removes the remaining GoBuildWP options.
 
 v1.19.4
 * Fixed: some hosts' malware scanners (for example SiteGround's) quarantined a GoBuildWP file because the security scan rules inside it contained malware signature text, so the file could no longer be read and the site failed with "Failed to open stream: Permission denied". The detection rules are now written so that no plugin file carries that text.
