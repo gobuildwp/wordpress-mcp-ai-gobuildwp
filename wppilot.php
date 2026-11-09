@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Plugin Name: GoBuildWP
  * Plugin URI: https://gobuildwp.com
  * Description: WordPress MCP server with free Elementor MCP editing. Connects Claude, Codex, Cursor and other AI clients to typed WordPress abilities over MCP, with OAuth 2.1, safety profiles, change evidence and rollback.
- * Version: 1.20.0
+ * Version: 1.20.1
  * Requires at least: 6.9
  * Requires PHP: 8.0
  * Update URI: https://gobuildwp.com/wppilot/
@@ -51,6 +51,14 @@ if (defined('WPPILOT_PLUGIN_FILE') && constant('WPPILOT_PLUGIN_FILE') !== __FILE
         wp_die(esc_html__('Another GoBuildWP Free edition is already active. Deactivate it before activating this edition; do not uninstall it to switch editions.', 'wppilot'));
     });
     return;
+}
+
+// Health checks are separate, logged-out web requests: raising memory only in
+// the updater leaves those requests at the host's low frontend limit. Ask for
+// WordPress's configured maximum on every load, before our dependencies load.
+// Core never lowers an existing limit and respects hosts that lock this setting.
+if (function_exists('wp_raise_memory_limit')) {
+    wp_raise_memory_limit('gobuildwp');
 }
 
 require_once __DIR__ . '/includes/compatibility.php';

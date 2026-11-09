@@ -167,6 +167,16 @@ jobs:
 
       - run: php tests/regression-smoke.php
 
+      - name: Self-update activation and runtime memory
+        run: |
+          curl --fail --location --silent --show-error https://wordpress.org/latest.tar.gz -o "$RUNNER_TEMP/wordpress.tar.gz"
+          tar -xzf "$RUNNER_TEMP/wordpress.tar.gz" -C "$RUNNER_TEMP"
+          php tests/self-update-activation.php "$RUNNER_TEMP/wordpress"
+          php -d memory_limit=128M tests/runtime-memory.php "$RUNNER_TEMP/wordpress" 256M 256M allocate
+          php -d memory_limit=512M tests/runtime-memory.php "$RUNNER_TEMP/wordpress" 256M 512M
+          php -d memory_limit=-1 tests/runtime-memory.php "$RUNNER_TEMP/wordpress" 256M -1
+          php -d memory_limit=128M tests/runtime-memory.php "$RUNNER_TEMP/wordpress" 128M 128M
+
   kits:
     name: Kits on PHP ${{ matrix.php }}
     runs-on: ubuntu-latest

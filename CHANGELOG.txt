@@ -1,3 +1,7 @@
+v1.20.1
+- Preserve the Cloud connection during native updates of GoBuildWP and Pro.
+- Request WordPress memory headroom for frontend and update checks.
+
 v1.20.0
 * New: website protection is on from activation. Login lockout, user-enumeration blocking and the firewall in log mode now work on every site, with or without GoBuildWP Cloud; before, a site had to be paired and configured first. Define GOBUILDWP_DISABLE_PROTECTION as true in wp-config.php to switch it all off.
 * New: a pre-WordPress firewall. GoBuildWP Cloud can install a small PHP file under wp-content/gobuildwp-protection that PHP loads through auto_prepend_file before WordPress and every plugin, so blocked addresses, the reputation blocklist and XML-RPC (when it is off) are refused before any plugin code runs, and keep being refused while the site is broken. Requests with a WordPress login cookie or an Authorization header are left to WordPress. It is removed on deactivation and uninstall.

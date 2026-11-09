@@ -336,6 +336,7 @@ function wordpress_get_extension(array $input): array|WP_Error
         'slug' => $slug,
         'installed' => null,
         'directory' => null,
+        'self_update_supported' => true,
     ];
 
     if ($is_theme) {
@@ -550,8 +551,16 @@ function wordpress_update_plugin(array $input): array|WP_Error
 
     $skin = new \WP_Ajax_Upgrader_Skin();
     $upgrader = new \Plugin_Upgrader($skin);
+    // Match core's background updater: keep our connection active and load
+    // the replacement code on the next request, never in this running one.
+    $keep_active = wordpress_keep_self_update_active($upgrader, $file);
+    add_filter('upgrader_pre_install', $keep_active, 9, 2);
     /** @var mixed $result */
-    $result = $upgrader->upgrade($file);
+    try {
+        $result = $upgrader->upgrade($file);
+    } finally {
+        remove_filter('upgrader_pre_install', $keep_active, 9);
+    }
 
     $failure = wordpress_upgrader_error($result, $skin, __('plugin update', domain: 'wppilot'));
     if ($failure !== null) {
@@ -570,6 +579,17 @@ function wordpress_update_plugin(array $input): array|WP_Error
         'version_before' => (string) ($before['version'] ?? ''),
         'version_after' => (string) ($after['version'] ?? ''),
     ] + $after;
+}
+
+/** Keep only our own plugins active, matching WordPress background updates. */
+function wordpress_keep_self_update_active(\Plugin_Upgrader $upgrader, string $file): \Closure
+{
+    return static function ($response, array $extra) use ($upgrader, $file) {
+        if (($extra['plugin'] ?? '') === $file && wordpress_extension_self_error($file) !== null) {
+            remove_filter('upgrader_pre_install', [$upgrader, 'deactivate_plugin_before_upgrade'], 10);
+        }
+        return $response;
+    };
 }
 
 /** @param array<string, mixed> $input @return array<string, mixed>|WP_Error */
