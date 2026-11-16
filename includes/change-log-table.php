@@ -36,6 +36,9 @@ if (!defined('ABSPATH')) {
 /**
  * 2 (1.16.0): session_id, so one agent session's writes can be found and undone together, and
  * redo_data, the state an undo replaced, so the undo can itself be undone.
+ *
+ * The hash chain (includes/ledger-chain.php) keeps prev_hash and row_hash inside entry_data, so it
+ * needs no column of its own and covers the option store the same way.
  */
 const WPPILOT_CHANGES_SCHEMA_VERSION = 2;
 
@@ -364,6 +367,9 @@ function wppilot_change_storage_status(): array
             ? ['stage' => (string) ($error['stage'] ?? ''), 'message' => (string) ($error['message'] ?? ''), 'at' => (int) ($error['at'] ?? 0)]
             : null,
         'migration' => is_array($migration) ? wppilot_string_keyed_array($migration) : null,
+        // The newest sealed row's hash (includes/ledger-chain.php), so two readings taken apart can
+        // be compared; verify-change-log walks the whole chain.
+        'chain_head' => function_exists('wppilot_ledger_chain_head') ? wppilot_ledger_chain_head() : '',
     ];
 }
 
@@ -1186,7 +1192,18 @@ function wppilot_changes_prune(?int $now = null): array
 
     if ($policy['max_days'] > 0) {
         $cutoff = gmdate('Y-m-d H:i:s', $now - ($policy['max_days'] * DAY_IN_SECONDS));
-        $summary['deleted'] += wppilot_changes_delete_where('recorded_at < %s', [$cutoff]);
+        // Only the unbroken run of old rows at the start is removed. A row out of date order (one
+        // copied in late from the option) or without a date would otherwise leave a hole in the
+        // middle that the hash chain (includes/ledger-chain.php) could not tell from a deleted row; it goes with the count
+        // limit, or once the rows before it age out.
+        /** @var mixed $keep */
+        $keep = $wpdb->get_var(wppilot_changes_prepare(
+            "SELECT MIN(seq) FROM {$table} WHERE recorded_at IS NULL OR recorded_at >= %s",
+            [$cutoff],
+        ));
+        $summary['deleted'] += is_numeric($keep)
+            ? wppilot_changes_delete_where('seq < %d', [(int) $keep])
+            : wppilot_changes_delete_where('recorded_at < %s', [$cutoff]);
     }
 
     if ($policy['max_rows'] > 0) {

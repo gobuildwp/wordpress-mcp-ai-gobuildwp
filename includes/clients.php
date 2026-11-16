@@ -432,6 +432,31 @@ function wppilot_clients_proxied_oauth(): array
                 domain: 'wppilot',
             ),
         ],
+        // Desktop chat apps with MCP support whose config format GoBuildWP has
+        // not verified against vendor documentation (checked 2026-11-13: neither
+        // publishes a file location or a remote-server key). Both are given the
+        // generic mcp-remote shape — a local stdio server that does the OAuth
+        // exchange or carries the token header itself — which any client that
+        // can launch a local MCP server accepts. When either vendor documents a
+        // native remote-server form, move the entry to a native group.
+        'grok-desktop' => [
+            'label' => 'Grok Desktop',
+            'match' => ['grok', 'xai', 'x.ai'],
+            'methods' => ['oauth', 'token'],
+            'note' => __(
+                'Uses the generic mcp-remote bridge (needs Node.js): the Grok app config format has not been verified.',
+                domain: 'wppilot',
+            ),
+        ],
+        'gemini-desktop' => [
+            'label' => 'Gemini Desktop',
+            'match' => ['gemini-desktop', 'gemini desktop', 'gemini app'],
+            'methods' => ['oauth', 'token'],
+            'note' => __(
+                'Uses the generic mcp-remote bridge (needs Node.js): the Gemini app config format has not been verified. For the terminal agent, pick Gemini CLI.',
+                domain: 'wppilot',
+            ),
+        ],
     ];
 }
 

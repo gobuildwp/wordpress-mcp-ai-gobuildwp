@@ -105,6 +105,7 @@ function order_summary(WC_Order $order, bool $full = false): array
     $data['shipping'] = $order->get_address('shipping');
     $data['items'] = $items;
     $data['customer_note'] = $order->get_customer_note();
+    $data['notes'] = order_notes($order->get_id());
     $refunds = [];
     foreach ($order->get_refunds() as $refund) {
         if ($refund instanceof WC_Order_Refund) {
@@ -193,6 +194,34 @@ function list_orders(array $input): array|WP_Error
 }
 
 /**
+ * The order's notes, newest first, capped at 20: private notes, notes to the customer and
+ * system notes alike.
+ *
+ * @return list<array<string, mixed>>
+ */
+function order_notes(int $order_id): array
+{
+    if (!function_exists('wc_get_order_notes')) {
+        return [];
+    }
+    $notes = [];
+    foreach ((array) wc_get_order_notes(['order_id' => $order_id, 'limit' => 20, 'orderby' => 'date_created', 'order' => 'DESC']) as $note) {
+        if (!is_object($note)) {
+            continue;
+        }
+        $created = $note->date_created ?? null;
+        $notes[] = [
+            'id' => (int) ($note->id ?? 0),
+            'date_created' => $created instanceof \WC_DateTime ? $created->date('c') : null,
+            'content' => (string) ($note->content ?? ''),
+            'customer_note' => (bool) ($note->customer_note ?? false),
+            'added_by' => (string) ($note->added_by ?? ''),
+        ];
+    }
+    return $notes;
+}
+
+/**
  * @param array<string, mixed> $input
  * @return array<string, mixed>|WP_Error
  */
@@ -266,7 +295,10 @@ function get_customer(array $input): array|WP_Error
         return $gate;
     }
     $id = (int) ($input['customer_id'] ?? 0);
-    if ($id <= 0 || !get_user_by('id', $id)) {
+    $user = $id > 0 ? get_user_by('id', $id) : false;
+    // Only a customer account, or a user who has placed orders, is a customer: any other user
+    // (an administrator, an editor) is not found, as list-customers would not list them either.
+    if (!$user instanceof \WP_User || (!in_array('customer', (array) ($user->roles ?? []), true) && wc_get_customer_order_count($id) <= 0)) {
         return error('wc_not_found', __('Customer not found.', 'wppilot'));
     }
     $customer = new WC_Customer($id);

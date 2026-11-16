@@ -56,6 +56,12 @@ wp_register_ability('wppilot/read-file', [
                 'description' => 'Whether the content was truncated due to limit.',
             ],
             'mime_type' => ['type' => 'string', 'description' => 'Detected MIME type.'],
+            'redacted' => [
+                'type' => 'array',
+                'items' => ['type' => 'string'],
+                'description' => 'Names of secret constants or env entries whose values were replaced.',
+            ],
+            'redaction_note' => ['type' => 'string', 'description' => 'Present when values were redacted.'],
         ],
     ],
     'execute_callback' => 'wppilot_read_file',
@@ -141,6 +147,13 @@ function wppilot_read_file($input)
     }
     $bytes_read = strlen($content);
 
+    // wp-config.php, .env and similar files hold the database password, auth keys and salts and
+    // API tokens. A file read hands them to the model and its transcript, so the literal values
+    // of secret-named constants and env entries are replaced. bytes_read stays the raw count so
+    // paging still lines up. Redaction runs on the raw bytes, before any base64 fallback.
+    $redacted = [];
+    $content = wppilot_read_file_redact_secrets($content, basename($resolved), $redacted);
+
     // Determine encoding: use base64 for binary content or invalid UTF-8.
     $is_text = $is_text_mime && mb_check_encoding(value: $content, encoding: 'UTF-8');
 
@@ -148,7 +161,7 @@ function wppilot_read_file($input)
         $content = base64_encode($content);
     }
 
-    return [
+    $result = [
         'path' => $resolved,
         'content' => $content,
         'encoding' => $is_text ? 'utf-8' : 'base64',
@@ -157,6 +170,73 @@ function wppilot_read_file($input)
         'truncated' => $truncated,
         'mime_type' => $mime_type,
     ];
+    if ($redacted !== []) {
+        $result['redacted'] = array_values(array_unique($redacted));
+        $result['redaction_note'] = 'Secret values were replaced with ' . WPPILOT_READ_FILE_REDACTED . '. Do not write this content back with write-file: that would overwrite the real values. Use edit-file on the lines you need to change.';
+    }
+    return $result;
+}
+
+if (!defined('WPPILOT_READ_FILE_REDACTED')) {
+    define('WPPILOT_READ_FILE_REDACTED', '[redacted-by-wppilot]');
+}
+
+/**
+ * Whether a constant or env name reads like it holds a secret: DB_PASSWORD, AUTH_KEY,
+ * NONCE_SALT, ITSEC_ENCRYPTION_KEY, STRIPE_SECRET, GITHUB_TOKEN and the like.
+ */
+function wppilot_read_file_name_is_secret(string $name): bool
+{
+    return preg_match('/(?:^|_)(?:PASS|PASSWD|PASSWORD|PWD|SECRET|TOKEN|SALT|KEY|PRIVATE|CREDENTIALS?|AUTH)(?:_|$)|PASSWORD|SECRET|TOKEN/i', $name) === 1;
+}
+
+/**
+ * Replace the literal values of secret-named define()/getenv_docker() calls, and of secret-named
+ * entries in .env/.ini style files. Works on raw bytes, so it also covers non-UTF-8 files.
+ *
+ * @param string   $content  Raw file bytes.
+ * @param string   $basename File name, to decide whether KEY=value lines are config.
+ * @param string[] $redacted Receives the names whose values were replaced.
+ */
+function wppilot_read_file_redact_secrets(string $content, string $basename, array &$redacted): string
+{
+    $placeholder = WPPILOT_READ_FILE_REDACTED;
+    $literal = '(?:\'(?:[^\'\\\\]|\\\\.)*\'|"(?:[^"\\\\]|\\\\.)*")';
+    $pattern = '/(\b(?:define|getenv_docker)\s*\(\s*)([\'"])([A-Za-z0-9_]+)\2(\s*,\s*)' . $literal . '/s';
+    $out = preg_replace_callback(
+        $pattern,
+        static function (array $m) use ($placeholder, &$redacted): string {
+            if (!wppilot_read_file_name_is_secret($m[3])) {
+                return $m[0];
+            }
+            $redacted[] = $m[3];
+            return $m[1] . $m[2] . $m[3] . $m[2] . $m[4] . "'" . $placeholder . "'";
+        },
+        $content,
+    );
+    if (is_string($out)) {
+        $content = $out;
+    }
+
+    $lower = strtolower($basename);
+    $is_env = str_starts_with($lower, '.env') || str_ends_with($lower, '.env') || str_ends_with($lower, '.ini');
+    if ($is_env) {
+        $out = preg_replace_callback(
+            '/^([ \t]*(?:export[ \t]+)?)([A-Za-z_][A-Za-z0-9_.]*)([ \t]*[=:][ \t]*)(\S[^\r\n]*)(?=\r?$)/m',
+            static function (array $m) use ($placeholder, &$redacted): string {
+                if (!wppilot_read_file_name_is_secret($m[2])) {
+                    return $m[0];
+                }
+                $redacted[] = $m[2];
+                return $m[1] . $m[2] . $m[3] . $placeholder;
+            },
+            $content,
+        );
+        if (is_string($out)) {
+            $content = $out;
+        }
+    }
+    return $content;
 }
 
 /**

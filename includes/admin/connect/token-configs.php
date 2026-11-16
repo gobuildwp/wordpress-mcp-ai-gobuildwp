@@ -719,6 +719,16 @@ function wppilot_build_token_vscode_family_configs(string $url, string $name, st
             __('Cline sidebar, then MCP Servers, then Configure MCP Servers.', domain: 'wppilot'),
             [__('Via UI', domain: 'wppilot') => 'cline_mcp_settings.json'],
         ),
+        // Generic mcp-remote bridge: neither app's own remote-server format
+        // has been verified (see wppilot_clients_proxied_oauth()).
+        'grok-desktop' => wppilot_token_entry(
+            wppilot_token_claude_desktop_json($name, $url, $token),
+            wppilot_token_unverified_hint('Grok'),
+        ),
+        'gemini-desktop' => wppilot_token_entry(
+            wppilot_token_claude_desktop_json($name, $url, $token),
+            wppilot_token_unverified_hint('Gemini'),
+        ),
         'roo-code' => wppilot_token_entry(
             wppilot_token_mcp_servers_json($name, $url, $token, type: 'streamable-http'),
             __(
@@ -882,4 +892,19 @@ function wppilot_token_api_client_labels(): array
         'openai-api' => __('OpenAI API', domain: 'wppilot'),
         'curl' => __('curl / any HTTP client', domain: 'wppilot'),
     ];
+}
+
+/**
+ * Hint for a token snippet whose client config location is unverified.
+ */
+function wppilot_token_unverified_hint(string $app): string
+{
+    return sprintf(
+        /* translators: %s: name of the AI app */
+        __(
+            'Add this local MCP server in the MCP or connector settings of %s. It is the generic mcp-remote bridge (needs Node.js) carrying the token as a header; the app config file location has not been verified.',
+            domain: 'wppilot',
+        ),
+        $app,
+    );
 }

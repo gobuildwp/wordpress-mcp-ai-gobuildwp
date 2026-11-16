@@ -15,9 +15,13 @@ if (!defined('ABSPATH')) {
 
 wp_register_ability('gobuildwp/protection-prepend', [
     'label' => __('Pre-WordPress Firewall', domain: 'wppilot'),
-    'description' => __(
-        'Installs or removes the pre-WordPress firewall: a small PHP file under wp-content/gobuildwp-protection that PHP loads through auto_prepend_file (from .user.ini, and .htaccess under mod_php) before WordPress and every plugin, and that refuses blocked addresses, the reputation blocklist, XML-RPC when it is off and, with the firewall in block mode, the firewall rules. Blocks keep working while the site is broken. Requests with a WordPress login cookie or an Authorization header are left to WordPress. The reply says whether it is installed, how, whether this request passed through it, and what is in the way if it could not be installed.',
+    'description' => sprintf(
+        /* translators: %s: the firewall's folder under wp-content. */
+        __(
+        'Installs or removes the pre-WordPress firewall: a small PHP file under wp-content/%s that PHP loads through auto_prepend_file (from .user.ini, and .htaccess under mod_php) before WordPress and every plugin, and that refuses blocked addresses, the reputation blocklist, XML-RPC when it is off and, with the firewall in block mode, the firewall rules. Blocks keep working while the site is broken. Requests with a WordPress login cookie or an Authorization header are left to WordPress. The reply says whether it is installed, how, whether this request passed through it, and what is in the way if it could not be installed.',
         domain: 'wppilot',
+        ),
+        Runtime\public_name('wppilot-kit-protection'),
     ),
     'category' => 'security-protection',
     'input_schema' => [
@@ -40,7 +44,7 @@ wp_register_ability('gobuildwp/protection-prepend', [
     'execute_callback' => static function (array $input = []): array|\WP_Error {
         require_once __DIR__ . '/../load.php';
         if (!is_bool($input['enabled'] ?? null)) {
-            return new \WP_Error('gobuildwp_prepend_invalid', 'Invalid setting: enabled must be true or false.');
+            return new \WP_Error(Runtime\public_name('wppilot_kit_prepend_invalid'), 'Invalid setting: enabled must be true or false.');
         }
         return set_prepend($input['enabled']);
     },

@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace WPPilot\Kits\DbRead;
 
 use WP_Error;
+use WPPilot\Kits\Runtime;
 
 if (!defined('ABSPATH')) {
     exit();
@@ -51,6 +52,25 @@ function denied_tables(): array
     /** @var mixed $extra */
     $extra = apply_filters('wppilot_kit_db_read_denied_tables', []);
     $names = DENIED_TABLES;
+    // The host's own tables (change ledger with before-images, tokens, connections, approvals)
+    // hold secrets in clear; `table_refusal()` matches a name and everything under `name_`.
+    $own = [];
+    if (Runtime\has_host()) {
+        $own[] = (string) Runtime\host()->id();
+        /** @var mixed $prefixes */
+        $prefixes = Runtime\host()->extension('protected-table-prefixes');
+        foreach (is_array($prefixes) ? $prefixes : [] as $prefix) {
+            if (is_string($prefix)) {
+                $own[] = $prefix;
+            }
+        }
+    }
+    foreach ($own as $prefix) {
+        $prefix = rtrim(strtolower($prefix), '_');
+        if ($prefix !== '') {
+            $names[] = $prefix;
+        }
+    }
     foreach (is_array($extra) ? $extra : [] as $name) {
         if (is_string($name) && $name !== '') {
             $names[] = strtolower($name);

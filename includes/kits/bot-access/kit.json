@@ -1,0 +1,31 @@
+{
+    "slug": "bot-access",
+    "version": "1.0.0",
+    "namespace": "WPPilot\\Kits\\BotAccess",
+    "tier": "free",
+    "runtime": "^1.2",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "diagnostics": {
+            "label": "Diagnostics",
+            "description": "Read-only operational, performance, security, and integration diagnostics."
+        }
+    },
+    "abilities": [
+        {
+            "name": "wppilot/bot-access-report",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": [
+        "bot-access"
+    ],
+    "tests": [
+        "tests/Unit/Kits/BotAccess"
+    ]
+}

@@ -9,12 +9,12 @@ namespace GoBuildWP\Kits\SecurityProtection {
     if (!function_exists(__NAMESPACE__ . '\get_transient')) {
         function get_transient(string $key): mixed
         {
-            return $GLOBALS['gobuildwp_sp_test_transients'][$key] ?? false;
+            return $GLOBALS['kit_test_sp_transients'][$key] ?? false;
         }
 
         function set_transient(string $key, mixed $value, int $expiration = 0): bool
         {
-            $GLOBALS['gobuildwp_sp_test_transients'][$key] = $value;
+            $GLOBALS['kit_test_sp_transients'][$key] = $value;
             return true;
         }
     }
@@ -29,7 +29,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
     use GoBuildWP\Kits\SecurityProtection as SP;
     use PHPUnit\Framework\TestCase;
     use WP_Error;
-    use WPPilot_Test_State;
+    use Kit_Test_State;
 
     /**
      * Virtual patches: rule validation, the site's own version recheck, request matching, who a
@@ -40,10 +40,10 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
     {
         protected function setUp(): void
         {
-            WPPilot_Test_State::$options = [];
-            WPPilot_Test_State::$plugins = [];
-            $GLOBALS['wppilot_test_themes'] = [];
-            $GLOBALS['gobuildwp_sp_test_transients'] = [];
+            \Kit_Test_State::$options = [];
+            \Kit_Test_State::$plugins = [];
+            \Kit_Test_State::set_themes([]);
+            $GLOBALS['kit_test_sp_transients'] = [];
         }
 
         /**
@@ -147,7 +147,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
         public function test_the_set_is_replaced_whole_and_one_bad_rule_refuses_it(): void
         {
-            WPPilot_Test_State::$plugins = ['example-plugin/example-plugin.php' => ['Version' => '1.9.0']];
+            \Kit_Test_State::$plugins = ['example-plugin/example-plugin.php' => ['Version' => '1.9.0']];
             $state = SP\set_virtual_patches([self::example('a'), self::example('b')]);
             self::assertIsArray($state);
             self::assertSame(2, $state['stored']);
@@ -169,10 +169,10 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
         public function test_the_full_set_is_not_autoloaded_but_the_active_list_is(): void
         {
-            WPPilot_Test_State::$plugins = ['example-plugin/example-plugin.php' => ['Version' => '1.0']];
+            \Kit_Test_State::$plugins = ['example-plugin/example-plugin.php' => ['Version' => '1.0']];
             SP\set_virtual_patches([self::example()]);
-            self::assertFalse($GLOBALS['wppilot_test_option_autoload'][SP\OPT_VPATCHES]);
-            self::assertTrue($GLOBALS['wppilot_test_option_autoload'][SP\OPT_VPATCHES_ACTIVE]);
+            self::assertFalse(\Kit_Test_State::option_autoload(SP\OPT_VPATCHES));
+            self::assertTrue(\Kit_Test_State::option_autoload(SP\OPT_VPATCHES_ACTIVE));
         }
 
         // ------------------------------------------------------------ version recheck
@@ -193,8 +193,8 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
         public function test_the_site_drops_a_rule_once_the_component_is_updated_or_removed(): void
         {
-            WPPilot_Test_State::$plugins = ['example-plugin/example-plugin.php' => ['Version' => '1.5.0']];
-            $GLOBALS['wppilot_test_themes'] = ['example-theme' => ['Name' => 'Example', 'Version' => '3.0']];
+            \Kit_Test_State::$plugins = ['example-plugin/example-plugin.php' => ['Version' => '1.5.0']];
+            \Kit_Test_State::set_themes(['example-theme' => ['Name' => 'Example', 'Version' => '3.0']]);
             SP\set_virtual_patches([
                 self::example('plugin-rule'),
                 self::example('theme-rule', component: ['type' => 'theme', 'slug' => 'example-theme', 'to' => '3.1']),
@@ -203,11 +203,11 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             self::assertSame(['plugin-rule', 'theme-rule'], array_column(SP\active_virtual_patches(), 'id'));
             self::assertTrue(SP\has_virtual_patches());
 
-            WPPilot_Test_State::$plugins = ['example-plugin/example-plugin.php' => ['Version' => '2.0.0']];
+            \Kit_Test_State::$plugins = ['example-plugin/example-plugin.php' => ['Version' => '2.0.0']];
             SP\recheck_virtual_patches();
             self::assertSame(['theme-rule'], array_column(SP\active_virtual_patches(), 'id'));
 
-            unset($GLOBALS['wppilot_test_themes']['example-theme']);
+            \Kit_Test_State::set_themes([]);
             SP\recheck_virtual_patches();
             self::assertSame([], SP\active_virtual_patches());
             self::assertTrue(SP\has_virtual_patches(), 'stored rules still need rechecking on the next update');
@@ -221,7 +221,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
         public function test_single_file_plugins_are_found_by_file_name(): void
         {
-            WPPilot_Test_State::$plugins = ['example-plugin.php' => ['Version' => '1.0']];
+            \Kit_Test_State::$plugins = ['example-plugin.php' => ['Version' => '1.0']];
             self::assertSame('1.0', SP\installed_version('plugin', 'example-plugin'));
             self::assertNull(SP\installed_version('plugin', 'example'));
         }

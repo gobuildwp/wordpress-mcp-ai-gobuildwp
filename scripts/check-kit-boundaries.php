@@ -19,7 +19,8 @@ declare(strict_types=1);
  *   - calls to wppilot_* functions, WPPILOT_* constants, and strings naming a wppilot_* or
  *     wppilot-* hook, option or handle other than the kit's own wppilot_kit_* / wppilot-kit*
  *     (the exporter renames only those);
- *   - names under WPPilot\ other than the kit's own namespace and WPPilot\Kits\Runtime;
+ *   - names under WPPilot\ or GoBuildWP\ other than the kit's own namespace, WPPilot\Kits\Runtime
+ *     and the namespaces of the kits its kit.json requires.kits names (exported with it);
  *   - global-namespace functions or classes, Composer autoloading and spl_autoload_register(),
  *     each of which collides the moment two plugins carry the same kit;
  *   - syntax or library functions newer than PHP 8.0, which both plugins still promise: enums,
@@ -311,12 +312,14 @@ function check_signature(array $tokens, int $i, string $where, Report $report): 
  * @param list<array{0: int, 1: string, 2: int}> $tokens
  * @param list<string> $lines
  * @param string|null $own The kit's namespace, or null for the runtime.
+ * @param list<string> $required The namespaces of the kits this kit's kit.json `requires.kits` names.
  */
-function check_portable(array $tokens, array $lines, string $where, ?string $own, Report $report): void
+function check_portable(array $tokens, array $lines, string $where, ?string $own, Report $report, array $required = []): void
 {
     $count = count($tokens);
-    // A kit may name itself and the runtime; the runtime only itself.
-    $allowed_namespaces = $own !== null ? ['WPPilot\\Kits\\Runtime', $own] : ['WPPilot\\Kits\\Runtime'];
+    // A kit may name itself, the runtime and the kits it declares in requires.kits (the exporter
+    // ships those with it, under the same rewritten namespace); the runtime only itself.
+    $allowed_namespaces = $own !== null ? array_merge(['WPPilot\\Kits\\Runtime', $own], $required) : ['WPPilot\\Kits\\Runtime'];
     $in_allowed = static function (string $name) use ($allowed_namespaces): bool {
         $name = ltrim($name, '\\');
         foreach ($allowed_namespaces as $allowed) {
@@ -571,6 +574,18 @@ function check(string $free, string $pro): array
         }
     }
 
+    // Every kit's namespace, so a kit may name the kits its requires.kits declares, and only those.
+    // A Free kit requiring a Pro kit is refused by check_required_kits(), not here.
+    $namespaces = [];
+    foreach ($sources as $root) {
+        foreach (kit_dirs($root . '/includes/kits') as $slug => $dir) {
+            $manifest = is_file($dir . '/kit.json') ? json_decode((string) file_get_contents($dir . '/kit.json'), true) : null;
+            if (is_array($manifest) && is_string($manifest['namespace'] ?? null) && preg_match('/^(WPPilot|GoBuildWP)\\\\Kits\\\\[A-Z][A-Za-z0-9]*$/', $manifest['namespace']) === 1) {
+                $namespaces[$slug] = $manifest['namespace'];
+            }
+        }
+    }
+
     foreach ($sources as $tier => $root) {
         $label = $tier === 'pro' ? 'pro:' : '';
         foreach (kit_dirs($root . '/includes/kits') as $slug => $dir) {
@@ -593,6 +608,12 @@ function check(string $free, string $pro): array
                 $report->add($kit_where, 0, 'a kit carries no Composer dependencies: two plugins with the same kit would load them twice');
             }
             $own = is_string($manifest['namespace'] ?? null) ? $manifest['namespace'] : 'WPPilot\\Kits\\' . $slug;
+            $required_namespaces = [];
+            foreach (is_array($manifest['requires']['kits'] ?? null) ? $manifest['requires']['kits'] : [] as $required) {
+                if (is_string($required) && $required !== $slug && isset($namespaces[$required])) {
+                    $required_namespaces[] = $namespaces[$required];
+                }
+            }
 
             $registered = [];
             foreach (files_under($dir) as $file) {
@@ -604,7 +625,7 @@ function check(string $free, string $pro): array
                 $tokens = tokens($source);
                 $lines = preg_split('/\R/', $source) ?: [];
                 check_syntax($tokens, $lines, $where, $report);
-                check_portable($tokens, $lines, $where, $own, $report);
+                check_portable($tokens, $lines, $where, $own, $report, $required_namespaces);
                 foreach (profile_gate_problems($tokens) as $problem) {
                     $report->add($where, $problem['line'], $problem['message']);
                 }

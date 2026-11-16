@@ -9,6 +9,8 @@ Removes old spam comments, trashed comments and post revisions.
 
 Arguments: `targets` (`spam_comments`, `trash_comments`, `revisions`), `older_than_days` (1–3650, default 30) and `limit` (1–500).
 
+<!-- kit-export:omit -->
 GoBuildWP Cloud schedules runs. It sends `confirm: true` only for a schedule that an owner or admin approved. Otherwise it only calls the preview.
+<!-- /kit-export:omit -->
 
 Tests: `tests/Unit/Kits/DbCleanup`.

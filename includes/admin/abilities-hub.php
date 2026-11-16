@@ -234,6 +234,15 @@ function wppilot_handle_ability_hub_actions(): void
         return;
     }
 
+    if ($action === 'rest_bridge' && function_exists('wppilot_handle_rest_bridge_action')) {
+        wppilot_handle_rest_bridge_action();
+        return;
+    }
+    if ($action === 'wp_cli_policy' && function_exists('wppilot_handle_wp_cli_policy_action')) {
+        wppilot_handle_wp_cli_policy_action();
+        return;
+    }
+
     $ability_name = is_string($_POST['ability_name'] ?? null)
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- wppilot_sanitize_requested_ability_name() applies wp_unslash() and sanitize_text_field(); the name is then checked by wppilot_is_valid_ability_name().
         ? wppilot_sanitize_requested_ability_name($_POST['ability_name'])
@@ -707,6 +716,9 @@ function wppilot_render_settings_page()
             </div>
         </div>
         <?php wppilot_render_ability_hub_result_notice($result); ?>
+        <?php if (function_exists('wppilot_ability_hold_render_banner')) {
+            wppilot_ability_hold_render_banner();
+        } ?>
         <?php if (function_exists('wppilot_get_safety_profile')): ?>
             <?php $profile = wppilot_get_safety_profile(); ?>
             <?php $profiles = wppilot_safety_profiles(); ?>
@@ -749,6 +761,12 @@ function wppilot_render_settings_page()
         <?php if ($ability_groups !== []): ?>
             <?php wppilot_render_ability_bulk_actions('bottom'); ?>
         <?php endif; ?>
+        <?php if (function_exists('wppilot_render_wp_cli_policy_panel')): ?>
+            <?php wppilot_render_wp_cli_policy_panel(); ?>
+        <?php endif; ?>
+        <?php if (function_exists('wppilot_render_rest_bridge_panel')): ?>
+            <?php wppilot_render_rest_bridge_panel(); ?>
+        <?php endif; ?>
     </div>
     <?php
 }
@@ -761,6 +779,15 @@ function wppilot_render_ability_hub_result_notice(?string $result): void
         'invalid' => ['error', __('Invalid ability name.', domain: 'wppilot')],
         'missing_bulk_action' => ['error', __('Choose a bulk action.', domain: 'wppilot')],
         'nothing_selected' => ['error', __('Select at least one ability.', domain: 'wppilot')],
+        'wp_cli_saved' => ['success', __('WP-CLI command rules saved and recorded on the Changes screen.', domain: 'wppilot')],
+        'wp_cli_unchanged' => ['info', __('The WP-CLI command rules were already as submitted; nothing changed.', domain: 'wppilot')],
+        'wp_cli_unconfirmed' => ['error', __('WP-CLI command rules were not saved: tick the confirmation box first.', domain: 'wppilot')],
+        'rest_saved' => ['success', __('REST bridge switches saved and recorded on the Changes screen.', domain: 'wppilot')],
+        'rest_unchanged' => ['info', __('The REST bridge switches were already as submitted; nothing changed.', domain: 'wppilot')],
+        'rest_unconfirmed' => ['error', __('REST bridge switches were not saved: turning on Write needs the confirmation box ticked.', domain: 'wppilot')],
+        'hold_allowed' => ['success', __('The held abilities are allowed. Agents can see and call them now.', domain: 'wppilot')],
+        'hold_kept_off' => ['success', __('The held abilities stay switched off. Switch any of them on below when you need it.', domain: 'wppilot')],
+        'hold_none' => ['error', __('Nothing was waiting from that plugin.', domain: 'wppilot')],
         default => null,
     };
 

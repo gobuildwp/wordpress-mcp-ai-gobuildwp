@@ -349,7 +349,7 @@ function normalize(array $raw): array|WP_Error
 
     return [
         'source' => $source,
-        'reference' => esc_url_raw((string) ($raw['reference'] ?? '')),
+        'reference' => sanitize_reference((string) ($raw['reference'] ?? ''), $source === 'url'),
         'container' => max(0.0, (float) ($raw['container'] ?? 1200)),
         'section_padding' => max(0.0, (float) ($raw['section_padding'] ?? 96)),
         'section_padding_mobile' => max(0.0, (float) ($raw['section_padding_mobile'] ?? 0)),
@@ -1842,4 +1842,21 @@ function skeleton_distance(string $a, string $b): float
     }
 
     return 1.0 - ($same / $length);
+}
+
+/**
+ * A spec's reference is a URL for source url and often a file or plain-text brief otherwise:
+ * only something that reads as a URL goes through esc_url_raw, which would turn "brand brief"
+ * into "http://brand%20brief".
+ */
+function sanitize_reference(string $reference, bool $is_url = false): string
+{
+    $reference = trim($reference);
+    if ($reference === '') {
+        return '';
+    }
+    if ($is_url || preg_match('#^(https?:)?//#i', $reference) === 1 || str_starts_with($reference, '/')) {
+        return esc_url_raw($reference);
+    }
+    return sanitize_text_field($reference);
 }

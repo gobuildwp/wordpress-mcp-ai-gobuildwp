@@ -311,6 +311,8 @@ function list_tools(): array
     }
 
     $tools = [];
+    // Compact mode lists the three discovery meta-tools and nothing else; see tool-modes.php.
+    $compact = function_exists('WPPilot\Mcp\compact_tools_enabled') && compact_tools_enabled();
 
     /** @var mixed $ability */
     foreach (wp_get_abilities() as $ability) {
@@ -319,7 +321,12 @@ function list_tools(): array
         }
 
         $meta = \wppilot_ability_meta($ability);
-        if (!\wppilot_ability_is_exposed($meta)) {
+        if ($compact) {
+            // The meta-tools carry no `mcp.public` of their own; the adapter serves them unconditionally.
+            if (!is_meta_tool_ability($ability->get_name())) {
+                continue;
+            }
+        } elseif (!\wppilot_ability_is_exposed($meta)) {
             continue;
         }
 
@@ -350,10 +357,13 @@ function list_tools(): array
         if ($annotations !== []) {
             $tool['annotations'] = $annotations;
         }
+        if (function_exists('WPPilot\Mcp\apply_strict_mode')) {
+            $tool = apply_strict_mode($tool);
+        }
         $tools[] = function_exists('WPPilot\Mcp\decorate_tool') ? decorate_tool($tool, $meta) : $tool;
     }
 
-    return sort_tools_deterministically($tools);
+    return sort_tools_deterministically(function_exists('WPPilot\Mcp\with_extension_tools') ? with_extension_tools($tools) : $tools);
 }
 
 /**
@@ -665,7 +675,8 @@ function input_schema_is_null(WP_Ability $ability): bool
  *     Obtain explicit user approval, then retry with confirm=true.
  *
  * Advertising the field is what makes that instruction followable. It is added
- * to `required` as well, because a call omitting it cannot succeed.
+ * to `required` as well, because a call omitting it cannot succeed - except on an
+ * ability declaring `dry_run`, whose dry runs need no confirmation.
  *
  * The injection is on the advertised copy only. Abilities declaring their own
  * `confirm` keep theirs untouched, and call_tool() still strips the field
@@ -689,18 +700,32 @@ function advertise_confirmation(WP_Ability $ability, array $schema): array
 
     $schema['type'] = 'object';
     $properties = is_array($schema['properties'] ?? null) ? $schema['properties'] : [];
+    // An ability declaring its own `dry_run` runs a dry run unconfirmed (see
+    // wppilot_ability_call_is_dry_run()), so `confirm` cannot be required there: a client
+    // validating against this schema would refuse the dry run before it is sent. The server gate
+    // still refuses the real write without it.
+    $declares_dry_run = array_key_exists('dry_run', $properties);
     $properties['confirm'] = [
         'type' => 'boolean',
-        'description' => 'Must be true. This operation is destructive or critical, and GoBuildWP refuses it '
-            . 'without an explicit confirmation that the user approved this specific call.',
+        'description' => $declares_dry_run
+            ? 'Must be true for a real write, and not needed when dry_run is true. This operation is destructive '
+                . 'or critical, and GoBuildWP refuses it without an explicit confirmation that the user approved this specific call.'
+            : 'Must be true. This operation is destructive or critical, and GoBuildWP refuses it '
+                . 'without an explicit confirmation that the user approved this specific call.',
     ];
     $schema['properties'] = $properties;
 
     $required = is_array($schema['required'] ?? null) ? $schema['required'] : [];
-    if (!in_array('confirm', $required, strict: true)) {
+    if ($declares_dry_run) {
+        $required = array_values(array_filter($required, static fn(mixed $key): bool => $key !== 'confirm'));
+    } elseif (!in_array('confirm', $required, strict: true)) {
         $required[] = 'confirm';
     }
-    $schema['required'] = $required;
+    if ($required === []) {
+        unset($schema['required']);
+    } else {
+        $schema['required'] = $required;
+    }
 
     return $schema;
 }
@@ -772,6 +797,11 @@ function force_schema_objects(array $schema): array
 function call_tool(array $params, mixed $id): array
 {
     $name = is_string($params['name'] ?? null) ? $params['name'] : '';
+    // A tool an extension owns, such as the approval card's decide button, is not an ability.
+    $extension_call = function_exists('WPPilot\Mcp\call_extension_tool') ? call_extension_tool($name, $params, $id) : null;
+    if ($extension_call !== null) {
+        return $extension_call;
+    }
     $ability = $name === '' ? null : ability_for_tool($name);
 
     if ($ability === null) {
@@ -781,6 +811,20 @@ function call_tool(array $params, mixed $id): array
 
     $arguments = is_array($params['arguments'] ?? null) ? $params['arguments'] : [];
 
+    // execute-ability is gated as the ability it names, never run inside the adapter; see
+    // unwrap_execute_ability().
+    if (function_exists('WPPilot\Mcp\unwrap_execute_ability') && $ability->get_name() === EXECUTE_META_ABILITY) {
+        $unwrapped = unwrap_execute_ability($arguments);
+        if ($unwrapped instanceof WP_Error) {
+            return error_response(ERROR_INVALID_PARAMS, $unwrapped->get_error_message(), 200, $id);
+        }
+        [$ability, $arguments] = $unwrapped;
+    } elseif (function_exists('WPPilot\Mcp\strict_schemas_enabled') && strict_schemas_enabled()) {
+        // A strict client sends null for each optional field it leaves out.
+        $stripped = strip_strict_nulls($arguments, normalize_schema($ability->get_input_schema()));
+        $arguments = is_array($stripped) ? $stripped : $arguments;
+    }
+
     // Safety profile, confirmation, confirm strip, then every wppilot_pre_ability_execute control:
     // rate limit, design and preview gates, and whatever a companion plugin adds. This transport
     // used to reproduce each of those by hand; see wppilot_gate_ability_call().
@@ -789,7 +833,11 @@ function call_tool(array $params, mixed $id): array
     if ($gated instanceof WP_Error) {
         // A destructive call awaiting the user's approval goes back as input_required; see confirmation.php.
         $input_required = input_required_payload($gated);
-        return $input_required !== null ? input_required_response($input_required, $id) : tool_error($gated, $id);
+        if ($input_required !== null) {
+            return input_required_response($input_required, $id);
+        }
+
+        return function_exists('WPPilot\Mcp\decorate_refusal') ? decorate_refusal(tool_error($gated, $id), $gated, $params) : tool_error($gated, $id);
     }
     if (is_array($gated)) {
         $arguments = $gated;
@@ -807,7 +855,34 @@ function call_tool(array $params, mixed $id): array
         return tool_error($result, $id);
     }
 
-    return success(tool_result($result), $id, 'tools/call');
+    return success(guarded_tool_result($ability->get_name(), $result), $id, 'tools/call');
+}
+
+/**
+ * The tool result after the output guard: secrets redacted, instruction-like text flagged.
+ *
+ * Flags and the redaction count go in `_meta`, with a short text block so a client that
+ * ignores `_meta` still shows the model the warning. structuredContent stays the
+ * ability's result. See includes/output-guard.php.
+ *
+ * @return array<string, mixed>
+ */
+function guarded_tool_result(string $ability_name, mixed $result): array
+{
+    if (!function_exists('wppilot_output_guard')) {
+        return tool_result($result);
+    }
+    $guarded = \wppilot_output_guard($ability_name, $result, 'mcp');
+    $payload = tool_result($guarded['result']);
+    $meta = \wppilot_output_guard_meta($guarded);
+    if ($meta === null) {
+        return $payload;
+    }
+
+    $payload['_meta'] = ['gobuildwp/content_safety' => $meta];
+    $payload['content'][] = ['type' => 'text', 'text' => $meta['notice']];
+
+    return $payload;
 }
 
 /**
@@ -979,12 +1054,19 @@ function encode_result(mixed $result): string
  */
 function tool_error(WP_Error $error, mixed $id): array
 {
+    $structured = [
+        'error' => $error->get_error_code(),
+        'message' => $error->get_error_message(),
+    ];
+    // A Cloud job's queued request: its id and wp-admin link, so Cloud can show and follow it.
+    $data = $error->get_error_data();
+    if (is_array($data) && is_array($data['cloud_approval'] ?? null)) {
+        $structured['cloud_approval'] = $data['cloud_approval'];
+    }
+
     return success([
         'content' => [['type' => 'text', 'text' => $error->get_error_message()]],
-        'structuredContent' => [
-            'error' => $error->get_error_code(),
-            'message' => $error->get_error_message(),
-        ],
+        'structuredContent' => $structured,
         'isError' => true,
     ], $id, 'tools/call');
 }
@@ -1009,7 +1091,7 @@ function repair_tool_list(array $tools): array
         }
         $tool = client_ready_tool($tool);
         if ($tool !== null) {
-            $repaired[] = $tool;
+            $repaired[] = function_exists('WPPilot\Mcp\apply_strict_mode') ? apply_strict_mode($tool) : $tool;
         }
     }
 

@@ -74,6 +74,47 @@ function wppilot_settings_sections(): array
                     'value' => wppilot_get_safety_profile(),
                     'options' => wppilot_settings_profile_options(),
                 ],
+                [
+                    'type' => 'toggle',
+                    'name' => 'wppilot_read_mode',
+                    'label' => __('Read Mode', domain: 'wppilot'),
+                    'help' => wppilot_read_mode_forced()
+                        ? __(
+                            'Pinned on by WPPILOT_READ_MODE in wp-config.php. Every agent connection is read-only until that line is removed.',
+                            domain: 'wppilot',
+                        )
+                        : __(
+                            'On makes every connection read-only: MCP, REST, application passwords, XML-RPC, Chat and GoBuildWP Cloud. Writes are refused with a clear error and only read abilities run. Also: wp wppilot read-mode on|off.',
+                            domain: 'wppilot',
+                        ),
+                    'value' => wppilot_read_mode_enabled(),
+                ],
+                [
+                    'type' => 'toggle',
+                    'name' => 'wppilot_agents_paused',
+                    'label' => __('Pause agents', domain: 'wppilot'),
+                    'help' => wppilot_agents_pause_forced()
+                        ? __(
+                            'Pinned on by WPPILOT_AGENTS_PAUSED in wp-config.php. Every agent call is refused until that line is removed.',
+                            domain: 'wppilot',
+                        )
+                        : __(
+                            'On refuses every agent call, reads included, with an "agents paused" error: MCP, REST, application passwords, Chat, WP-CLI abilities and GoBuildWP Cloud. Nothing is disconnected, so switching it off puts everything back. Also in the admin bar, and: wp wppilot pause on|off.',
+                            domain: 'wppilot',
+                        ),
+                    'value' => wppilot_agents_paused(),
+                    'state' => 'armed',
+                ],
+                [
+                    'type' => 'toggle',
+                    'name' => 'wppilot_agents_resume_local_only',
+                    'label' => __('Only resume locally', domain: 'wppilot'),
+                    'help' => __(
+                        'On means GoBuildWP Cloud can still pause agents here but can never resume them: a person has to, here, in the admin bar or with wp wppilot pause off.',
+                        domain: 'wppilot',
+                    ),
+                    'value' => wppilot_agents_resume_local_only(),
+                ],
             ],
             'save' => 'wppilot_settings_save_agent_access',
         ],
@@ -180,6 +221,12 @@ function wppilot_settings_save_agent_access(array $post): void
         wppilot_update_safety_profile($profile);
     }
 
+    // An unchecked checkbox is absent from the POST; a pinned Read Mode stays on.
+    wppilot_set_read_mode(($post['wppilot_read_mode'] ?? null) !== null);
+    // Same for the pause; a pinned pause stays on.
+    wppilot_set_agents_paused(($post['wppilot_agents_paused'] ?? null) !== null);
+    wppilot_set_agents_resume_local_only(($post['wppilot_agents_resume_local_only'] ?? null) !== null);
+
     // An unchecked checkbox is absent from the POST entirely.
     if (($post['wppilot_ai_abilities_enabled'] ?? null) !== null) {
         wppilot_enable_ai_abilities();
@@ -249,6 +296,10 @@ function wppilot_handle_settings_save(): void
 
     /** @var array<string, mixed> $post */
     $post = wp_unslash($_POST);
+    // A field locked in wp-config.php keeps its pinned value whatever was posted for it.
+    if (function_exists('wppilot_settings_apply_locks')) {
+        $post = wppilot_settings_apply_locks($post);
+    }
 
     foreach (wppilot_settings_sections() as $section) {
         $save = $section['save'] ?? null;
@@ -294,6 +345,9 @@ function wppilot_render_settings_screen(): void
                 </button>
             </p>
         </form>
+        <?php if (function_exists('wppilot_config_render_panel')) {
+            wppilot_config_render_panel();
+        } ?>
     </div>
     <?php
 }
@@ -336,6 +390,7 @@ function wppilot_render_settings_field(array $field): void
     $label = (string) ($field['label'] ?? $name);
     $help = (string) ($field['help'] ?? '');
     $id = 'wppilot-field-' . sanitize_key($name);
+    $lock_note = function_exists('wppilot_setting_lock_note') ? wppilot_setting_lock_note($field) : '';
     ?>
     <div class="wppilot-setting">
         <div class="wppilot-setting__text">
@@ -344,6 +399,9 @@ function wppilot_render_settings_field(array $field): void
             echo esc_html($label); ?></label>
             <?php if ($help !== '') { ?>
                 <p class="wppilot-setting__help"><?php echo esc_html($help); ?></p>
+            <?php } ?>
+            <?php if ($lock_note !== '') { ?>
+                <p class="wppilot-setting__help wppilot-setting__lock"><strong><?php echo esc_html($lock_note); ?></strong></p>
             <?php } ?>
             <?php if (is_array($field['link'] ?? null) && is_string($field['link']['url'] ?? null)) { ?>
                 <p class="wppilot-setting__help"><a href="<?php echo esc_url((string) $field['link']['url']); ?>" target="_blank" rel="noopener noreferrer"><?php
@@ -374,7 +432,7 @@ function wppilot_render_settings_field(array $field): void
             } elseif ($type === 'select') {
                 $options = is_array($field['options'] ?? null) ? $field['options'] : [];
                 ?>
-                <select id="<?php echo esc_attr($id); ?>" name="<?php echo esc_attr($name); ?>">
+                <select id="<?php echo esc_attr($id); ?>" name="<?php echo esc_attr($name); ?>"<?php disabled($lock_note !== ''); ?>>
                     <?php foreach ($options as $value => $text) { ?>
                         <option
                             value="<?php echo esc_attr((string) $value); ?>"
@@ -394,6 +452,7 @@ function wppilot_render_settings_field(array $field): void
                         name="<?php echo esc_attr($name); ?>"
                         value="1"
                         <?php checked($on); ?>
+                        <?php disabled($lock_note !== ''); ?>
                     >
                     <span class="wppilot-switch__track" aria-hidden="true"></span>
                 </label>

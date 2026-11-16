@@ -641,6 +641,83 @@ function check_oauth_urls(string $home, string $siteurl, bool $is_ssl): array
 }
 
 /**
+ * Whether the OAuth tables exist. Without them no client can register or sign in, and every OAuth
+ * request fails in ways that look like an authentication problem.
+ *
+ * @param list<string> $missing Table names that are not installed.
+ * @return array{id: string, status: string, label: string, finding: string, evidence: list<string>, fix: string}
+ */
+function check_oauth_tables(array $missing): array
+{
+    $label = __('OAuth tables', domain: 'wppilot');
+    if ($missing === []) {
+        return check('oauth_tables', 'pass', $label, __('All four OAuth tables are installed.', domain: 'wppilot'));
+    }
+
+    return check('oauth_tables', 'fail', $label, __('OAuth tables are missing, so OAuth clients cannot register or sign in.', domain: 'wppilot'), $missing, __('Click "Repair OAuth tables" under Repairs on this screen. It re-runs the installer and checks again; nothing is deleted. If the tables still do not appear, ask your host to grant the database user the CREATE privilege.', domain: 'wppilot'));
+}
+
+/**
+ * Which page caches could be serving stale OAuth discovery documents, and whether GoBuildWP can
+ * purge them itself.
+ *
+ * @param list<array{label: string, supported: bool, manual: string}> $detected Active cache plugins.
+ * @param list<string>                                                 $urls     The discovery URLs.
+ * @param array{at: int, purged: list<string>}|null                    $last     The last purge, if any.
+ * @return array{id: string, status: string, label: string, finding: string, evidence: list<string>, fix: string}
+ */
+function check_discovery_cache(array $detected, array $urls, ?array $last): array
+{
+    $id = 'discovery_cache';
+    $label = __('Cached OAuth discovery', domain: 'wppilot');
+    $evidence = $urls;
+    if ($last !== null) {
+        $evidence[] = sprintf(
+            'last purge: %s (%s)',
+            gmdate('Y-m-d H:i', $last['at']) . ' UTC',
+            $last['purged'] === [] ? 'nothing purged' : implode(', ', $last['purged']),
+        );
+    }
+
+    if ($detected === []) {
+        return check($id, 'pass', $label, __('No supported page-cache plugin is active, so nothing in WordPress caches the discovery documents. A CDN or host cache still can: if sign-in finds stale metadata, purge these URLs there.', domain: 'wppilot'), $evidence);
+    }
+
+    $names = array_map(static fn (array $cache): string => $cache['label'], $detected);
+    $manual = array_values(array_filter($detected, static fn (array $cache): bool => !$cache['supported']));
+    if ($manual === []) {
+        return check($id, 'pass', $label, sprintf(
+            /* translators: %s: comma-separated cache plugin names */
+            __('Page cache detected: %s. GoBuildWP purges the discovery URLs from it when the site address, permalinks or AI Abilities change, and on demand with "Purge discovery cache" below.', domain: 'wppilot'),
+            implode(', ', $names),
+        ), $evidence);
+    }
+
+    return check($id, 'warn', $label, sprintf(
+        /* translators: %s: comma-separated cache plugin names */
+        __('Page cache detected that GoBuildWP cannot purge by URL: %s. A cached copy of a discovery document can keep OAuth sign-in failing after the problem behind it is fixed.', domain: 'wppilot'),
+        implode(', ', array_map(static fn (array $cache): string => $cache['label'], $manual)),
+    ), $evidence, implode("\n", array_map(static fn (array $cache): string => $cache['label'] . ': ' . $cache['manual'], $manual)));
+}
+
+/**
+ * The discovery-cache check, fed from the live site.
+ *
+ * @return array{id: string, status: string, label: string, finding: string, evidence: list<string>, fix: string}
+ */
+function check_discovery_cache_live(): array
+{
+    $detected = [];
+    foreach (\WPPilot\OAuth\DiscoveryCache\providers() as $provider) {
+        if ($provider['detected']) {
+            $detected[] = ['label' => $provider['label'], 'supported' => $provider['purge'] !== null, 'manual' => $provider['manual']];
+        }
+    }
+
+    return check_discovery_cache($detected, \WPPilot\OAuth\DiscoveryCache\discovery_urls(), \WPPilot\OAuth\DiscoveryCache\last_result());
+}
+
+/**
  * Summarise the checks: counts per status and the worst one.
  *
  * @param list<array{id: string, status: string, label: string, finding: string, evidence: list<string>, fix: string}> $checks
@@ -808,6 +885,13 @@ function run(?callable $request = null): array
         $metadata_class = classify_response($metadata);
         $all_headers[] = $metadata_class['headers'];
         $checks[] = check_oauth_metadata($metadata_class, probe_evidence('GET ' . $metadata_url, $metadata_class, $metadata['error']), $mcp_path, $home_path);
+
+        if (function_exists('WPPilot\\Troubleshoot\\Checks\\missing_oauth_tables') && isset($GLOBALS['wpdb'])) {
+            $checks[] = check_oauth_tables(\WPPilot\Troubleshoot\Checks\missing_oauth_tables());
+        }
+        if (function_exists('WPPilot\\OAuth\\DiscoveryCache\\providers')) {
+            $checks[] = check_discovery_cache_live();
+        }
     } else {
         $checks[] = check('oauth_challenge', 'skip', __('OAuth sign-in challenge', domain: 'wppilot'), __('OAuth is not available on this site (it needs HTTPS), so there is nothing to test.', domain: 'wppilot'));
     }

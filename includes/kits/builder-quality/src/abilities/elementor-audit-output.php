@@ -40,8 +40,29 @@ wp_register_ability('wppilot/elementor-audit-output', [
             'items_total' => ['type' => 'integer'],
         ],
     ],
-    'execute_callback' => static fn(array $input): array|WP_Error => audit($input),
-    'permission_callback' => static fn(mixed $input = null): bool => Runtime\can_run() && current_user_can('edit_post', (int) (is_array($input) ? ($input['post_id'] ?? 0) : 0)),
+    'execute_callback' => static function (array $input): array|WP_Error {
+        $result = audit($input);
+        if (is_array($result)) {
+            // An empty map is an object in the output schema, not a JSON list.
+            foreach (['counts', 'fixes'] as $key) {
+                if (array_key_exists($key, $result) && $result[$key] === []) {
+                    $result[$key] = new \stdClass();
+                }
+            }
+        }
+        return $result;
+    },
+    // A post that does not exist falls back to edit_posts, so the caller gets "No such post"
+    // instead of a permission error; an existing post still needs edit_post on it.
+    'permission_callback' => static function (mixed $input = null): bool {
+        if (!Runtime\can_run()) {
+            return false;
+        }
+        $post_id = (int) (is_array($input) ? ($input['post_id'] ?? 0) : 0);
+        return $post_id > 0 && get_post($post_id) instanceof \WP_Post
+            ? current_user_can('edit_post', $post_id)
+            : current_user_can('edit_posts');
+    },
     'meta' => [
         'show_in_rest' => true,
         'mcp' => ['public' => true],

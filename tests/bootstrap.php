@@ -53,6 +53,8 @@ require_once dirname(__DIR__) . '/includes/compatibility.php';
 // Load the whole WordPress-core module, not just its helpers: registration
 // happens at file scope, so requiring every file is what proves the surface
 // comes up with Free alone — no Pro class, licence check, or entitlement call.
+// The post edit-lock guard the write abilities' schemas and callbacks call.
+require_once dirname(__DIR__) . '/includes/post-lock.php';
 require_once dirname(__DIR__) . '/includes/abilities/wordpress/bootstrap.php';
 wppilot_load_wordpress_abilities();
 
@@ -76,6 +78,11 @@ require_once dirname(__DIR__) . '/includes/abilities/registry.php';
 // MCP transport asks it which tools must be confirmed before it will run them,
 // and that answer decides what the tool list advertises.
 require_once dirname(__DIR__) . '/includes/safety.php';
+require_once dirname(__DIR__) . '/includes/read-mode.php';
+require_once dirname(__DIR__) . '/includes/agent-pause.php';
+require_once dirname(__DIR__) . '/includes/wp-cli-policy.php';
+require_once dirname(__DIR__) . '/includes/rest-bridge.php';
+require_once dirname(__DIR__) . '/includes/output-guard.php';
 // The gate pipeline every execution path shares, and the one policy.php answer
 // it needs (which abilities the Hub cannot switch off). policy.php registers
 // nothing at file scope.
@@ -106,6 +113,7 @@ require_once dirname(__DIR__) . '/includes/oauth/client-id-metadata.php';
 // digesting, and the route boundary a token identity is allowed to cross — run
 // without a database. Storage itself is integration territory.
 require_once dirname(__DIR__) . '/includes/tokens.php';
+require_once dirname(__DIR__) . '/includes/device-auth.php';
 require_once dirname(__DIR__) . '/includes/oauth/middleware.php';
 
 // The change ledger registers nothing at file scope, so it loads here purely for
@@ -113,6 +121,10 @@ require_once dirname(__DIR__) . '/includes/oauth/middleware.php';
 // by reference, and only a real call proves the call sites still satisfy them.
 require_once dirname(__DIR__) . '/includes/change-log.php';
 require_once dirname(__DIR__) . '/includes/change-log-table.php';
+require_once dirname(__DIR__) . '/includes/idempotency.php';
+require_once dirname(__DIR__) . '/includes/write-receipts.php';
+// The hash chain every recorded row is sealed into. Registers nothing at file scope.
+require_once dirname(__DIR__) . '/includes/ledger-chain.php';
 // Session undo and redo, and where a session id comes from. Both register nothing at file scope.
 require_once dirname(__DIR__) . '/includes/change-sessions.php';
 require_once dirname(__DIR__) . '/includes/restore-points.php';
@@ -124,6 +136,14 @@ require_once dirname(__DIR__) . '/includes/agent-sessions.php';
 // at load, which is what the tests assert against.
 require_once dirname(__DIR__) . '/includes/agent-identities.php';
 require_once dirname(__DIR__) . '/includes/ledger-map.php';
+require_once dirname(__DIR__) . '/includes/content-guard.php';
+require_once dirname(__DIR__) . '/includes/safe-fetch.php';
+require_once dirname(__DIR__) . '/includes/child-theme.php';
+require_once dirname(__DIR__) . '/includes/widgets.php';
+// The core abilities above required these two before change-log.php loaded, so their undo
+// strategies found no registry. In the plugin the ledger always loads first.
+wppilot_register_rollback_strategy(WPPILOT_CHILD_THEME_TYPE, 'wppilot_child_theme_rollback');
+wppilot_register_rollback_strategy(WPPILOT_WIDGETS_TYPE, 'wppilot_widget_rollback');
 
 // The design system's pure layers: the document parser, the token extractor,
 // the pre-flight rules, the distinctiveness comparison, the spec, and the

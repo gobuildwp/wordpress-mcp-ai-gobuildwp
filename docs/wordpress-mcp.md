@@ -128,19 +128,20 @@ rather than appearing as a white screen.
 
 ## What is registered on a fresh install
 
-GoBuildWP ships 216 abilities, plus one MCP prompt per saved skill. Not all of
+GoBuildWP ships 262 abilities, plus one MCP prompt per saved skill. Not all of
 them register everywhere: the WooCommerce, SEO, form, backup and security
 abilities appear only while their plugin is active, and developer abilities
 only under Developer Full Access, so a fresh install on the default profile
-registers 154. They are grouped into a
+registers 177. They are grouped into a
 single **WordPress** category on the Abilities screen and can be switched off
 individually: content, taxonomies, media, comments, menus, revisions, user
 reads, allowlisted site settings, the plugin and theme lifecycle, Gutenberg
 block workflows, Elementor editing, the design system, preview, skills, the
-change ledger and diagnostics. Twenty abilities register only under
+change ledger and diagnostics. Twenty-three abilities register only under
 Developer Full Access: the fifteen developer abilities (PHP execution, WP-CLI,
 reading and writing server files, temporary admin access) plus database
-queries, the options explorer, and creating or updating users.
+queries, inserting, updating and deleting rows in a plugin's own table, the
+options explorer, and creating or updating users.
 
 Content creation is draft-first: an absent, blank or malformed status resolves
 to `draft` before any capability check runs, so nothing is published by

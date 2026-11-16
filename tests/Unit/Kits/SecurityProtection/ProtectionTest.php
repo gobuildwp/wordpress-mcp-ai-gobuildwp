@@ -10,19 +10,19 @@ namespace GoBuildWP\Kits\SecurityProtection {
     if (!function_exists(__NAMESPACE__ . '\get_transient')) {
         function get_transient(string $key): mixed
         {
-            return $GLOBALS['gobuildwp_sp_test_transients'][$key] ?? false;
+            return $GLOBALS['kit_test_sp_transients'][$key] ?? false;
         }
 
         function set_transient(string $key, mixed $value, int $expiration = 0): bool
         {
-            $GLOBALS['gobuildwp_sp_test_transients'][$key] = $value;
+            $GLOBALS['kit_test_sp_transients'][$key] = $value;
             return true;
         }
     }
     if (!function_exists(__NAMESPACE__ . '\get_user_meta')) {
         function get_user_meta(int $user_id, string $key = '', bool $single = false): mixed
         {
-            return $GLOBALS['gobuildwp_sp_test_user_meta'][$user_id][$key] ?? ($single ? '' : []);
+            return $GLOBALS['kit_test_sp_user_meta'][$user_id][$key] ?? ($single ? '' : []);
         }
     }
 }
@@ -35,7 +35,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
     use PHPUnit\Framework\Attributes\DataProvider;
     use PHPUnit\Framework\TestCase;
     use WP_Error;
-    use WPPilot_Test_State;
+    use Kit_Test_State;
 
     /**
      * Website protection: client address and CIDR matching, firewall rules, settings validation,
@@ -45,9 +45,9 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
     {
         protected function setUp(): void
         {
-            WPPilot_Test_State::$options = [];
-            $GLOBALS['gobuildwp_sp_test_transients'] = [];
-            $GLOBALS['gobuildwp_sp_test_user_meta'] = [];
+            \Kit_Test_State::$options = [];
+            $GLOBALS['kit_test_sp_transients'] = [];
+            $GLOBALS['kit_test_sp_user_meta'] = [];
             $this->server = $_SERVER;
         }
 
@@ -57,9 +57,9 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
         protected function tearDown(): void
         {
             $_SERVER = $this->server;
-            remove_all_filters('gobuildwp_protection_trusted_proxies');
-            remove_all_filters('gobuildwp_protection_cloudflare_ranges');
-            WPPilot_Test_State::$current_user_id = 0;
+            remove_all_filters('wppilot_kit_protection_trusted_proxies');
+            remove_all_filters('wppilot_kit_protection_cloudflare_ranges');
+            \Kit_Test_State::$current_user_id = 0;
         }
 
         // ------------------------------------------------------------ addresses
@@ -79,7 +79,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             self::assertSame('5.6.7.8', SP\client_ip(['REMOTE_ADDR' => '2606:4700::1', 'HTTP_CF_CONNECTING_IP' => '5.6.7.8'], 'cloudflare'));
             self::assertSame('172.70.1.2', SP\client_ip(['REMOTE_ADDR' => '172.70.1.2', 'HTTP_CF_CONNECTING_IP' => 'junk'], 'cloudflare'));
 
-            add_filter('gobuildwp_protection_cloudflare_ranges', static fn(): array => ['203.0.113.0/24']);
+            add_filter('wppilot_kit_protection_cloudflare_ranges', static fn(): array => ['203.0.113.0/24']);
             self::assertSame('5.6.7.8', SP\client_ip(['REMOTE_ADDR' => '203.0.113.5', 'HTTP_CF_CONNECTING_IP' => '5.6.7.8'], 'cloudflare'));
             self::assertSame('172.70.1.2', SP\client_ip(['REMOTE_ADDR' => '172.70.1.2', 'HTTP_CF_CONNECTING_IP' => '5.6.7.8'], 'cloudflare'));
         }
@@ -90,13 +90,27 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             // No trusted proxy named: the header is ignored.
             self::assertSame('10.0.0.1', SP\client_ip($server, 'x_forwarded_for'));
 
-            add_filter('gobuildwp_protection_trusted_proxies', static fn(): array => ['10.0.0.0/24', 'nonsense']);
+            add_filter('wppilot_kit_protection_trusted_proxies', static fn(): array => ['10.0.0.0/24', 'nonsense']);
             self::assertSame(['10.0.0.0/24'], SP\trusted_proxies());
             // 10.0.0.2 is another hop of the trusted proxy, so the client is the address before it.
             self::assertSame('198.51.100.7', SP\client_ip($server, 'x_forwarded_for'));
             self::assertSame('10.0.0.1', SP\client_ip(['REMOTE_ADDR' => '10.0.0.1', 'HTTP_X_FORWARDED_FOR' => 'nope'], 'x_forwarded_for'));
             // A connection from outside the proxy list can't choose its own address.
             self::assertSame('192.0.2.9', SP\client_ip(['REMOTE_ADDR' => '192.0.2.9', 'HTTP_X_FORWARDED_FOR' => '6.6.6.6'], 'x_forwarded_for'));
+        }
+
+        public function test_shared_proxy_addresses_are_recognised_only_as_the_direct_peer(): void
+        {
+            // A whole office or CDN shares these, so a login lockout on them locks everyone out.
+            self::assertTrue(SP\ip_is_shared_proxy(['REMOTE_ADDR' => '10.0.0.4'], '10.0.0.4'));
+            self::assertTrue(SP\ip_is_shared_proxy(['REMOTE_ADDR' => '172.70.1.2'], '172.70.1.2'));
+            self::assertTrue(SP\ip_is_shared_proxy(['REMOTE_ADDR' => '127.0.0.1'], '127.0.0.1'));
+            self::assertTrue(SP\ip_is_shared_proxy(['REMOTE_ADDR' => '::1'], '::1'));
+            // A real client address, or one resolved through a trusted proxy header, is not.
+            self::assertFalse(SP\ip_is_shared_proxy(['REMOTE_ADDR' => '203.0.113.5'], '203.0.113.5'));
+            self::assertFalse(SP\ip_is_shared_proxy(['REMOTE_ADDR' => '10.0.0.4'], '198.51.100.7'));
+            self::assertFalse(SP\ip_is_shared_proxy(['REMOTE_ADDR' => 'junk'], 'junk'));
+            self::assertFalse(SP\ip_is_shared_proxy([], ''));
         }
 
         public function test_ipv4_mapped_addresses_are_unmapped(): void
@@ -179,7 +193,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
         public function test_stored_settings_from_before_the_safe_defaults_still_win(): void
         {
-            WPPilot_Test_State::$options[SP\OPT_SETTINGS] = ['firewall' => 'off', 'login' => ['enabled' => false]];
+            \Kit_Test_State::$options[SP\OPT_SETTINGS] = ['firewall' => 'off', 'login' => ['enabled' => false]];
             $s = SP\settings();
             self::assertSame('off', $s['firewall']);
             self::assertFalse($s['login']['enabled']);
@@ -260,7 +274,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             foreach (['10.0.0.0/8', '198.51.0.0/15', '2001:db8::/32', '2001:db8::/47'] as $wide) {
                 $r = SP\add_block($wide, 0, '', 'manual');
                 self::assertInstanceOf(WP_Error::class, $r, $wide);
-                self::assertSame('gobuildwp_protection_invalid', $r->get_error_code());
+                self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_protection_invalid'), $r->get_error_code());
             }
             self::assertIsArray(SP\add_block('198.51.0.0/16', 0, '', 'manual'));
             self::assertIsArray(SP\add_block('2001:db8:1::/48', 0, '', 'manual'));
@@ -272,14 +286,14 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             $_SERVER['REMOTE_ADDR'] = '203.0.113.40';
             $r = SP\add_block('203.0.113.0/24', 0, '', 'manual');
             self::assertInstanceOf(WP_Error::class, $r);
-            self::assertSame('gobuildwp_protection_self_block', $r->get_error_code());
+            self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_protection_self_block'), $r->get_error_code());
 
             // The address the signed-in user logged in from counts too, even on another request.
-            WPPilot_Test_State::$current_user_id = 7;
-            $GLOBALS['gobuildwp_sp_test_user_meta'][7]['session_tokens'] = ['abc' => ['ip' => '198.51.100.23', 'login' => 1]];
+            \Kit_Test_State::$current_user_id = 7;
+            $GLOBALS['kit_test_sp_user_meta'][7]['session_tokens'] = ['abc' => ['ip' => '198.51.100.23', 'login' => 1]];
             $r = SP\add_block('198.51.100.23', 0, '', 'manual');
             self::assertInstanceOf(WP_Error::class, $r);
-            self::assertSame('gobuildwp_protection_self_block', $r->get_error_code());
+            self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_protection_self_block'), $r->get_error_code());
 
             self::assertIsArray(SP\add_block('198.51.101.0/24', 0, '', 'manual'));
             // Automatic blocks name the attacker's address, never the caller's, so they aren't checked.
@@ -290,29 +304,30 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
         #[\PHPUnit\Framework\Attributes\PreserveGlobalState(false)]
         public function test_disable_protection_constant_unhooks_the_guard(): void
         {
+            // A separate process gets only the bootstrap; the guard reads its flag through the runtime.
+            require_once dirname(__DIR__, 4) . '/includes/kits/_runtime/runtime.php';
             SP\configure(['xmlrpc' => 'off']);
             SP\install_hooks();
             self::assertArrayHasKey('xmlrpc_enabled', $GLOBALS['wp_filter'] ?? []);
 
             $GLOBALS['wp_filter'] = [];
-            define('GOBUILDWP_DISABLE_PROTECTION', true);
+            define('WPPILOT_KIT_DISABLE_PROTECTION', true);
             SP\install_hooks();
             self::assertSame([], $GLOBALS['wp_filter']);
         }
 
         public function test_block_ip_runs_without_confirm(): void
         {
-            $before = count(WPPilot_Test_State::$registrations);
+            $before = count(\Kit_Test_State::$registrations);
             require dirname(__DIR__, 4) . '/includes/kits/security-protection/src/abilities/protection-block-ip.php';
-            $args = WPPilot_Test_State::$registrations[$before]['args'];
-            WPPilot_Test_State::$registrations = array_slice(WPPilot_Test_State::$registrations, 0, $before);
-            WPPilot_Test_State::$registered_abilities = array_slice(WPPilot_Test_State::$registered_abilities, 0, $before);
+            $args = \Kit_Test_State::$registrations[$before]['args'];
+            \Kit_Test_State::$registrations = array_slice(\Kit_Test_State::$registrations, 0, $before);
+            \Kit_Test_State::$registered_abilities = array_slice(\Kit_Test_State::$registered_abilities, 0, $before);
 
             // GoBuildWP Cloud never sends confirm=true, so a confirm step would refuse every block.
             self::assertFalse($args['meta']['annotations']['destructive']);
             self::assertArrayNotHasKey('confirm', $args['input_schema']['properties']);
-            $ability = new \WP_Ability('gobuildwp/protection-block-ip', $args['meta'], $args['input_schema'], $args['category']);
-            self::assertFalse(wppilot_ability_requires_confirmation($ability));
+            // The host's own confirm gate reading these annotations is checked in KitHostCompatTest.
 
             $manifest = json_decode((string) file_get_contents(dirname(__DIR__, 4) . '/includes/kits/security-protection/kit.json'), true);
             $entry = array_values(array_filter($manifest['abilities'], static fn(array $a): bool => $a['name'] === 'gobuildwp/protection-block-ip'))[0];
@@ -336,7 +351,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             SP\configure(['allowlist' => ['192.0.2.0/24']]);
             $r = SP\add_block('192.0.2.5', 0, '', 'manual');
             self::assertInstanceOf(WP_Error::class, $r);
-            self::assertSame('gobuildwp_protection_allowlisted', $r->get_error_code());
+            self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_protection_allowlisted'), $r->get_error_code());
             self::assertInstanceOf(WP_Error::class, SP\add_block('nonsense', 0, '', 'manual'));
         }
 

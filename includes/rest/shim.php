@@ -116,7 +116,11 @@ function wppilot_rest_run_ability(WP_REST_Request $request): mixed
 
     // @mago-expect analysis:mixed-assignment
     $result = $ability->execute(wppilot_normalize_empty_ability_input($ability, $input));
-    return $result instanceof WP_Error ? wppilot_rest_classify_ability_error($result) : $result;
+    if ($result instanceof WP_Error) {
+        return wppilot_rest_classify_ability_error($result);
+    }
+
+    return wppilot_output_guard_rest_response(wppilot_output_guard($ability_name, $result, 'rest'));
 }
 
 /**

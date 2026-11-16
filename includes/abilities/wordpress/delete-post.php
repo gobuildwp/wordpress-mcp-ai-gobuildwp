@@ -41,6 +41,7 @@ register_core_ability('wppilot/delete-post', [
                 'description' => 'When true, permanently deletes the post (bypassing the trash). When false, moves it to the trash if the post type supports trashing.',
                 'default' => false,
             ],
+            'wait_seconds' => \wppilot_post_lock_wait_schema(),
         ],
         'additionalProperties' => false,
         'anyOf' => [
@@ -114,6 +115,11 @@ function wordpress_delete_post(array $input): array|WP_Error
             sprintf('You are not allowed to delete post %d.', $post_id),
             ['status' => 403],
         );
+    }
+
+    $locked = \wppilot_post_lock_guard($post_id, \wppilot_post_lock_wait_seconds($input['wait_seconds'] ?? 0));
+    if ($locked instanceof WP_Error) {
+        return $locked;
     }
 
     $previous_status = $post->post_status;

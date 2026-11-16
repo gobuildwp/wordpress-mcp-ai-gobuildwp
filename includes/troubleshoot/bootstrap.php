@@ -22,6 +22,8 @@ require_once __DIR__ . '/admin.php';
 require_once __DIR__ . '/doctor.php';
 require_once __DIR__ . '/doctor-ui.php';
 require_once __DIR__ . '/doctor-ability.php';
+require_once __DIR__ . '/repairs.php';
+Repairs\register();
 
 /**
  * Record the moment an authenticated request reaches any GoBuildWP MCP route, per auth method.

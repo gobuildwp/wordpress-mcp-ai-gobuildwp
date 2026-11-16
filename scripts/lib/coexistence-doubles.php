@@ -63,6 +63,122 @@ final class Kit_Coexistence
     }
 }
 
+/**
+ * An empty site database. A read-only ability that counts or lists rows (db-cleanup's preview)
+ * runs here as on a fresh site and finds nothing; every query is kept, so a run proves it reached
+ * the database without needing one. Writes report nothing changed.
+ */
+final class Kit_Coexistence_Wpdb
+{
+    public string $prefix = 'wp_';
+
+    public string $last_error = '';
+
+    public int $insert_id = 0;
+
+    public int $num_rows = 0;
+
+    /** @var list<string> */
+    public array $queries = [];
+
+    /** Table names ($wpdb->posts, ->comments, ->options, ...) as WordPress spells them. */
+    public function __get(string $table): string
+    {
+        return $this->prefix . $table;
+    }
+
+    public function prepare(string $query, mixed ...$args): string
+    {
+        $args = count($args) === 1 && is_array($args[0]) ? array_values($args[0]) : array_values($args);
+        $index = 0;
+        return (string) preg_replace_callback('/%(%|i|d|s|f)/', static function (array $match) use (&$index, $args): string {
+            if ($match[1] === '%') {
+                return '%';
+            }
+            $value = $args[$index++] ?? '';
+            return match ($match[1]) {
+                'i' => '`' . str_replace('`', '``', (string) $value) . '`',
+                'd' => (string) (int) $value,
+                'f' => (string) (float) $value,
+                default => "'" . addslashes((string) $value) . "'",
+            };
+        }, $query);
+    }
+
+    public function get_blog_prefix(?int $blog_id = null): string
+    {
+        return $this->prefix;
+    }
+
+    public function esc_like(string $text): string
+    {
+        return addcslashes($text, '_%\\');
+    }
+
+    public function get_charset_collate(): string
+    {
+        return '';
+    }
+
+    public function query(string $query): int
+    {
+        $this->queries[] = $query;
+        return 0;
+    }
+
+    public function get_var(?string $query = null, int $x = 0, int $y = 0): ?string
+    {
+        if ($query !== null) {
+            $this->queries[] = $query;
+        }
+        return preg_match('/^\s*SELECT\s+COUNT\(/i', (string) $query) === 1 ? '0' : null;
+    }
+
+    /** @return list<mixed> */
+    public function get_results(?string $query = null, string $output = 'OBJECT'): array
+    {
+        if ($query !== null) {
+            $this->queries[] = $query;
+        }
+        return [];
+    }
+
+    /** @return list<mixed> */
+    public function get_col(?string $query = null, int $x = 0): array
+    {
+        if ($query !== null) {
+            $this->queries[] = $query;
+        }
+        return [];
+    }
+
+    public function get_row(?string $query = null, string $output = 'OBJECT', int $y = 0): mixed
+    {
+        if ($query !== null) {
+            $this->queries[] = $query;
+        }
+        return null;
+    }
+
+    /** @param array<string, mixed> $data */
+    public function insert(string $table, array $data, mixed $format = null): int|false
+    {
+        return false;
+    }
+
+    /** @param array<string, mixed> $data @param array<string, mixed> $where */
+    public function update(string $table, array $data, array $where, mixed $format = null, mixed $where_format = null): int|false
+    {
+        return 0;
+    }
+
+    /** @param array<string, mixed> $where */
+    public function delete(string $table, array $where, mixed $where_format = null): int|false
+    {
+        return 0;
+    }
+}
+
 foreach (['MINUTE_IN_SECONDS' => 60, 'HOUR_IN_SECONDS' => 3600, 'DAY_IN_SECONDS' => 86400, 'WEEK_IN_SECONDS' => 604800] as $constant => $value) {
     if (!defined($constant)) {
         define($constant, $value);
@@ -207,6 +323,63 @@ function delete_option(string $option): bool
 function get_transient(string $transient): mixed
 {
     Kit_Coexistence::record('transient', $transient);
+    return false;
+}
+
+function get_site_transient(string $transient): mixed
+{
+    Kit_Coexistence::record('transient', $transient);
+    return false;
+}
+
+function set_site_transient(string $transient, mixed $value, int $expiration = 0): bool
+{
+    Kit_Coexistence::record('transient', $transient);
+    return true;
+}
+
+function delete_site_transient(string $transient): bool
+{
+    Kit_Coexistence::record('transient', $transient);
+    return true;
+}
+
+/** A site with one administrator, as the run's current user. @return array{total_users: int, avail_roles: array<string, int>} */
+function count_users(): array
+{
+    return ['total_users' => 1, 'avail_roles' => ['administrator' => 1]];
+}
+
+function get_temp_dir(): string
+{
+    return rtrim(str_replace('\\', '/', sys_get_temp_dir()), '/') . '/';
+}
+
+if (!class_exists('WP_User_Query', false)) {
+    /** A user search on a site with no matching users. */
+    final class WP_User_Query
+    {
+        /** @param array<string, mixed> $query */
+        public function __construct(public array $query = [])
+        {
+        }
+
+        /** @return list<mixed> */
+        public function get_results(): array
+        {
+            return [];
+        }
+
+        public function get_total(): int
+        {
+            return 0;
+        }
+    }
+}
+
+/** No image editor: the image kits report what they would do without converting anything. */
+function wp_image_editor_supports(array $args = []): bool
+{
     return false;
 }
 

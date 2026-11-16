@@ -65,14 +65,28 @@ final class ScannerSignaturesTest extends TestCase
     /** @return iterable<string> */
     private function shipped_files(string $root): iterable
     {
-        yield $root . '/wppilot.php';
-        yield $root . '/uninstall.php';
+        // The plugin's own top-level files: its main file and uninstall.php, whatever it is called.
+        yield from glob($root . '/*.php') ?: [];
+        // A dev install puts phpunit and its tooling in vendor/ too; the shipped zip has none of it.
+        $dev = [];
+        $lock = json_decode((string) @file_get_contents($root . '/composer.lock'), true);
+        foreach ((is_array($lock) ? $lock['packages-dev'] ?? [] : []) as $package) {
+            if (isset($package['name']) && is_string($package['name'])) {
+                $dev[] = $root . '/vendor/' . $package['name'] . '/';
+            }
+        }
         foreach (['includes', 'assets', 'vendor'] as $dir) {
             if (!is_dir($root . '/' . $dir)) {
                 continue;
             }
             $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/' . $dir, \FilesystemIterator::SKIP_DOTS));
             foreach ($files as $file) {
+                $path = str_replace('\\', '/', $file->getPathname());
+                foreach ($dev as $prefix) {
+                    if (str_starts_with($path, str_replace('\\', '/', $prefix))) {
+                        continue 2;
+                    }
+                }
                 if ($file->isFile() && preg_match('/\.(?:php|js|mjs|inc|phtml)$/', $file->getFilename()) === 1 && $file->getSize() < 4_000_000) {
                     yield $file->getPathname();
                 }

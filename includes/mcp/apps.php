@@ -88,7 +88,9 @@ function resource_ui_meta(): array
  */
 function list_resources(): array
 {
-    return [[
+    $cards = function_exists('WPPilot\Mcp\ApprovalCard\list_resources') ? \WPPilot\Mcp\ApprovalCard\list_resources() : [];
+
+    return array_merge([[
         'uri' => PREVIEW_CARD_URI,
         'name' => 'wppilot-preview-card',
         'title' => 'GoBuildWP preview card',
@@ -96,7 +98,7 @@ function list_resources(): array
             . 'button where the host lets the card call tools.',
         'mimeType' => MIME_TYPE,
         '_meta' => resource_ui_meta(),
-    ]];
+    ]], $cards);
 }
 
 function resource_count(): int
@@ -112,7 +114,7 @@ function resource_count(): int
 function read_contents(string $uri): ?array
 {
     if ($uri !== PREVIEW_CARD_URI) {
-        return null;
+        return function_exists('WPPilot\Mcp\ApprovalCard\read_contents') ? \WPPilot\Mcp\ApprovalCard\read_contents($uri) : null;
     }
 
     return [[

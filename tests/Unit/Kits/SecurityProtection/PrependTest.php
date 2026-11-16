@@ -9,12 +9,12 @@ namespace GoBuildWP\Kits\SecurityProtection {
     if (!function_exists(__NAMESPACE__ . '\get_transient')) {
         function get_transient(string $key): mixed
         {
-            return $GLOBALS['gobuildwp_sp_test_transients'][$key] ?? false;
+            return $GLOBALS['kit_test_sp_transients'][$key] ?? false;
         }
 
         function set_transient(string $key, mixed $value, int $expiration = 0): bool
         {
-            $GLOBALS['gobuildwp_sp_test_transients'][$key] = $value;
+            $GLOBALS['kit_test_sp_transients'][$key] = $value;
             return true;
         }
     }
@@ -26,7 +26,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
     use GoBuildWP\Kits\SecurityProtection as SP;
     use PHPUnit\Framework\TestCase;
-    use WPPilot_Test_State;
+    use Kit_Test_State;
 
     /**
      * The pre-WordPress firewall: installing it (engine, state file, .user.ini block), keeping
@@ -38,20 +38,20 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
         protected function setUp(): void
         {
-            WPPilot_Test_State::$options = [];
-            $GLOBALS['gobuildwp_sp_test_transients'] = [];
-            $this->dir = str_replace('\\', '/', sys_get_temp_dir()) . '/gobuildwp-sp-' . bin2hex(random_bytes(4));
+            \Kit_Test_State::$options = [];
+            $GLOBALS['kit_test_sp_transients'] = [];
+            $this->dir = str_replace('\\', '/', sys_get_temp_dir()) . '/kit-sp-' . bin2hex(random_bytes(4));
             mkdir($this->dir . '/site/wp-content', 0755, true);
-            $root = $this->dir . '/site/wp-content/gobuildwp-protection';
+            $root = $this->dir . '/site/wp-content/wppilot-kit-protection';
             $site = $this->dir . '/site';
-            add_filter('gobuildwp_protection_prepend_root', static fn(): string => $root);
-            add_filter('gobuildwp_protection_prepend_site_root', static fn(): string => $site);
+            add_filter('wppilot_kit_protection_prepend_root', static fn(): string => $root);
+            add_filter('wppilot_kit_protection_prepend_site_root', static fn(): string => $site);
         }
 
         protected function tearDown(): void
         {
-            remove_all_filters('gobuildwp_protection_prepend_root');
-            remove_all_filters('gobuildwp_protection_prepend_site_root');
+            remove_all_filters('wppilot_kit_protection_prepend_root');
+            remove_all_filters('wppilot_kit_protection_prepend_site_root');
             self::rmtree($this->dir);
         }
 
@@ -76,7 +76,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
 
         private function root(): string
         {
-            return $this->dir . '/site/wp-content/gobuildwp-protection';
+            return $this->dir . '/site/wp-content/wppilot-kit-protection';
         }
 
         // ------------------------------------------------------------ install
@@ -147,9 +147,22 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             $r = SP\set_prepend(false);
             self::assertIsArray($r);
             self::assertFalse($r['installed']);
-            self::assertDirectoryDoesNotExist($this->root());
+            // PHP keeps prepending the cached .user.ini path for a few minutes, so a no-op stand-in
+            // stays at that path instead of a missing file that would fatal every request.
+            $engine = $this->root() . '/firewall.php';
+            self::assertFileExists($engine);
+            self::assertFileDoesNotExist($this->root() . '/state.php');
+            self::assertStringContainsString(SP\PREPEND_STUB_NOTE, (string) file_get_contents($engine));
+            self::assertSame(1, (int) shell_exec(escapeshellarg(PHP_BINARY) . ' -n -r ' . escapeshellarg('include ' . var_export($engine, true) . '; echo 1;')));
             self::assertSame("memory_limit = 256M\n", file_get_contents($this->ini()));
             self::assertSame(['installed' => false, 'method' => null, 'active' => false, 'problem' => null], SP\prepend_status());
+            // A fresh stand-in survives cleanup; one older than the ini cache window is removed.
+            SP\prepend_cleanup_stub();
+            self::assertFileExists($engine);
+            touch($engine, time() - max(300, (int) ini_get('user_ini.cache_ttl')) - 61);
+            clearstatcache();
+            SP\prepend_cleanup_stub();
+            self::assertDirectoryDoesNotExist($this->root());
             // The ini file goes when only our block was in it.
             unlink($this->ini());
             self::assertIsArray(SP\set_prepend(true));
@@ -163,7 +176,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             file_put_contents($this->ini(), "auto_prepend_file = \"/srv/wordfence-waf.php\"\n");
             $r = SP\set_prepend(true);
             self::assertInstanceOf(\WP_Error::class, $r);
-            self::assertSame('gobuildwp_prepend_unavailable', $r->get_error_code());
+            self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_prepend_unavailable'), $r->get_error_code());
             self::assertStringContainsString('already sets auto_prepend_file', $r->get_error_message());
             self::assertDirectoryDoesNotExist($this->root());
             self::assertFalse(SP\prepend_status()['installed']);

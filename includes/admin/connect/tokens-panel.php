@@ -49,6 +49,7 @@ function wppilot_token_ceiling_choices(): array
     return [
         '' => __('Same as the site', domain: 'wppilot'),
         'production' => $profiles['production']['label'],
+        'drafts' => __('Drafts only (read, and write drafts)', domain: 'wppilot'),
         'readonly' => $profiles['readonly']['label'],
     ];
 }
@@ -377,7 +378,7 @@ function wppilot_render_token_step(?string $new_token, ?WP_Error $token_error = 
                 <li><?php printf(
                     /* translators: %s: the MCP endpoint URL, in a <code> tag */
                     esc_html__('Point your client at %s.', domain: 'wppilot'),
-                    '<code>' . esc_html(rest_url('mcp/wppilot')) . '</code>',
+                    '<code>' . esc_html(wppilot_mcp_endpoint_url('mcp/wppilot')) . '</code>',
                 ); ?></li>
                 <li><?php printf(
                     /* translators: %s: the Authorization header, in a <code> tag */

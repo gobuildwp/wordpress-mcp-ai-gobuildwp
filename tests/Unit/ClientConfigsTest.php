@@ -252,6 +252,24 @@ final class ClientConfigsTest extends TestCase
         }
     }
 
+    public function test_grok_and_gemini_desktop_use_the_generic_mcp_remote_bridge(): void
+    {
+        $clients = wppilot_clients();
+        $token = self::token();
+        $public = self::oauthPublic();
+        foreach (['grok-desktop', 'gemini-desktop'] as $key) {
+            self::assertSame('proxy', $clients[$key]['oauth'], $key);
+            self::assertStringContainsString('not been verified', (string) $clients[$key]['note'], $key);
+
+            $server = self::json((string) $token[$key]['code'])['mcpServers'][self::NAME];
+            self::assertSame(['-y', 'mcp-remote', self::URL, '--header', 'Authorization:${AUTH_HEADER}'], $server['args'], $key);
+            self::assertSame('Bearer ' . self::TOKEN, $server['env']['AUTH_HEADER'], $key);
+
+            self::assertStringContainsString('mcp-remote', (string) $public[$key]['code'], $key);
+            self::assertArrayHasKey($key, self::oauthBridge(), $key);
+        }
+    }
+
     public function test_wording_fixes(): void
     {
         $token = self::token();

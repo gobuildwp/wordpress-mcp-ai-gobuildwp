@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace GoBuildWP\Tests\Unit\Kits\SecurityIntegrity;
 
 require_once __DIR__ . '/harness.php';
-require_once dirname(__DIR__, 4) . '/includes/cloud/request-signing.php';
 
 use GoBuildWP\Kits\SecurityIntegrity as SI;
 use PHPUnit\Framework\TestCase;
@@ -21,24 +20,28 @@ final class RulePackTest extends TestCase
 {
     private Fixture $site;
 
+    /** The pack trusts only the host's cloud-verified answer, so a test host stands in. */
+    private static FakeHost $host;
+
     protected function setUp(): void
     {
         reset_state();
-        gobuildwp_cloud_request_set_verified(false);
+        self::$host = new FakeHost();
+        \WPPilot\Kits\Runtime\host(self::$host);
         $this->site = new Fixture();
     }
 
     protected function tearDown(): void
     {
         $this->site->remove();
-        gobuildwp_cloud_request_set_verified(false);
+        self::$host->cloudVerified = false;
         reset_state();
     }
 
     /** @param list<array<string, mixed>> $rules @param list<string> $hashes */
     private static function offer(array $rules = [], array $hashes = [], string $version = 'rp1-test'): array|\WP_Error
     {
-        gobuildwp_cloud_request_set_verified(true);
+        self::$host->cloudVerified = true;
         return SI\accept_pack(['pack' => ['version' => $version, 'rules' => $rules, 'hashes' => $hashes]]);
     }
 
@@ -103,14 +106,14 @@ final class RulePackTest extends TestCase
     {
         $body = ['pack' => ['version' => 'v1', 'rules' => [self::rule('susp.zz')], 'hashes' => []]];
 
-        gobuildwp_cloud_request_set_verified(false);
+        self::$host->cloudVerified = false;
         $refused = SI\accept_pack($body);
         self::assertInstanceOf(\WP_Error::class, $refused);
-        self::assertSame('gobuildwp_rules_unsigned', $refused->get_error_code());
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_rules_unsigned'), $refused->get_error_code());
         self::assertFalse(get_option(SI\PACK_OPTION, false));
         self::assertArrayNotHasKey('susp.zz', SI\rules());
 
-        gobuildwp_cloud_request_set_verified(true);
+        self::$host->cloudVerified = true;
         $stored = SI\accept_pack($body);
         self::assertIsArray($stored);
         self::assertSame(['stored', 'v1', 1, 0], [$stored['state'], $stored['version'], $stored['rules'], $stored['hashes']]);
@@ -133,7 +136,7 @@ final class RulePackTest extends TestCase
         $stored = get_option(SI\PACK_OPTION);
         self::assertIsArray($stored);
         self::assertSame('rp1-test', $stored['version']);
-        self::assertFalse($GLOBALS['wppilot_test_option_autoload'][SI\PACK_OPTION] ?? null);
+        self::assertFalse(\Kit_Test_State::option_autoload(SI\PACK_OPTION));
     }
 
     public function test_built_in_rule_wins_an_id_clash(): void

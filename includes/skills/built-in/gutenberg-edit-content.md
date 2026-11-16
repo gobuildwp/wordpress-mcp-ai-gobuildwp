@@ -62,6 +62,22 @@ own editor JavaScript, so never hand-write a block's HTML.
   in `core/html` or a classic/freeform block: raw-HTML blocks are not visually
   editable and defeat native editing.
 
+## Change One Block, or Import Markdown
+
+- To change one block, use `wppilot/gutenberg-edit-block` with the block's
+  `path` (its index at each level of the `gutenberg-get-content` tree) and that
+  listing's `hash` as `expected_hash`. Pass `attributes` (null removes one)
+  and/or `inner_html` for a block with no inner blocks. Run `dry_run` first
+  when unsure. A `gutenberg_block_changed` refusal means someone edited the
+  post since you read it: read it again. A dynamic block is written at once
+  (`route: direct`); any other block is queued (`route: queue`), so continue
+  with steps 2 to 4 below.
+- For prose, write Markdown and call `wppilot/markdown-to-blocks`. Without
+  `post_id` it only returns `block_spec`; with `post_id` it queues the blocks,
+  replacing the content or, with `mode: append`, adding after it.
+- Both refuse an edit that would remove most of the page's text or media.
+  Pass `confirm_content_loss: true` only after the person agrees.
+
 ## Choose the Write Path
 
 - Use `wppilot/gutenberg-write-content` only when every block is a registered

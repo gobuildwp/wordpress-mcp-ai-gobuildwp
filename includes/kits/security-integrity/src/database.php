@@ -61,7 +61,18 @@ const CORE_ROLE_CAPS = [
 const ID_WINDOW = 2000;
 
 /** Rows of option values looked at for these patterns are skipped when their name says they are ours. */
-const OWN_OPTION_PREFIXES = ['gobuildwp_kit_si_', 'wppilot_kit_job_', 'wppilot_kit_sr_plan_', 'wppilot_preview_', '_transient_', '_site_transient_'];
+const OWN_OPTION_PREFIXES = ['gobuildwp_kit_si_', 'wppilot_kit_job_', 'wppilot_kit_sr_plan_', '_transient_', '_site_transient_'];
+
+/**
+ * Option prefixes a host extension point adds to the kit's own, or none without a host.
+ *
+ * @return list<string>
+ */
+function host_option_prefixes(string $point): array
+{
+    $prefixes = \WPPilot\Kits\Runtime\has_host() ? \WPPilot\Kits\Runtime\host()->extension($point) : null;
+    return is_array($prefixes) ? array_values(array_filter($prefixes, static fn($p): bool => is_string($p) && $p !== '')) : [];
+}
 
 /**
  * @param array<string, mixed> $payload
@@ -480,7 +491,7 @@ function is_secret_name(string $name): bool
 
 function skipped_option(string $name): bool
 {
-    foreach (OWN_OPTION_PREFIXES as $prefix) {
+    foreach (array_merge(OWN_OPTION_PREFIXES, host_option_prefixes('unscanned-option-prefixes')) as $prefix) {
         if (str_starts_with($name, $prefix)) {
             return true;
         }

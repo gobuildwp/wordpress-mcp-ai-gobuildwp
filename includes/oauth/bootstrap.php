@@ -16,6 +16,13 @@ if (!defined('ABSPATH')) {
 // many connections are active precisely when the gates are closed, and must not fatal doing so.
 require_once __DIR__ . '/client-validation.php';
 
+// Also outside boot(): a cached copy of the discovery documents outlives the gates closing, so the
+// purge must still run after AI Abilities is switched off or the site moves URL.
+require_once __DIR__ . '/discovery-cache.php';
+DiscoveryCache\register();
+require_once __DIR__ . '/app-approval.php';
+AppApproval\register();
+
 // Also outside boot(): the key-bootstrap command exists to repair an installation whose web PHP
 // cannot create the OAuth keys at all, so it must not depend on the gates below. WP-CLI defines
 // WP_CLI before plugins load, so nothing extra is read on a web request.
@@ -50,21 +57,23 @@ function resource_request_allowed(string $requested, string $expected): bool
 }
 
 /**
- * Scopes accepted by the authorization and token servers. `mcp` is the only scope issued.
- * The other values remain accepted as migration aliases for clients authenticated before
- * GoBuildWP switched to one full-access grant.
+ * Scopes accepted by the authorization and token servers. Two are issued: `mcp`, full access, and
+ * `mcp:read`, which caps the grant at Read Only (includes/access/connection-levels.php). The other
+ * values remain accepted as migration aliases for clients authenticated before GoBuildWP switched
+ * to one full-access grant, and still map to `mcp`.
  *
  * @return list<string>
  */
 function supported_scopes(): array
 {
-    return ['mcp', 'read', 'write', 'abilities:read', 'abilities'];
+    return ['mcp', 'mcp:read', 'read', 'write', 'abilities:read', 'abilities'];
 }
 
 /**
  * Validate and normalize the scope string captured before consent.
  *
- * Every recognized request maps to the one full-access `mcp` grant.
+ * A request for `mcp:read` alone becomes the read-only grant. Every other recognized request
+ * maps to the full-access `mcp` grant.
  */
 function normalize_authorization_scope(string $requested): ?string
 {
@@ -83,7 +92,7 @@ function normalize_authorization_scope(string $requested): ?string
         }
     }
 
-    return 'mcp';
+    return $parts === ['mcp:read'] ? 'mcp:read' : 'mcp';
 }
 
 function boot(): void

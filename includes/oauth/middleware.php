@@ -83,7 +83,11 @@ function resolve_bearer_identity(mixed $user): mixed
     }
 }
 
-function resolve_bearer_identity_now(mixed $user): mixed
+/**
+ * @param ?\Closure(string): array{user_id: int, scopes: list<string>, client_id?: string} $validator
+ *     Tests only; production always validates with validate_bearer_credential().
+ */
+function resolve_bearer_identity_now(mixed $user, ?\Closure $validator = null): mixed
 {
     $auth = get_authorization_header();
 
@@ -94,10 +98,18 @@ function resolve_bearer_identity_now(mixed $user): mixed
         return resolve_token_identity($user, $auth);
     }
 
+    // rest_url() (the token audience) needs $wp_rewrite, which WordPress creates
+    // after plugins_loaded. A plugin that asks for the current user during
+    // plugins_loaded (WPS Hide Login) would crash it. Defer: reject_invalid_bearer
+    // re-judges this bearer at rest_authentication_errors.
+    if (!(($GLOBALS['wp_rewrite'] ?? null) instanceof \WP_Rewrite)) {
+        return $user;
+    }
+
     return resolve_bearer_identity_using(
         $user,
         $auth,
-        static fn(string $authorization): array => validate_bearer_credential($authorization),
+        $validator ?? static fn(string $authorization): array => validate_bearer_credential($authorization),
     );
 }
 
@@ -195,7 +207,17 @@ function resolve_bearer_identity_using(mixed $user, string $auth, \Closure $vali
     } catch (OAuthServerException) {
         record_authentication_error('Invalid, expired, or revoked OAuth access token.');
         return $user;
-    } catch (\Throwable) {
+    } catch (\Throwable $e) {
+        // The 500 told the client nothing and left the site owner nothing to go on; this is where
+        // the WPS Hide Login crash was hidden. The message and location never contain the token.
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Server-side diagnostic for an unexpected failure.
+        error_log(sprintf(
+            'GoBuildWP OAuth: bearer validation failed: %s: %s in %s:%d',
+            $e::class,
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine(),
+        ));
         record_authentication_error('OAuth authentication failed.', status: 500);
         return $user;
     }
@@ -587,9 +609,10 @@ function oauth_identity_may_use_route(string $route, string $method): bool
 /** @param list<string> $scopes */
 function scopes_authorize_routed_request(array $scopes, string $route, string $method): bool
 {
-    // `abilities` and `abilities:read` are accepted only for already-issued CLI tokens. There is
-    // no longer a read-only mode: every recognized grant has the same full access as `mcp`.
-    return array_intersect($scopes, ['mcp', 'abilities', 'abilities:read']) !== [];
+    // `abilities` and `abilities:read` are accepted only for already-issued CLI tokens and keep the
+    // full access of `mcp`. `mcp:read` reaches the same routes; what it may run is capped at Read
+    // Only by wppilot_connection_policy(), where every other ceiling is enforced.
+    return array_intersect($scopes, ['mcp', 'mcp:read', 'abilities', 'abilities:read']) !== [];
 }
 
 function route_required_scope(string $route, string $method): ?string
@@ -606,7 +629,15 @@ function get_authorization_header(): string
     }
 
     // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The same credential as Apache passes it after a rewrite: hashed and compared byte-for-byte, so only unslashed and trimmed.
-    return isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? trim((string) wp_unslash($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) : '';
+    $redirected = isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? trim((string) wp_unslash($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) : '';
+    if ($redirected !== '' || !function_exists('wppilot_auth_alias_header')) {
+        return $redirected;
+    }
+
+    // X-GoBuildWP-Authorization, for hosts that strip Authorization: HTTPS, agent routes, Bearer
+    // only, and only when no Authorization arrived. See includes/access/connection-survival.php.
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Routing test only.
+    return \wppilot_auth_alias_header($_SERVER, $_GET, is_ssl());
 }
 
 function has_bearer_scheme(string $auth): bool

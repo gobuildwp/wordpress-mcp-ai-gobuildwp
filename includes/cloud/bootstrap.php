@@ -80,6 +80,8 @@ require_once __DIR__ . '/inventory.php';
 require_once __DIR__ . '/policy.php';
 require_once __DIR__ . '/rate-limit.php';
 require_once __DIR__ . '/request-signing.php';
+require_once __DIR__ . '/agent-pause.php';
+require_once __DIR__ . '/approvals.php';
 
 add_action('admin_post_wppilot_cloud_begin', callback: 'wppilot_cloud_handle_begin');
 add_action('admin_post_wppilot_cloud_return', callback: 'wppilot_cloud_handle_return');
@@ -89,6 +91,7 @@ add_action('admin_post_wppilot_cloud_disconnect', callback: 'wppilot_cloud_handl
 add_action('admin_post_wppilot_cloud_manage', callback: 'wppilot_cloud_handle_manage');
 
 add_action('rest_api_init', callback: 'wppilot_cloud_register_routes');
+add_action('rest_api_init', callback: 'wppilot_cloud_register_agent_pause_routes');
 add_filter('rest_pre_dispatch', callback: 'gobuildwp_cloud_signing_pre_dispatch', priority: GOBUILDWP_CLOUD_SIGNING_PRIORITY, accepted_args: 3);
 
 // No arguments: the event push (events.php) passes $event itself.

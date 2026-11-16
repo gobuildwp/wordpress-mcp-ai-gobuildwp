@@ -62,10 +62,36 @@ wp_register_ability('wppilot/get-change', [
     ],
 ]);
 
+wp_register_ability('wppilot/verify-change-log', [
+    'label' => __('Verify GoBuildWP Change Ledger', domain: 'wppilot'),
+    'description' => __(
+        'Checks the change ledger\'s hash chain oldest to newest and reports every row that was edited, deleted, inserted or cut from the end outside GoBuildWP, as "chain break at row N" with its change id. Rows from before the chain was added are counted, not judged. The chain is plain SHA-256, so someone who can rewrite every row and the stored head can forge it; a signed audit export from the Changes screen, checked offline with scripts/verify-ledger-export.php, proves what the ledger held when it was exported.',
+        domain: 'wppilot',
+    ),
+    'category' => 'changes',
+    'input_schema' => ['type' => 'object', 'default' => [], 'properties' => [], 'additionalProperties' => false],
+    'output_schema' => ['type' => 'object'],
+    // One chain implementation: includes/ledger-chain.php, shared with the Changes screen's
+    // Verify button, the signed export and the Troubleshoot ledger check.
+    'execute_callback' => static function (): array {
+        $report = wppilot_ledger_chain_verify();
+        $report['summary'] = wppilot_ledger_chain_summary($report);
+        $report['storage'] = wppilot_change_table_active() ? 'table' : 'option';
+
+        return $report;
+    },
+    'permission_callback' => 'wppilot_permission_callback',
+    'meta' => [
+        'show_in_rest' => true,
+        'mcp' => ['public' => true],
+        'annotations' => ['readonly' => true, 'destructive' => false, 'idempotent' => true],
+    ],
+]);
+
 wp_register_ability('wppilot/rollback-change', [
     'label' => __('Rollback GoBuildWP Change', domain: 'wppilot'),
     'description' => __(
-        'Rolls back a reversible change and verifies the observed state against the stored before-image fingerprint. It never marks success when writes fail or verification differs. A file change whose files changed again afterwards is refused with changed_since, so later edits are not overwritten; pass force=true only when the person agrees to lose them. Requires explicit confirmation.',
+        'Rolls back a reversible change and verifies the observed state against the stored before-image fingerprint. It never marks success when writes fail or verification differs. A file change whose files changed again afterwards is refused with changed_since, and a post or post-meta change whose post was edited afterwards is refused with wppilot_change_changed_since, so later edits are not overwritten; pass force=true only when the person agrees to lose them. Requires explicit confirmation.',
         domain: 'wppilot',
     ),
     'category' => 'changes',
@@ -75,7 +101,7 @@ wp_register_ability('wppilot/rollback-change', [
             'change_id' => ['type' => 'string'],
             'force' => [
                 'type' => 'boolean',
-                'description' => 'Undo a file change even though its files changed after it, overwriting those later changes.',
+                'description' => 'Undo a file, post or post-meta change even though its target changed after it, overwriting those later changes.',
             ],
         ],
         'required' => ['change_id'],

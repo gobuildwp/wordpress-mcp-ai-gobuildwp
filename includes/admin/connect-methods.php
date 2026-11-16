@@ -467,7 +467,8 @@ function wppilot_build_oauth_public_configs(string $mcp_url, string $mcp_name): 
     $bridge = wppilot_build_oauth_bridge_configs($mcp_url, $mcp_name, []);
     // Only Roo Code is left on the bridge: every other client that used to be
     // here now documents its own OAuth flow (see wppilot_build_oauth_native_more()).
-    $tail = ['roo-code'];
+    // Grok Desktop and Gemini Desktop have no verified native form either.
+    $tail = ['roo-code', 'grok-desktop', 'gemini-desktop'];
 
     return array_merge(
         array_intersect_key($bridge, array_flip($tail)),
@@ -1037,5 +1038,25 @@ function wppilot_build_oauth_bridge_standard(string $mcp_servers_json, string $s
             wppilot_oauth_add_to('mcp.json'),
             wppilot_amazon_q_kiro_paths(),
         ),
+        'grok-desktop' => wppilot_oauth_code_entry($mcp_servers_json, wppilot_oauth_unverified_hint('Grok'), []),
+        'gemini-desktop' => wppilot_oauth_code_entry($mcp_servers_json, wppilot_oauth_unverified_hint('Gemini'), []),
     ];
+}
+
+/**
+ * Hint for a client whose MCP config location GoBuildWP has not verified.
+ *
+ * The snippet is the generic mcp-remote bridge, so the hint says where the
+ * shape is known to work rather than naming a file the app may not read.
+ */
+function wppilot_oauth_unverified_hint(string $app): string
+{
+    return sprintf(
+        /* translators: %s: name of the AI app */
+        __(
+            'Add this local MCP server in the MCP or connector settings of %s, then sign in when your browser opens. It uses the generic mcp-remote bridge (needs Node.js); the app config file location has not been verified.',
+            domain: 'wppilot',
+        ),
+        $app,
+    );
 }

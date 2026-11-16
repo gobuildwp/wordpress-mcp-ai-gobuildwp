@@ -100,6 +100,7 @@ function render_page(): void
             with_method_picker: true,
         ); ?>
         <?php \WPPilot\Troubleshoot\DoctorUi\render_section(); ?>
+        <?php \WPPilot\Troubleshoot\Repairs\render_section(); ?>
     </div>
     <?php
 }

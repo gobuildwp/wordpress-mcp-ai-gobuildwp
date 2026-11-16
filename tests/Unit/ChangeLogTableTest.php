@@ -106,11 +106,12 @@ final class ChangeLogTableTest extends TestCase
         wppilot_store_change($row);
 
         $stored = wppilot_get_change('row-1');
-        self::assertSame(array_keys($row), array_keys((array) $stored), 'keys come back in the order they were written');
+        self::assertSame([...array_keys($row), 'prev_hash', 'row_hash'], array_keys((array) $stored), 'keys come back in the order they were written, then the chain seal');
+        $stored = $this->unsealed((array) $stored);
         self::assertEquals($row, $stored);
         self::assertInstanceOf(stdClass::class, $stored['rollback']['snapshot']['meta']['_layout'][0], 'an object in meta stays an object');
         self::assertSame(12.0, $stored['duration_ms']);
-        self::assertEquals([$row], wppilot_get_change_log());
+        self::assertEquals([$row], array_map([$this, 'unsealed'], wppilot_get_change_log()));
         self::assertArrayNotHasKey(WPPILOT_CHANGE_LOG_OPTION, WPPilot_Test_State::$options);
     }
 
@@ -131,10 +132,24 @@ final class ChangeLogTableTest extends TestCase
 
         wppilot_store_change($row);
 
-        self::assertSame($row, wppilot_get_change('binary'));
+        self::assertSame($row, $this->unsealed((array) wppilot_get_change('binary')));
         self::assertStringStartsWith('b64:', (string) $this->db->get_var("SELECT rollback_data FROM wp_wppilot_changes WHERE change_id = 'binary'"));
         self::assertTrue(wppilot_change_table_active(), 'nothing fell back');
         self::assertSame(['binary'], array_column(wppilot_query_change_log(['agent' => 'agent']), 'id'));
+    }
+
+    /**
+     * A stored row without the hash-chain seal (includes/ledger-chain.php), which every row gains.
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    public function unsealed(array $row): array
+    {
+        self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', (string) ($row['row_hash'] ?? ''), 'the row is sealed');
+        unset($row['prev_hash'], $row['row_hash']);
+
+        return $row;
     }
 
     public function testARowWithoutAnIdIsGivenOne(): void

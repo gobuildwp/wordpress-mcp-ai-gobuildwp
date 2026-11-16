@@ -30,7 +30,7 @@ namespace WPPilot\Tests\Unit\Kits\DbCleanup {
 
         public string $last_error = '';
 
-        public function __construct(public \WPPilot_Test_Sqlite_Wpdb $db)
+        public function __construct(public \Kit_Test_Sqlite_Wpdb $db)
         {
             $db->query('CREATE TABLE wp_comments (comment_ID INTEGER PRIMARY KEY, comment_post_ID INTEGER, comment_content TEXT, comment_approved TEXT, comment_date_gmt TEXT)');
             $db->query('CREATE TABLE wp_commentmeta (meta_id INTEGER PRIMARY KEY, comment_id INTEGER, meta_key TEXT, meta_value TEXT)');

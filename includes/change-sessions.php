@@ -68,6 +68,14 @@ const WPPILOT_SESSION_VOLATILE_META = [
     '_elementor_element_cache',
     '_elementor_screenshot',
     '_elementor_screenshot_failed',
+    // Elementor's global-class usage index. It is derived from _elementor_data and written lazily
+    // the first time a page renders (even a block page), so one front-end view after a write made
+    // every undo of it refuse. _elementor_data itself is still compared, so a real edit still shows.
+    '_elementor_global_class_usage_indexed',
+    '_elementor_global_class_usage_indexed_preview',
+    '_elementor_used_global_class',
+    '_elementor_used_global_class_preview',
+    '_elementor_markdown_cache',
     '_wp_old_slug',
     '_wp_old_date',
     '_encloseme',
@@ -80,8 +88,11 @@ const WPPILOT_SESSION_VOLATILE_META = [
 /**
  * Annotate a row about to be stored with its session and the state its write left behind.
  *
- * Only rows written inside an agent session carry either, so a person's own wp-admin edits and
- * every row written before 1.16.0 are stored exactly as they were.
+ * Only rows written inside an agent session carry a session. The after-state is recorded for
+ * every session row, and outside a session for post and post-meta rows too, because undoing one
+ * of those on its own (wppilot_rollback_change) refuses when the post changed since; see
+ * WPPILOT_CHANGE_CONFLICT_TYPES. Rows written before that check existed carry no after-state
+ * and are undone without it.
  *
  * @param array<string, mixed> $row
  * @return array<string, mixed>
@@ -90,19 +101,19 @@ function wppilot_change_row_with_session(array $row): array
 {
     if (!array_key_exists('session', $row)) {
         $session = function_exists('wppilot_current_session_id') ? wppilot_current_session_id() : '';
-        if ($session === '') {
-            return $row;
+        if ($session !== '') {
+            $row['session'] = $session;
         }
-        $row['session'] = $session;
     }
-    if (!is_string($row['session']) || $row['session'] === '' || array_key_exists('after', $row)) {
-        return $row;
-    }
-    if (($row['kind'] ?? 'change') !== 'change') {
+    $in_session = is_string($row['session'] ?? null) && $row['session'] !== '';
+    if (array_key_exists('after', $row) || ($row['kind'] ?? 'change') !== 'change') {
         return $row;
     }
     $rollback = is_array($row['rollback'] ?? null) ? wppilot_string_keyed_array($row['rollback']) : [];
     if (($rollback['reversible'] ?? false) !== true) {
+        return $row;
+    }
+    if (!$in_session && !in_array((string) ($rollback['type'] ?? ''), WPPILOT_CHANGE_CONFLICT_TYPES, strict: true)) {
         return $row;
     }
     $target = wppilot_change_payload_target($rollback);
@@ -344,9 +355,12 @@ function wppilot_change_state_digest(?array $state): ?array
         foreach (wppilot_string_keyed_array($state['fields'] ?? null) as $field => $value) {
             $parts['post.' . $field] = wppilot_change_part_hash($value);
         }
+        $volatile_meta = wppilot_session_volatile_meta_keys();
         // @mago-expect analysis:mixed-assignment -- Field and meta values are only hashed.
         foreach (wppilot_string_keyed_array($state['meta'] ?? null) as $key => $value) {
-            $parts['meta.' . $key] = wppilot_change_part_hash($value);
+            if (!in_array($key, $volatile_meta, strict: true)) {
+                $parts['meta.' . $key] = wppilot_change_part_hash($value);
+            }
         }
     }
 
@@ -769,8 +783,21 @@ function wppilot_change_digest_or_null(?array $value): ?array
     foreach (is_array($value['parts'] ?? null) ? $value['parts'] : [] as $name => $hash) {
         $parts[(string) $name] = (string) $hash;
     }
+    $fingerprint = (string) $value['fingerprint'];
+    // A row stored before a key joined the volatile list still carries that key's hash, and the
+    // live digest no longer does, so the two would never match again. Drop those parts and
+    // re-derive the fingerprint the same way wppilot_change_state_digest() builds it.
+    $kept = $parts;
+    foreach (wppilot_session_volatile_meta_keys() as $key) {
+        unset($kept['meta.' . $key]);
+    }
+    if ($kept !== $parts && $kept !== []) {
+        ksort($kept, SORT_STRING);
+        $parts = $kept;
+        $fingerprint = hash('sha256', (string) wp_json_encode($parts));
+    }
 
-    return ['fingerprint' => (string) $value['fingerprint'], 'parts' => $parts];
+    return ['fingerprint' => $fingerprint, 'parts' => $parts];
 }
 
 /**
@@ -1002,9 +1029,9 @@ function wppilot_change_actor_by(array $agent, array $user): string
  *         (unknown session, too large, another run in progress). Everything else — refused,
  *         stopped part way, completed — is a result that says which.
  */
-function wppilot_undo_session(string $session, bool $allow_partial = false): array|WP_Error
+function wppilot_undo_session(string $session, bool $allow_partial = false, bool $skip_conflicts = false): array|WP_Error
 {
-    return wppilot_session_run('undo', $session, $allow_partial);
+    return wppilot_session_run('undo', $session, $allow_partial, $skip_conflicts);
 }
 
 /**
@@ -1020,7 +1047,7 @@ function wppilot_redo_session(string $session, bool $allow_partial = false): arr
 /**
  * @return array<string, mixed>|WP_Error
  */
-function wppilot_session_run(string $operation, string $session, bool $allow_partial): array|WP_Error
+function wppilot_session_run(string $operation, string $session, bool $allow_partial, bool $skip_conflicts = false): array|WP_Error
 {
     $session = trim($session);
     if ($session === '' || strlen($session) > WPPILOT_SESSION_ID_MAX_LENGTH) {
@@ -1039,7 +1066,7 @@ function wppilot_session_run(string $operation, string $session, bool $allow_par
             return $loaded;
         }
         return $operation === 'undo'
-            ? wppilot_session_execute_undo($session, wppilot_session_plan_undo($session, $loaded['rows'], $loaded['current']), $allow_partial)
+            ? wppilot_session_execute_undo($session, wppilot_session_plan_undo($session, $loaded['rows'], $loaded['current']), $allow_partial, $skip_conflicts)
             : wppilot_session_execute_redo($session, wppilot_session_plan_redo($session, $loaded['rows'], $loaded['current']), $allow_partial);
     } finally {
         wppilot_session_lock($session, acquire: false);
@@ -1050,8 +1077,13 @@ function wppilot_session_run(string $operation, string $session, bool $allow_par
  * @param array{pending: list<array<string, mixed>>, conflicts: list<array<string, mixed>>, irreversible: list<array<string, mixed>>, unchecked: list<array<string, mixed>>, already: int} $plan
  * @return array<string, mixed>
  */
-function wppilot_session_execute_undo(string $session, array $plan, bool $allow_partial): array
+function wppilot_session_execute_undo(string $session, array $plan, bool $allow_partial, bool $skip_conflicts = false): array
 {
+    $skipped = [];
+    if ($skip_conflicts && $plan['conflicts'] !== []) {
+        [$plan, $skipped] = wppilot_session_skip_conflicted_targets($plan);
+    }
+
     $report = [
         'session_id' => $session,
         'operation' => 'undo',
@@ -1065,7 +1097,18 @@ function wppilot_session_execute_undo(string $session, array $plan, bool $allow_
         'unchecked' => $plan['unchecked'],
         'already_undone' => $plan['already'],
     ];
+    if ($skip_conflicts) {
+        $report['skipped_conflicts'] = $skipped;
+    }
 
+    if ($plan['pending'] === [] && $skipped !== []) {
+        $report['status'] = 'nothing-to-do';
+        $report['message'] = sprintf(
+            'Nothing was changed. Every change left to undo is on a target that was changed by something else after the session wrote to it; all %d were skipped (listed under skipped_conflicts).',
+            count($skipped),
+        );
+        return $report;
+    }
     if ($plan['pending'] === []) {
         $report['status'] = 'nothing-to-do';
         $report['message'] = $plan['irreversible'] !== []
@@ -1115,12 +1158,67 @@ function wppilot_session_execute_undo(string $session, array $plan, bool $allow_
 
     $report['status'] = 'completed';
     $report['message'] = sprintf(
-        'Undid and verified all %d change(s) this session could undo.%s',
+        'Undid and verified all %d change(s) this session could undo.%s%s',
         count($report['undone']),
         $plan['irreversible'] !== [] ? sprintf(' %d change(s) could not be undone and were left as they are (not_reversible).', count($plan['irreversible'])) : '',
+        $skipped !== [] ? sprintf(' %d change(s) on targets edited by something else afterwards were skipped and left as they are (skipped_conflicts).', count($skipped)) : '',
     );
 
     return $report;
+}
+
+/**
+ * Drop every pending change whose target has a conflict, so the later edit survives.
+ *
+ * All of a session's writes to a conflicted target go, not only the one the
+ * conflict names: undoing an older write to the same target would overwrite
+ * the later edit just the same. The conflicts move into the skipped list
+ * together with the changes they kept back.
+ *
+ * @param array{pending: list<array<string, mixed>>, conflicts: list<array<string, mixed>>, irreversible: list<array<string, mixed>>, unchecked: list<array<string, mixed>>, already: int} $plan
+ * @return array{0: array{pending: list<array<string, mixed>>, conflicts: list<array<string, mixed>>, irreversible: list<array<string, mixed>>, unchecked: list<array<string, mixed>>, already: int}, 1: list<array<string, mixed>>}
+ */
+function wppilot_session_skip_conflicted_targets(array $plan): array
+{
+    $reasons = [];
+    foreach ($plan['conflicts'] as $conflict) {
+        $target = (string) ($conflict['target'] ?? '');
+        if ($target !== '' && !isset($reasons[$target])) {
+            $reasons[$target] = $conflict;
+        }
+    }
+
+    $kept = [];
+    $skipped = [];
+    foreach ($plan['pending'] as $row) {
+        $target = (string) $row['target'];
+        if ($target === '' || !isset($reasons[$target])) {
+            $kept[] = $row;
+            continue;
+        }
+        $conflict = $reasons[$target];
+        $extra = [
+            'kind' => (string) ($conflict['kind'] ?? 'changed-since'),
+            'reason' => 'Skipped: ' . (string) ($conflict['reason'] ?? 'The target was changed by something else after this session wrote to it.'),
+        ];
+        if (isset($conflict['later_changes'])) {
+            $extra['later_changes'] = $conflict['later_changes'];
+        }
+        $skipped[] = wppilot_session_row_brief($row, $extra);
+    }
+
+    // A conflict with no target cannot be matched to a row, so it still refuses the run.
+    $plan['conflicts'] = array_values(array_filter(
+        $plan['conflicts'],
+        static fn (array $conflict): bool => (string) ($conflict['target'] ?? '') === '',
+    ));
+    $plan['pending'] = $kept;
+    $plan['unchecked'] = array_values(array_filter(
+        $plan['unchecked'],
+        static fn (array $brief): bool => !isset($reasons[(string) ($brief['target'] ?? '')]),
+    ));
+
+    return [$plan, $skipped];
 }
 
 /**

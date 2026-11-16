@@ -457,6 +457,15 @@ function el_insert_into_tree(array &$elements, array $element, ?string $parent_i
         return null;
     }
 
+    $parent = el_find($elements, $parent_id);
+    if ($parent === null) {
+        return "Parent '{$parent_id}' not found on post {$post_id}.";
+    }
+    if (!el_parent_accepts_children($parent)) {
+        $parent_type = (string) ($parent['widgetType'] ?? 'widget');
+        return "Parent '{$parent_id}' is a widget ({$parent_type}) and cannot hold child elements. Use a container, section or column as parent_id.";
+    }
+
     $found = el_mutate($elements, $parent_id, static function (array $node) use ($element, $position): array {
         /** @var list<array<string, mixed>> $children */
         $children = is_array($node['elements'] ?? null) ? $node['elements'] : [];
@@ -466,6 +475,38 @@ function el_insert_into_tree(array &$elements, array $element, ?string $parent_i
     });
 
     return $found ? null : "Parent '{$parent_id}' not found on post {$post_id}.";
+}
+
+/**
+ * Whether a tree node may hold child elements. Containers, sections and
+ * columns can; a widget cannot, unless it is one of Elementor's nested
+ * elements (nested tabs, accordion, carousel, mega menu), whose children are
+ * containers by design.
+ *
+ * @param array<string, mixed> $node
+ */
+function el_parent_accepts_children(array $node): bool
+{
+    if ((string) ($node['elType'] ?? '') !== 'widget') {
+        return true;
+    }
+
+    $widget_type = (string) ($node['widgetType'] ?? '');
+    $nested_base = '\Elementor\Modules\NestedElements\Base\Widget_Nested_Base';
+    if ($widget_type !== '' && class_exists('\Elementor\Plugin') && class_exists($nested_base)) {
+        $plugin = \Elementor\Plugin::$instance;
+        $manager = $plugin !== null ? ($plugin->widgets_manager ?? null) : null;
+        if ($manager !== null) {
+            $widget = $manager->get_widget_types($widget_type);
+            if ($widget instanceof $nested_base) {
+                return true;
+            }
+        }
+    }
+
+    // A widget that already carries children is an existing nested element
+    // even when its class could not be resolved here.
+    return is_array($node['elements'] ?? null) && $node['elements'] !== [];
 }
 
 /**

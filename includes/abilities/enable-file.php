@@ -38,6 +38,14 @@ wp_register_ability('wppilot/enable-file', [
             'disabled_path' => ['type' => 'string', 'description' => 'Absolute path of the disabled file.'],
             'enabled_path' => ['type' => 'string', 'description' => 'Absolute path after renaming.'],
             'enabled' => ['type' => 'boolean', 'description' => 'Whether the file was actually renamed.'],
+            'syntax_checked' => [
+                'type' => 'boolean',
+                'description' => 'Whether the PHP was parsed before enabling. A file that does not parse stays disabled.',
+            ],
+            'verification' => [
+                'type' => 'object',
+                'description' => 'Loopback check of the home page and wp-admin after enabling a PHP or execution control file. When enabling broke the site, the file is disabled again and the call fails with write_rolled_back instead.',
+            ],
         ],
     ],
     'execute_callback' => 'wppilot_enable_file',
@@ -114,14 +122,42 @@ function wppilot_enable_file($input)
         return new WP_Error('enabled_file_exists', sprintf('An enabled version already exists: %s', $enabled_path));
     }
 
+    // Enabling makes the file live, so it gets the same checks as writing it would.
+    // See includes/file-write-guard.php.
+    $lint = ['checked' => false];
+    if (wppilot_file_guard_is_php_source($enabled_path)) {
+        $source = file_get_contents($resolved);
+        if ($source === false) {
+            return new WP_Error('read_failed', sprintf('Could not read file: %s', $resolved));
+        }
+        $lint = wppilot_file_guard_lint($enabled_path, $source);
+        if (is_wp_error($lint)) {
+            return $lint;
+        }
+    }
+    $baseline = wppilot_file_guard_baseline($enabled_path);
+
     // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink,WordPress.WP.AlternativeFunctions.rename_rename,WordPress.WP.AlternativeFunctions.file_system_operations_fopen,WordPress.WP.AlternativeFunctions.file_system_operations_fclose,WordPress.WP.AlternativeFunctions.file_system_operations_fread,WordPress.WP.AlternativeFunctions.file_system_operations_fwrite,WordPress.WP.AlternativeFunctions.file_system_operations_chmod,WordPress.WP.AlternativeFunctions.file_system_operations_mkdir,WordPress.WP.AlternativeFunctions.file_system_operations_rmdir,WordPress.WP.AlternativeFunctions.file_system_operations_readfile,WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- WP_Filesystem is not usable here: it takes credentials from an interactive admin form, which a REST/MCP request has no way to show. Restoring a disabled file is the ability itself, bounded by the path guard and gated to Developer Full Access.
     if (!rename($resolved, $enabled_path)) {
         return new WP_Error('rename_failed', sprintf('Failed to rename file: %s', $resolved));
+    }
+    wppilot_file_guard_invalidate_opcache($enabled_path);
+
+    $verification = wppilot_file_guard_verify(
+        $enabled_path,
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Undoing the rename this same call made.
+        static fn(): bool => rename($enabled_path, $resolved),
+        $baseline,
+    );
+    if (is_wp_error($verification)) {
+        return $verification;
     }
 
     return [
         'disabled_path' => $resolved,
         'enabled_path' => $enabled_path,
         'enabled' => true,
+        'syntax_checked' => $lint['checked'],
+        'verification' => $verification,
     ];
 }

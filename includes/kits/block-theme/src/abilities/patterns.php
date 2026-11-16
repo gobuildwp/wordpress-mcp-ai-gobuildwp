@@ -94,12 +94,17 @@ wp_register_ability('wppilot/create-pattern', [
             return $content;
         }
         $synced = ($input['synced'] ?? true) !== false;
-        $saved = rest('POST', '/wp/v2/blocks', [
+        $params = [
             'title' => sanitize_text_field((string) $input['title']),
             'content' => $content,
             'status' => 'publish',
-            'wp_pattern_sync_status' => $synced ? '' : 'unsynced',
-        ]);
+        ];
+        if (!$synced) {
+            // A registered meta key: the blocks controller only reads it under meta, and its enum
+            // has no empty value, so a synced pattern simply leaves it unset.
+            $params['meta'] = ['wp_pattern_sync_status' => 'unsynced'];
+        }
+        $saved = rest('POST', '/wp/v2/blocks', $params);
         if ($saved instanceof WP_Error) {
             return $saved;
         }

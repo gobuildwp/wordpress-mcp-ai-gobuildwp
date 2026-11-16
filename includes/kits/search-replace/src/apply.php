@@ -45,11 +45,12 @@ function apply(array $input): array|WP_Error
         }
     }
     $subset = array_values($subset);
+    $options = option_subset($input['options'] ?? null);
 
     if (($input['background'] ?? false) === true) {
-        return enqueue($plan_id, $subset);
+        return enqueue($plan_id, $subset, $options);
     }
-    return run_batch($plan_id, $subset);
+    return run_batch($plan_id, $subset, $options);
 }
 
 /**
@@ -62,14 +63,20 @@ function apply(array $input): array|WP_Error
  * call: the ledger would record that post without a before-image, and a write nobody can undo is
  * exactly what this ability must never make.
  *
- * @param list<int> $subset Only these posts of the plan; empty for all.
+ * An options plan (target "options" at preview) is applied by run_option_batch() instead.
+ *
+ * @param list<int>    $subset  Only these posts of the plan; empty for all.
+ * @param list<string> $options Only these options of an options plan; empty for all.
  * @return array<string, mixed>|WP_Error
  */
-function run_batch(string $plan_id, array $subset = []): array|WP_Error
+function run_batch(string $plan_id, array $subset = [], array $options = []): array|WP_Error
 {
     $plan = load_plan($plan_id);
     if ($plan instanceof WP_Error) {
         return $plan;
+    }
+    if (($plan['kind'] ?? '') === 'options') {
+        return run_option_batch($plan_id, $options);
     }
     if (!lock_plan($plan_id)) {
         return new WP_Error('kit_sr_plan_busy', 'Another call is applying this plan right now; check search-replace-status, then retry.', ['status' => 409]);
@@ -318,20 +325,24 @@ function raw_meta_value(int $post_id, string $key): ?string
 /**
  * Hand the rest of a plan to the jobs runner.
  *
- * @param list<int> $subset
+ * @param list<int>    $subset
+ * @param list<string> $options
  * @return array<string, mixed>|WP_Error
  */
-function enqueue(string $plan_id, array $subset): array|WP_Error
+function enqueue(string $plan_id, array $subset, array $options = []): array|WP_Error
 {
     $plan = load_plan($plan_id);
     if ($plan instanceof WP_Error) {
         return $plan;
     }
+    if (($plan['kind'] ?? '') === 'options' && !current_user_can('manage_options')) {
+        return cannot_manage_options();
+    }
     if (!lock_plan($plan_id)) {
         return new WP_Error('kit_sr_plan_busy', 'Another call is applying this plan right now; check search-replace-status, then retry.', ['status' => 409]);
     }
     try {
-        $job_id = Runtime\host()->jobs()->enqueue(JOB_KIND, ['plan_id' => $plan_id, 'post_ids' => $subset]);
+        $job_id = Runtime\host()->jobs()->enqueue(JOB_KIND, ['plan_id' => $plan_id, 'post_ids' => $subset, 'options' => $options]);
         if ($job_id instanceof WP_Error) {
             return $job_id;
         }
@@ -367,7 +378,7 @@ function enqueue(string $plan_id, array $subset): array|WP_Error
 function job_step(array $payload, array $state): array
 {
     $subset = array_values(array_filter(array_map('intval', is_array($payload['post_ids'] ?? null) ? $payload['post_ids'] : []), static fn(int $id): bool => $id > 0));
-    $result = run_batch((string) ($payload['plan_id'] ?? ''), $subset);
+    $result = run_batch((string) ($payload['plan_id'] ?? ''), $subset, option_subset($payload['options'] ?? null));
     if ($result instanceof WP_Error) {
         if ($result->get_error_code() === 'kit_sr_plan_busy') {
             // A foreground apply holds the plan; wait for it rather than fail approved work.
@@ -481,14 +492,18 @@ function status(array $input): array|WP_Error
     foreach ($plan['items'] as $item) {
         $counts[$item['status']] = ($counts[$item['status']] ?? 0) + 1;
         if (in_array($item['status'], ['skipped', 'failed', 'partial'], strict: true) && count($not_applied) < 100) {
-            $not_applied[] = ['post_id' => $item['post_id'], 'title' => $item['title'], 'status' => $item['status'], 'reason' => $item['reason']];
+            $not_applied[] = isset($item['option'])
+                ? ['option' => (string) $item['option'], 'status' => $item['status'], 'reason' => $item['reason']]
+                : ['post_id' => $item['post_id'], 'title' => $item['title'], 'status' => $item['status'], 'reason' => $item['reason']];
         }
     }
     $out['plan'] = [
         'plan_id' => (string) $plan['id'],
         'group' => (string) $plan['group'],
         'expires_at' => gmdate('c', (int) $plan['expires_at']),
-        'posts' => count($plan['items']),
+        'target' => ($plan['kind'] ?? '') === 'options' ? 'options' : 'posts',
+        'posts' => ($plan['kind'] ?? '') === 'options' ? 0 : count($plan['items']),
+        'options' => ($plan['kind'] ?? '') === 'options' ? count($plan['items']) : 0,
         'counts' => $counts,
         'problems' => $not_applied,
         'job_id' => (string) ($plan['job_id'] ?? ''),

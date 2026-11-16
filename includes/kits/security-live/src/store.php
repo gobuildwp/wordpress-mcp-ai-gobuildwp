@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace GoBuildWP\Kits\SecurityLive;
 
+use WPPilot\Kits\Runtime;
+
 if (!defined('ABSPATH')) {
     exit();
 }
@@ -83,32 +85,32 @@ function configure(array $input): array|\WP_Error
         switch ($key) {
             case 'enabled':
                 if (!is_bool($value)) {
-                    return new \WP_Error('gobuildwp_live_invalid', 'enabled must be true or false.', ['status' => 400]);
+                    return new \WP_Error(Runtime\public_name('wppilot_kit_live_invalid'), 'enabled must be true or false.', ['status' => 400]);
                 }
                 $next['enabled'] = $value;
                 break;
             case 'interval_minutes':
                 if (!is_int($value) || $value < INTERVAL_RANGE[0] || $value > INTERVAL_RANGE[1]) {
-                    return new \WP_Error('gobuildwp_live_invalid', sprintf('interval_minutes must be %d to %d.', INTERVAL_RANGE[0], INTERVAL_RANGE[1]), ['status' => 400]);
+                    return new \WP_Error(Runtime\public_name('wppilot_kit_live_invalid'), sprintf('interval_minutes must be %d to %d.', INTERVAL_RANGE[0], INTERVAL_RANGE[1]), ['status' => 400]);
                 }
                 $next['interval_minutes'] = $value;
                 break;
             case 'excluded_paths':
                 if (!is_array($value) || count($value) > MAX_EXCLUDED) {
-                    return new \WP_Error('gobuildwp_live_invalid', sprintf('excluded_paths must be a list of at most %d paths.', MAX_EXCLUDED), ['status' => 400]);
+                    return new \WP_Error(Runtime\public_name('wppilot_kit_live_invalid'), sprintf('excluded_paths must be a list of at most %d paths.', MAX_EXCLUDED), ['status' => 400]);
                 }
                 $paths = [];
                 foreach ($value as $path) {
                     $clean = is_string($path) ? clean_excluded($path) : null;
                     if ($clean === null) {
-                        return new \WP_Error('gobuildwp_live_invalid', 'Each excluded path must be a folder or file inside the WordPress folder, without "..".', ['status' => 400]);
+                        return new \WP_Error(Runtime\public_name('wppilot_kit_live_invalid'), 'Each excluded path must be a folder or file inside the WordPress folder, without "..".', ['status' => 400]);
                     }
                     $paths[] = $clean;
                 }
                 $next['excluded_paths'] = array_values(array_unique($paths));
                 break;
             default:
-                return new \WP_Error('gobuildwp_live_invalid', sprintf('Unknown setting: %s.', (string) $key), ['status' => 400]);
+                return new \WP_Error(Runtime\public_name('wppilot_kit_live_invalid'), sprintf('Unknown setting: %s.', (string) $key), ['status' => 400]);
         }
     }
     $before = settings();
@@ -174,8 +176,11 @@ function record(string $severity, string $kind, string $subject, array $detail =
     $store['next'] = $id + 1;
     update_option(EVENTS_OPTION, $store, false);
 
-    if (in_array($severity, PUSH_SEVERITIES, strict: true) && function_exists('wppilot_cloud_note_event')) {
-        \wppilot_cloud_note_event('security_live');
+    if (in_array($severity, PUSH_SEVERITIES, strict: true)) {
+        $note = Runtime\has_host() ? Runtime\host()->extension('cloud-note-event') : null;
+        if (is_callable($note)) {
+            $note('security_live');
+        }
     }
     return $id;
 }

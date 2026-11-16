@@ -108,6 +108,8 @@ function wppilot_render_oauth_config_section(string $rest_url): void
         'qwen-code' => 'Qwen Code',
         'gemini-cli' => 'Gemini CLI',
         'zcode' => 'ZCode (GLM)',
+        'grok-desktop' => 'Grok Desktop',
+        'gemini-desktop' => 'Gemini Desktop',
         'openclaw' => 'OpenClaw',
     ];
     ?>

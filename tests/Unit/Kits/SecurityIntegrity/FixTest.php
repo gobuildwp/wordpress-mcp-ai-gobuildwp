@@ -89,7 +89,7 @@ final class FixTest extends TestCase
         self::assertSame('undone', SI\list_fixes()[0]['state']);
 
         $again = SI\undo_fixes(['fix_ids' => [$result['results'][0]['fix_id']], 'confirm' => true]);
-        self::assertSame('gobuildwp_security_fix_already_undone', $again['results'][0]['error']['code']);
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_already_undone'), $again['results'][0]['error']['code']);
     }
 
     public function test_undo_refuses_a_quarantined_copy_that_changed(): void
@@ -101,7 +101,7 @@ final class FixTest extends TestCase
 
         $undo = SI\undo_fixes(['fix_ids' => [$result['results'][0]['fix_id']], 'confirm' => true]);
         self::assertSame(0, $undo['undone']);
-        self::assertSame('gobuildwp_security_fix_changed', $undo['results'][0]['error']['code']);
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_changed'), $undo['results'][0]['error']['code']);
         self::assertFileDoesNotExist($this->site->root . '/wp-content/uploads/y.php');
     }
 
@@ -129,12 +129,12 @@ final class FixTest extends TestCase
 
         $codes = array_map(static fn(array $r): string => (string) ($r['error']['code'] ?? 'applied'), $result['results']);
         self::assertSame([
-            'gobuildwp_security_fix_protected',
-            'gobuildwp_security_fix_bad_path',
-            'gobuildwp_security_fix_bad_path',
-            'gobuildwp_security_fix_core_file',
-            'gobuildwp_security_fix_bad_path',
-            'gobuildwp_security_fix_not_core',
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_protected'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_bad_path'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_bad_path'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_core_file'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_bad_path'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_not_core'),
             'applied',
         ], $codes);
         self::assertSame(1, $result['applied']);
@@ -179,7 +179,7 @@ final class FixTest extends TestCase
         self::assertSame('applied', $result['results'][0]['state']);
         self::assertTrue($result['results'][0]['detail']['was_missing']);
         self::assertSame($official, file_get_contents($this->site->root . '/wp-login.php'));
-        self::assertSame('gobuildwp_security_fix_checksum_mismatch', $result['results'][1]['error']['code']);
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_checksum_mismatch'), $result['results'][1]['error']['code']);
         self::assertFileDoesNotExist($this->site->root . '/wp-includes/a.php');
 
         SI\undo_fixes(['fix_ids' => [$result['results'][0]['fix_id']], 'confirm' => true]);
@@ -191,7 +191,7 @@ final class FixTest extends TestCase
         $this->site->put('wp-includes/version.php', '<?php');
         self::primeCore(['wp-includes/version.php' => md5('<?php')]);
         $result = self::apply([['action' => 'repair_core_file', 'target' => 'wp-includes/version.php']]);
-        self::assertSame('gobuildwp_security_fix_unchanged', $result['results'][0]['error']['code']);
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_unchanged'), $result['results'][0]['error']['code']);
         self::assertSame([], TestNet::$calls);
     }
 
@@ -200,7 +200,7 @@ final class FixTest extends TestCase
         self::assertInstanceOf(WP_Error::class, SI\apply_fixes(['items' => []]));
         self::assertInstanceOf(WP_Error::class, SI\apply_fixes(['items' => array_fill(0, 26, ['action' => 'quarantine_file', 'target' => 'a'])]));
         $result = self::apply([['action' => 'delete_everything', 'target' => 'a']]);
-        self::assertSame('gobuildwp_security_fix_bad_input', $result['results'][0]['error']['code']);
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_bad_input'), $result['results'][0]['error']['code']);
     }
 
     /** One injected statement, written in pieces so this file holds no live call. */
@@ -291,12 +291,12 @@ final class FixTest extends TestCase
         ]);
 
         self::assertSame([
-            'gobuildwp_security_fix_unchanged',
-            'gobuildwp_security_fix_not_official',
-            'gobuildwp_security_fix_not_official',
-            'gobuildwp_security_fix_not_plugin',
-            'gobuildwp_security_fix_not_plugin',
-            'gobuildwp_security_fix_checksum_mismatch',
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_unchanged'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_not_official'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_not_official'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_not_plugin'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_not_plugin'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_checksum_mismatch'),
         ], self::codes($result));
         self::assertSame('<?php // changed', file_get_contents($this->site->root . '/wp-content/plugins/hello/b.php'));
     }
@@ -319,7 +319,7 @@ final class FixTest extends TestCase
         // Undo refuses once the file has changed again after the fix.
         $again = self::apply([['action' => 'clean_file', 'target' => 'wp-content/plugins/mine/mine.php']]);
         file_put_contents($file, $after . "// edited\n");
-        self::assertSame('gobuildwp_security_fix_changed_since', self::undo($again)['results'][0]['error']['code']);
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_changed_since'), self::undo($again)['results'][0]['error']['code']);
         self::assertSame($after . "// edited\n", file_get_contents($file));
     }
 
@@ -350,7 +350,7 @@ final class FixTest extends TestCase
 
         self::assertSame('quarantined', $result['results'][0]['detail']['mode'] ?? null, json_encode($result) ?: '');
         self::assertFileDoesNotExist($file);
-        self::assertSame(['applied', 'gobuildwp_security_fix_cannot_isolate'], self::codes($result));
+        self::assertSame(['applied', \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_cannot_isolate')], self::codes($result));
         self::assertFileExists($main);
     }
 
@@ -373,11 +373,11 @@ final class FixTest extends TestCase
         ]);
 
         self::assertSame([
-            'gobuildwp_security_fix_use_repair_core',
-            'gobuildwp_security_fix_cannot_isolate',
-            'gobuildwp_security_fix_cannot_isolate',
-            'gobuildwp_security_fix_unchanged',
-            'gobuildwp_security_fix_bad_path',
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_use_repair_core'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_cannot_isolate'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_cannot_isolate'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_unchanged'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_bad_path'),
         ], self::codes($result));
         self::assertSame($mixed, file_get_contents($this->site->root . '/wp-content/plugins/mine/mixed.php'));
         self::assertSame([], TestNet::$calls);
@@ -446,7 +446,7 @@ final class FixTest extends TestCase
 
         $result = self::apply([['action' => 'clean_option', 'target' => 'theme_mods_shop']]);
 
-        self::assertSame(['gobuildwp_security_fix_cannot_isolate'], self::codes($result), json_encode($result) ?: '');
+        self::assertSame([\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_cannot_isolate')], self::codes($result), json_encode($result) ?: '');
         self::assertSame($raw, $this->db->optionRows[0]['value']);
         self::assertSame([], $this->kept());
     }
@@ -464,24 +464,24 @@ final class FixTest extends TestCase
             ['action' => 'clean_option', 'target' => "bad\nname"],
         ]);
         self::assertSame([
-            'gobuildwp_security_fix_unchanged',
-            'gobuildwp_security_fix_protected',
-            'gobuildwp_security_fix_protected',
-            'gobuildwp_security_fix_protected',
-            'gobuildwp_security_fix_not_found',
-            'gobuildwp_security_fix_bad_input',
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_unchanged'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_protected'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_protected'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_protected'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_not_found'),
+            \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_bad_input'),
         ], self::codes($result));
 
         $this->db->failWrites = true;
         $failed = self::apply([['action' => 'clean_option', 'target' => 'widget_html']]);
-        self::assertSame(['gobuildwp_security_fix_write_failed'], self::codes($failed));
+        self::assertSame([\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_write_failed')], self::codes($failed));
         self::assertSame([], $this->kept());
 
         // A stripped option edited after the fix is not rolled back over the edit.
         $this->db->failWrites = false;
         $done = self::apply([['action' => 'clean_option', 'target' => 'widget_html']]);
         $this->db->optionRows[1]['value'] = serialize(['edited']);
-        self::assertSame('gobuildwp_security_fix_changed_since', self::undo($done)['results'][0]['error']['code']);
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_changed_since'), self::undo($done)['results'][0]['error']['code']);
         self::assertSame(serialize(['edited']), $this->db->optionRows[1]['value']);
     }
 
@@ -532,12 +532,12 @@ final class FixTest extends TestCase
             ['action' => 'remove_cron', 'target' => 'not_scheduled'],
             ['action' => 'remove_cron', 'target' => "bad\x01hook"],
         ]);
-        self::assertSame(['gobuildwp_security_fix_unchanged', 'gobuildwp_security_fix_unchanged', 'gobuildwp_security_fix_bad_input'], self::codes($result));
+        self::assertSame([\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_unchanged'), \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_unchanged'), \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_bad_input')], self::codes($result));
 
         TestNet::$cron = [2000 => ['orphan_job' => ['a' => ['schedule' => false, 'args' => []]]]];
         TestNet::$cron_fails = true;
         $failed = self::apply([['action' => 'remove_cron', 'target' => 'orphan_job']]);
-        self::assertSame(['gobuildwp_security_fix_write_failed'], self::codes($failed));
+        self::assertSame([\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_write_failed')], self::codes($failed));
         self::assertSame([], SI\list_fixes());
     }
 
@@ -565,11 +565,11 @@ final class FixTest extends TestCase
             ['action' => 'clean_post', 'target' => 'abc'],
             ['action' => 'clean_post', 'target' => '7'],
         ]);
-        self::assertSame(['gobuildwp_security_fix_unchanged', 'gobuildwp_security_fix_not_found', 'gobuildwp_security_fix_not_found', 'applied'], self::codes($result));
+        self::assertSame([\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_unchanged'), \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_not_found'), \WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_not_found'), 'applied'], self::codes($result));
 
         // Content edited after the fix is not rolled back over the edit.
         $this->db->postRows[7]['content'] = '<p>Rewritten</p>';
-        self::assertSame('gobuildwp_security_fix_changed_since', self::undo($result, 3)['results'][0]['error']['code']);
+        self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_security_fix_changed_since'), self::undo($result, 3)['results'][0]['error']['code']);
         self::assertSame('<p>Rewritten</p>', $this->db->postRows[7]['content']);
     }
 }

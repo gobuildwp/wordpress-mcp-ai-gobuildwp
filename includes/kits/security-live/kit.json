@@ -3,10 +3,13 @@
     "version": "1.0.0",
     "namespace": "GoBuildWP\\Kits\\SecurityLive",
     "tier": "free",
-    "runtime": "^1.4",
+    "runtime": "^1.5",
     "requires": {
         "php": "8.0",
-        "wp": "6.9"
+        "wp": "6.9",
+        "kits": [
+            "security-integrity"
+        ]
     },
     "categories": {
         "security-live": {

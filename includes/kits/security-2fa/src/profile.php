@@ -35,7 +35,7 @@ function render_profile_section(WP_User $user): void
         return;
     }
     $enabled = is_enabled($user->ID);
-    echo '<h2 id="gobuildwp-2fa">' . esc_html__('Two-factor login', domain: 'wppilot') . '</h2>';
+    echo '<h2 id="wppilot-kit-2fa">' . esc_html__('Two-factor login', domain: 'wppilot') . '</h2>';
     wp_nonce_field('gobuildwp_kit_2fa_profile_' . $user->ID, '_gobuildwp_kit_2fa_nonce');
     echo '<table class="form-table" role="presentation"><tr><th scope="row">' . esc_html__('Status', domain: 'wppilot') . '</th><td>';
 
@@ -179,5 +179,5 @@ function render_grace_notice(): void
             $left,
         )
         : __('Your role must use two-factor login. Set it up now, or you will be asked to at your next login.', domain: 'wppilot');
-    echo '<div class="notice notice-warning"><p>' . esc_html($message) . ' <a href="' . esc_url(admin_url('profile.php#gobuildwp-2fa')) . '">' . esc_html__('Set up two-factor login', domain: 'wppilot') . '</a></p></div>';
+    echo '<div class="notice notice-warning"><p>' . esc_html($message) . ' <a href="' . esc_url(admin_url('profile.php#wppilot-kit-2fa')) . '">' . esc_html__('Set up two-factor login', domain: 'wppilot') . '</a></p></div>';
 }

@@ -142,6 +142,12 @@ function wppilot_default_ability_ledger_map(): array
         $map[$ability] = ['strategy' => 'irreversible', 'reason' => 'An email or a note was sent or recorded; it cannot be taken back.'];
     }
 
+    // GoBuildWP's own single-block edit and Markdown import. Both change post_content: at
+    // once for a dynamic block, otherwise when the Block Editor Queue finalizes the batch, so
+    // an undo restores the content as it was when the change was asked for.
+    $map['wppilot/gutenberg-edit-block'] = ['strategy' => 'post-partial', 'target' => 'input.post_id', 'fields' => ['post_content']];
+    $map['wppilot/markdown-to-blocks'] = ['strategy' => 'post-partial', 'target' => 'input.post_id', 'fields' => ['post_content']];
+
     return $map;
 }
 

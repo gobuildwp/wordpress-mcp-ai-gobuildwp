@@ -115,6 +115,11 @@ function revoke_client_access(string $client_id, int $user_id): void
     // Hand the connection slot back now. Slot accounting reads the client's last use, so without
     // this a revoked connection went on occupying one until its grant expired on its own.
     \WPPilot\OAuth\ClientValidation\release_client_slot_if_unused($client_id);
+
+    // The grant is gone, so is the level set on it. Connecting again needs this user's consent.
+    if (function_exists('wppilot_connection_level_forget_oauth')) {
+        \wppilot_connection_level_forget_oauth($client_id, $user_id);
+    }
 }
 
 // @mago-expect lint:halstead
@@ -175,6 +180,10 @@ function render_page(int $user_id): void
                 . esc_html__('Access revoked successfully.', domain: 'wppilot')
                 . '</p></div>'
         ;
+    }
+
+    if (function_exists('WPPilot\\OAuth\\AppApproval\\render_pending_section')) {
+        \WPPilot\OAuth\AppApproval\render_pending_section();
     }
 
     if ($apps === []) {

@@ -15,9 +15,14 @@ if (!defined('ABSPATH')) {
 
 wp_register_ability('gobuildwp/protection-configure', [
     'label' => __('Configure Website Protection', domain: 'wppilot'),
-    'description' => __(
-        'Changes website protection settings; only the fields given change, and the previous settings are returned so the change can be reverted. firewall: off, log (record only; the default) or block. login.enabled and block_user_enumeration are on by default. login: enabled, max_failures (3-50), window_minutes, lockout_minutes, generic_errors. xmlrpc: on or off. block_user_enumeration. flood: enabled, max_404_per_minute. ip_source: remote_addr, cloudflare or x_forwarded_for (set only when the site really sits behind that proxy; Cloudflare\'s header is only believed from Cloudflare\'s own addresses, and X-Forwarded-For only from proxies listed in trusted_proxies or the GOBUILDWP_TRUSTED_PROXIES constant). trusted_proxies: addresses or CIDR ranges of the reverse proxy or load balancer (replaces the list; /8 or /32 at the widest); read client_ip and proxy_headers_seen from protection-status first. If protection ever locks the owner out, define GOBUILDWP_DISABLE_PROTECTION as true in wp-config.php to switch all of it off. allowlist: addresses or CIDR ranges that are never blocked. Signed-in administrators and administrator API calls are never blocked.',
+    'description' => sprintf(
+        /* translators: 1: the trusted-proxies wp-config constant, 2: the protection off-switch wp-config constant. */
+        __(
+        'Changes website protection settings; only the fields given change, and the previous settings are returned so the change can be reverted. firewall: off, log (record only; the default) or block. login.enabled and block_user_enumeration are on by default. login: enabled, max_failures (3-50), window_minutes, lockout_minutes, generic_errors. xmlrpc: on or off. block_user_enumeration. flood: enabled, max_404_per_minute. ip_source: remote_addr, cloudflare or x_forwarded_for (set only when the site really sits behind that proxy; Cloudflare\'s header is only believed from Cloudflare\'s own addresses, and X-Forwarded-For only from proxies listed in trusted_proxies or the %1$s constant). trusted_proxies: addresses or CIDR ranges of the reverse proxy or load balancer (replaces the list; /8 or /32 at the widest); read client_ip and proxy_headers_seen from protection-status first. If protection ever locks the owner out, define %2$s as true in wp-config.php to switch all of it off. allowlist: addresses or CIDR ranges that are never blocked. Signed-in administrators and administrator API calls are never blocked.',
         domain: 'wppilot',
+        ),
+        Runtime\public_name('WPPILOT_KIT_TRUSTED_PROXIES'),
+        Runtime\public_name('WPPILOT_KIT_DISABLE_PROTECTION'),
     ),
     'category' => 'security-protection',
     'input_schema' => [

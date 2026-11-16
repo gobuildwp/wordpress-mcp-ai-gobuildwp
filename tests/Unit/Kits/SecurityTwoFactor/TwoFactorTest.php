@@ -12,76 +12,76 @@ namespace GoBuildWP\Kits\SecurityTwoFactor {
     if (!function_exists(__NAMESPACE__ . '\get_user_meta')) {
         function get_user_meta(int $user_id, string $key = '', bool $single = false): mixed
         {
-            return $GLOBALS['gobuildwp_2fa_test_meta'][$user_id][$key] ?? '';
+            return $GLOBALS['kit_test_2fa_meta'][$user_id][$key] ?? '';
         }
 
         function update_user_meta(int $user_id, string $key, mixed $value, mixed $prev_value = ''): bool
         {
-            $current = $GLOBALS['gobuildwp_2fa_test_meta'][$user_id][$key] ?? null;
+            $current = $GLOBALS['kit_test_2fa_meta'][$user_id][$key] ?? null;
             if ($prev_value !== '' && $current !== $prev_value) {
                 return false;
             }
             if ($current === $value) {
                 return false;
             }
-            $GLOBALS['gobuildwp_2fa_test_meta'][$user_id][$key] = $value;
+            $GLOBALS['kit_test_2fa_meta'][$user_id][$key] = $value;
             return true;
         }
 
         function delete_user_meta(int $user_id, string $key): bool
         {
-            unset($GLOBALS['gobuildwp_2fa_test_meta'][$user_id][$key]);
+            unset($GLOBALS['kit_test_2fa_meta'][$user_id][$key]);
             return true;
         }
 
         function get_transient(string $key): mixed
         {
-            return $GLOBALS['gobuildwp_2fa_test_transients'][$key] ?? false;
+            return $GLOBALS['kit_test_2fa_transients'][$key] ?? false;
         }
 
         function set_transient(string $key, mixed $value, int $expiration = 0): bool
         {
-            $GLOBALS['gobuildwp_2fa_test_transients'][$key] = $value;
+            $GLOBALS['kit_test_2fa_transients'][$key] = $value;
             return true;
         }
 
         function delete_transient(string $key): bool
         {
-            unset($GLOBALS['gobuildwp_2fa_test_transients'][$key]);
+            unset($GLOBALS['kit_test_2fa_transients'][$key]);
             return true;
         }
 
         // A persistent object cache, switched on per test; off means the options-table path runs.
         function wp_using_ext_object_cache(): bool
         {
-            return !empty($GLOBALS['gobuildwp_2fa_test_ext_cache']);
+            return !empty($GLOBALS['kit_test_2fa_ext_cache']);
         }
 
         function wp_cache_add(string $key, mixed $value, string $group = '', int $expire = 0): bool
         {
-            if (isset($GLOBALS['gobuildwp_2fa_test_cache'][$group][$key])) {
+            if (isset($GLOBALS['kit_test_2fa_cache'][$group][$key])) {
                 return false;
             }
-            $GLOBALS['gobuildwp_2fa_test_cache'][$group][$key] = $value;
+            $GLOBALS['kit_test_2fa_cache'][$group][$key] = $value;
             return true;
         }
 
         function wp_cache_incr(string $key, int $offset = 1, string $group = ''): int|false
         {
-            if (!isset($GLOBALS['gobuildwp_2fa_test_cache'][$group][$key])) {
+            if (!isset($GLOBALS['kit_test_2fa_cache'][$group][$key])) {
                 return false;
             }
-            return $GLOBALS['gobuildwp_2fa_test_cache'][$group][$key] = (int) $GLOBALS['gobuildwp_2fa_test_cache'][$group][$key] + $offset;
+            return $GLOBALS['kit_test_2fa_cache'][$group][$key] = (int) $GLOBALS['kit_test_2fa_cache'][$group][$key] + $offset;
         }
 
         function wp_cache_get(string $key, string $group = ''): mixed
         {
-            return $GLOBALS['gobuildwp_2fa_test_cache'][$group][$key] ?? false;
+            return $GLOBALS['kit_test_2fa_cache'][$group][$key] ?? false;
         }
 
         function wp_cache_delete(string $key, string $group = ''): bool
         {
-            unset($GLOBALS['gobuildwp_2fa_test_cache'][$group][$key]);
+            unset($GLOBALS['kit_test_2fa_cache'][$group][$key]);
             return true;
         }
 
@@ -106,7 +106,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
     use PHPUnit\Framework\Attributes\DataProvider;
     use PHPUnit\Framework\TestCase;
     use WP_Error;
-    use WPPilot_Test_State;
+    use Kit_Test_State;
 
     /**
      * Two-factor login: TOTP against the RFC 6238 vectors, the time window and replay refusal,
@@ -122,13 +122,13 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
 
         protected function setUp(): void
         {
-            WPPilot_Test_State::$options = [];
-            $GLOBALS['gobuildwp_2fa_test_meta'] = [];
-            $GLOBALS['gobuildwp_2fa_test_transients'] = [];
-            $GLOBALS['gobuildwp_2fa_test_cache'] = [];
-            $GLOBALS['gobuildwp_2fa_test_ext_cache'] = false;
+            \Kit_Test_State::$options = [];
+            $GLOBALS['kit_test_2fa_meta'] = [];
+            $GLOBALS['kit_test_2fa_transients'] = [];
+            $GLOBALS['kit_test_2fa_cache'] = [];
+            $GLOBALS['kit_test_2fa_ext_cache'] = false;
             $this->savedWpdb = $GLOBALS['wpdb'] ?? null;
-            $wpdb = new \WPPilot_Test_Sqlite_Wpdb();
+            $wpdb = new \Kit_Test_Sqlite_Wpdb();
             $wpdb->query('CREATE TABLE wp_options (option_id INTEGER PRIMARY KEY AUTOINCREMENT, option_name TEXT NOT NULL UNIQUE, option_value TEXT NOT NULL, autoload TEXT NOT NULL)');
             $GLOBALS['wpdb'] = $wpdb;
         }
@@ -136,7 +136,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
         protected function tearDown(): void
         {
             $GLOBALS['wpdb'] = $this->savedWpdb;
-            $GLOBALS['gobuildwp_2fa_test_ext_cache'] = false;
+            $GLOBALS['kit_test_2fa_ext_cache'] = false;
             parent::tearDown();
         }
 
@@ -251,7 +251,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
             TF\enable(7, $secret, 0, $now);
             // Another request claimed this step after we read the last step but before we wrote.
             $last = (string) TF\get_user_meta(7, TF\META_LAST_STEP, true);
-            $GLOBALS['gobuildwp_2fa_test_meta'][7][TF\META_LAST_STEP] = 's' . TF\time_step($now);
+            $GLOBALS['kit_test_2fa_meta'][7][TF\META_LAST_STEP] = 's' . TF\time_step($now);
             self::assertFalse(TF\swap_meta(7, TF\META_LAST_STEP, $last, 's' . TF\time_step($now)));
             self::assertFalse(TF\verify_user_totp(7, TF\totp($secret, $now), $now));
         }
@@ -292,7 +292,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
             TF\stash_codes_for_display(5, ['aaaaa-bbbbb']);
             TF\disable(5);
             self::assertFalse(TF\is_enabled(5));
-            self::assertSame([], $GLOBALS['gobuildwp_2fa_test_meta'][5]);
+            self::assertSame([], $GLOBALS['kit_test_2fa_meta'][5]);
             self::assertSame([], TF\take_codes_for_display(5));
         }
 
@@ -337,7 +337,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
             self::assertSame(4, $state['user_id']);
             self::assertTrue($state['remember']);
             // The transient is named by a hash; the token itself is not stored.
-            foreach (array_keys($GLOBALS['gobuildwp_2fa_test_transients']) as $key) {
+            foreach (array_keys($GLOBALS['kit_test_2fa_transients']) as $key) {
                 self::assertStringNotContainsString(explode(':', $token)[1], $key);
             }
             TF\close_login($token);
@@ -436,7 +436,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
 
         public function test_failure_count_uses_the_object_cache_when_there_is_one(): void
         {
-            $GLOBALS['gobuildwp_2fa_test_ext_cache'] = true;
+            $GLOBALS['kit_test_2fa_ext_cache'] = true;
             $before = count($GLOBALS['wpdb']->queries);
             for ($i = 0; $i < TF\MAX_USER_FAILURES; $i++) {
                 self::assertSame($i + 1, TF\count_failure(4));
@@ -470,9 +470,9 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
 
         public function test_stored_policy_drops_roles_that_no_longer_exist(): void
         {
-            WPPilot_Test_State::$options[TF\OPT_POLICY] = ['required_roles' => ['administrator', 'gone'], 'grace_logins' => 2];
+            \Kit_Test_State::$options[TF\OPT_POLICY] = ['required_roles' => ['administrator', 'gone'], 'grace_logins' => 2];
             self::assertSame(['required_roles' => ['administrator'], 'grace_logins' => 2], TF\policy(['administrator']));
-            WPPilot_Test_State::$options[TF\OPT_POLICY] = 'junk';
+            \Kit_Test_State::$options[TF\OPT_POLICY] = 'junk';
             self::assertSame(TF\default_policy(), TF\policy(['administrator']));
         }
 
@@ -489,7 +489,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
             TF\enable(1, TF\new_secret(), 0, 1_700_000_000);
             self::assertSame('challenge', TF\login_requirement(1, ['administrator'], $policy));
             self::assertSame('challenge', TF\login_requirement(1, ['editor'], TF\default_policy()), 'a user who turned it on is always asked');
-            self::assertSame([], array_intersect(array_keys($GLOBALS['gobuildwp_2fa_test_meta'][1]), [TF\META_GRACE_USED]), 'enabling clears the grace count');
+            self::assertSame([], array_intersect(array_keys($GLOBALS['kit_test_2fa_meta'][1]), [TF\META_GRACE_USED]), 'enabling clears the grace count');
         }
 
         public function test_user_summary_has_no_secrets(): void
@@ -544,7 +544,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
 
         public function test_application_password_only_excuses_the_account_it_belongs_to(): void
         {
-            $GLOBALS['gobuildwp_2fa_app_password_users'] = [];
+            $GLOBALS['wppilot_kit_2fa_app_password_users'] = [];
             TF\remember_application_password_user(null);
             TF\remember_application_password_user('7');
             self::assertSame([], TF\application_password_users());
@@ -555,7 +555,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityTwoFactor {
                 self::assertSame([7], TF\application_password_users());
                 self::assertNotContains(8, TF\application_password_users());
             }
-            $GLOBALS['gobuildwp_2fa_app_password_users'] = [];
+            $GLOBALS['wppilot_kit_2fa_app_password_users'] = [];
         }
     }
 }

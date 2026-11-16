@@ -37,7 +37,6 @@ final class ProUpsellCatalogTest extends TestCase
         $by_label = array_column(\wppilot_pro_integration_catalog(), null, 'label');
         $expected = [
             'UpdraftPlus' => ['backups', 'class', 'UpdraftPlus', 1],
-            'Duplicator' => ['backups', 'class', 'Duplicator\\Package\\DupPackage', 1],
             'BackWPup' => ['backups', 'class', 'BackWPup', 1],
             'Wordfence' => ['security', 'constant', 'WORDFENCE_VERSION', 5],
             'Solid Security' => ['security', 'class', 'ITSEC_Core', 5],

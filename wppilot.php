@@ -9,7 +9,7 @@ declare(strict_types=1);
  * Plugin Name: GoBuildWP
  * Plugin URI: https://gobuildwp.com
  * Description: WordPress MCP server with free Elementor MCP editing. Connects Claude, Codex, Cursor and other AI clients to typed WordPress abilities over MCP, with OAuth 2.1, safety profiles, change evidence and rollback.
- * Version: 1.20.1
+ * Version: 1.21.0
  * Requires at least: 6.9
  * Requires PHP: 8.0
  * Update URI: https://gobuildwp.com/wppilot/
@@ -113,6 +113,7 @@ add_action('rest_api_init', callback: 'wppilot_register_missing_mcp_endpoint', p
 // uses them, capabilities and environment before anything that gates on them.
 require_once __DIR__ . '/includes/filesystem.php';
 require_once __DIR__ . '/includes/sandbox/guards.php';
+require_once __DIR__ . '/includes/file-write-guard.php';
 require_once __DIR__ . '/includes/capabilities.php';
 require_once __DIR__ . '/includes/environment.php';
 require_once __DIR__ . '/includes/app-password-blockers.php';
@@ -122,20 +123,47 @@ require_once __DIR__ . '/includes/admin/ui.php';
 require_once __DIR__ . '/includes/abilities/registry.php';
 require_once __DIR__ . '/includes/abilities/policy.php';
 require_once __DIR__ . '/includes/safety.php';
+require_once __DIR__ . '/includes/read-mode.php';
+require_once __DIR__ . '/includes/agent-pause.php';
+require_once __DIR__ . '/includes/wp-cli-policy.php';
+require_once __DIR__ . '/includes/rest-bridge.php';
+require_once __DIR__ . '/includes/post-lock.php';
+require_once __DIR__ . '/includes/access/ip-allowlist.php';
+require_once __DIR__ . '/includes/access/drafts-only.php';
+require_once __DIR__ . '/includes/access/connection-levels.php';
+require_once __DIR__ . '/includes/access/ability-hold.php';
+require_once __DIR__ . '/includes/config-locks.php';
+require_once __DIR__ . '/includes/access/connection-survival.php';
+wppilot_connection_survival_register_hooks();
+require_once __DIR__ . '/includes/output-guard.php';
 require_once __DIR__ . '/includes/rate-limit.php';
 require_once __DIR__ . '/includes/gate-pipeline.php';
+require_once __DIR__ . '/includes/mcp-kill-switch.php';
 require_once __DIR__ . '/includes/confirmation.php';
+require_once __DIR__ . '/includes/approvals/log.php';
+require_once __DIR__ . '/includes/approvals/session.php';
+wppilot_approval_log_register_hooks();
 require_once __DIR__ . '/includes/foreign-gate.php';
 require_once __DIR__ . '/includes/change-log.php';
 require_once __DIR__ . '/includes/change-log-table.php';
+require_once __DIR__ . '/includes/idempotency.php';
+require_once __DIR__ . '/includes/write-receipts.php';
+require_once __DIR__ . '/includes/ledger-chain.php';
 require_once __DIR__ . '/includes/change-sessions.php';
 require_once __DIR__ . '/includes/restore-points.php';
 require_once __DIR__ . '/includes/clients.php';
 require_once __DIR__ . '/includes/connections.php';
+require_once __DIR__ . '/includes/mcp/request-log.php';
 require_once __DIR__ . '/includes/tokens.php';
+require_once __DIR__ . '/includes/device-auth.php';
+add_action('rest_api_init', callback: 'wppilot_device_register_routes');
 require_once __DIR__ . '/includes/agent-identities.php';
 require_once __DIR__ . '/includes/agent-sessions.php';
 require_once __DIR__ . '/includes/ledger-map.php';
+require_once __DIR__ . '/includes/content-guard.php';
+require_once __DIR__ . '/includes/safe-fetch.php';
+require_once __DIR__ . '/includes/child-theme.php';
+require_once __DIR__ . '/includes/widgets.php';
 require_once __DIR__ . '/includes/privacy.php';
 require_once __DIR__ . '/includes/rest/transport-hardening.php';
 
@@ -146,7 +174,7 @@ add_filter('rest_post_dispatch', callback: 'wppilot_harden_rest_response', prior
 // these modules answer MCP 2026-07-28, which removed the handshake and sessions
 // entirely. The dispatcher only claims a request that carries modern per-request
 // _meta, so legacy traffic reaches the adapter untouched.
-foreach (['protocol', 'errors', 'headers', 'results', 'discover', 'transport', 'confirmation'] as $wppilot_mcp_module) {
+foreach (['protocol', 'errors', 'headers', 'results', 'discover', 'tool-modes', 'transport', 'confirmation'] as $wppilot_mcp_module) {
     require_once __DIR__ . '/includes/mcp/' . $wppilot_mcp_module . '.php';
 }
 unset($wppilot_mcp_module);
@@ -161,6 +189,7 @@ require_once __DIR__ . '/includes/mcp/skill-resources.php';
 // the modern transport. extensions.php is the transport's single hook-in point for both.
 require_once __DIR__ . '/includes/mcp/tasks.php';
 require_once __DIR__ . '/includes/mcp/apps.php';
+require_once __DIR__ . '/includes/mcp/approval-card.php';
 require_once __DIR__ . '/includes/mcp/extensions.php';
 \WPPilot\Mcp\ServerCard\register();
 \WPPilot\Mcp\SkillResources\register();
@@ -213,6 +242,7 @@ require_once __DIR__ . '/includes/troubleshoot/bootstrap.php';
 require_once __DIR__ . '/includes/admin/instructions.php';
 require_once __DIR__ . '/includes/admin/settings.php';
 require_once __DIR__ . '/includes/admin/confirm.php';
+require_once __DIR__ . '/includes/admin/device.php';
 require_once __DIR__ . '/includes/admin/dashboard.php';
 require_once __DIR__ . '/includes/admin/home.php';
 require_once __DIR__ . '/includes/admin/notifications.php';
@@ -220,6 +250,8 @@ require_once __DIR__ . '/includes/preview/bootstrap.php';
 if (is_admin()) {
     // admin-post.php counts as admin, so the screen's undo and download handlers load too.
     require_once __DIR__ . '/includes/admin/changes/changes.php';
+    require_once __DIR__ . '/includes/admin/approvals.php';
+    require_once __DIR__ . '/includes/admin/request-log.php';
 }
 // Basic Elementor support. Self-gating: the module checks for Elementor and its
 // version floor before loading anything, so this require is inert on a site
@@ -233,6 +265,15 @@ wppilot_register_lifecycle_hooks();
 
 add_action('plugins_loaded', callback: 'wppilot_safety_maybe_install', priority: 4);
 add_filter('mcp_adapter_pre_tool_call', callback: 'wppilot_safety_pre_mcp_tool_call', priority: 5, accepted_args: 2);
+wppilot_read_mode_register_hooks();
+wppilot_agents_pause_register_hooks();
+wppilot_ip_allowlist_register_hooks();
+wppilot_drafts_only_register_hooks();
+wppilot_connection_levels_register_hooks();
+wppilot_ability_hold_register_hooks();
+wppilot_config_locks_register_hooks();
+wppilot_ledger_chain_register_hooks();
+wppilot_output_guard_register_hooks();
 // WordPress 7.1 and newer. Inert on 6.9 and 7.0, where the filter never fires
 // and the ability policy's unregistration remains the only enforcement.
 add_filter(

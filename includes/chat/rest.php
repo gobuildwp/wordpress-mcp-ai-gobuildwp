@@ -441,11 +441,20 @@ function wppilot_chat_rest_execute_tool(WP_REST_Request $request): array|WP_Erro
     }
     // @mago-expect analysis:mixed-assignment
     $result = wppilot_chat_prepare_tool_result($prepared['ability_name'], $result);
+    // The result goes to the model provider: redact secrets, and flag instruction-like text
+    // beside the result (never inside it) so the model sees it as site content.
+    $guarded = wppilot_output_guard($prepared['ability_name'], $result, 'chat');
+    // @mago-expect analysis:mixed-assignment
+    $result = $guarded['result'];
+    $content_safety = wppilot_output_guard_meta($guarded);
 
     $now = time();
     $tool_calls = wppilot_chat_session_list($session, key: 'tool_calls');
     $tool_calls[$call_index]['status'] = 'succeeded';
     $tool_calls[$call_index]['result'] = $result;
+    if ($content_safety !== null) {
+        $tool_calls[$call_index]['content_safety'] = $content_safety;
+    }
     $tool_calls[$call_index]['updated_at'] = $now;
     $session['tool_calls'] = $tool_calls;
     $session['status'] = 'idle';

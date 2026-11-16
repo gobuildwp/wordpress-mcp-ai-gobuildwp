@@ -87,9 +87,16 @@ function wppilot_activate_current_site(): void
     wppilot_tokens_schema_install();
     wppilot_changes_install_and_migrate();
     wppilot_safety_maybe_install();
+    // Before the AI abilities toggle, whose stored value is what marks an install as not fresh.
+    wppilot_confirmation_default_on_activate();
     wppilot_enable_ai_abilities_on_activate();
     wppilot_pro_upsell_on_activate();
     wppilot_telemetry_on_activate();
+    // A page cache may still hold the discovery documents from before activation; the purge runs
+    // on the next wp_loaded, once the cache plugins have registered their purge hooks.
+    if (function_exists('WPPilot\\OAuth\\DiscoveryCache\\mark_pending')) {
+        \WPPilot\OAuth\DiscoveryCache\mark_pending();
+    }
 }
 
 /**
@@ -135,6 +142,29 @@ function wppilot_telemetry_on_activate(): void
  * The safety profile is untouched, so a fresh install still comes up on
  * Production Safe with code execution, filesystem and database access blocked.
  */
+/**
+ * A new install starts with a person approving destructive calls.
+ *
+ * "Agent self-confirm" (confirm=true) lets the AI approve its own destructive calls, so it is no
+ * longer what a fresh site gets. An existing install keeps whatever it ran with, stored or not,
+ * because changing how its agents must confirm on an update would break them without warning.
+ * Fresh means nothing at all was ever stored: no confirmation mode and no AI abilities decision.
+ */
+function wppilot_confirmation_default_on_activate(): void
+{
+    if (!defined('WPPILOT_CONFIRMATION_MODE_OPTION')) {
+        return;
+    }
+    if (
+        get_option(WPPILOT_CONFIRMATION_MODE_OPTION, default_value: null) !== null
+        || get_option('wppilot_ai_abilities_enabled', default_value: null) !== null
+    ) {
+        return;
+    }
+
+    add_option(WPPILOT_CONFIRMATION_MODE_OPTION, 'human');
+}
+
 function wppilot_enable_ai_abilities_on_activate(): void
 {
     if (!function_exists('wppilot_enable_ai_abilities')) {
@@ -176,6 +206,10 @@ function wppilot_deactivate_current_site(): void
     // Re-created on the next admin request after reactivation while the site is still paired.
     wp_clear_scheduled_hook(WPPILOT_CLOUD_HEARTBEAT_HOOK);
     wp_clear_scheduled_hook(WPPILOT_CHANGES_PRUNE_HOOK);
+    // approvals/log.php may not be loaded (a unit test that loads lifecycle.php alone).
+    if (defined('WPPILOT_APPROVAL_LOG_PRUNE_HOOK')) {
+        wp_clear_scheduled_hook(WPPILOT_APPROVAL_LOG_PRUNE_HOOK);
+    }
     // Expired restore points are copies of site files under uploads; a deactivated plugin no longer
     // runs the hourly cleanup, so drop them now. Unexpired ones stay for undo after reactivation.
     wp_clear_scheduled_hook('gobuildwp_restore_points_cleanup');

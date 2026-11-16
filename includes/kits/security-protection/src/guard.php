@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace GoBuildWP\Kits\SecurityProtection;
 
+use WPPilot\Kits\Runtime;
 use WP_Error;
 
 if (!defined('ABSPATH')) {
@@ -22,7 +23,9 @@ if (!defined('ABSPATH')) {
  */
 function install_hooks(): void
 {
-    if (defined('GOBUILDWP_DISABLE_PROTECTION') && constant('GOBUILDWP_DISABLE_PROTECTION') === true) {
+    // On init, not here: the kit runtime that names the firewall folder may not be loaded yet.
+    add_action('init', __NAMESPACE__ . '\\prepend_cleanup_stub');
+    if (Runtime\flag('WPPILOT_KIT_DISABLE_PROTECTION')) {
         return;
     }
     $settings = settings();
@@ -74,7 +77,7 @@ function install_hooks(): void
     add_filter('rest_authentication_errors', __NAMESPACE__ . '\\filter_rest_auth', 99, 1);
     // A deferred decision on a request WordPress doesn't serve as REST (WordPress serves REST on
     // parse_request and exits) is enforced here instead of being dropped.
-    if (isset($GLOBALS['gobuildwp_sp_deferred'])) {
+    if (isset($GLOBALS['wppilot_kit_sp_deferred'])) {
         add_action('parse_request', __NAMESPACE__ . '\\enforce_deferred', PHP_INT_MAX, 0);
         add_action('admin_init', __NAMESPACE__ . '\\enforce_deferred', 0, 0);
         add_action('login_init', __NAMESPACE__ . '\\enforce_deferred', 0, 0);
@@ -92,11 +95,11 @@ function rest_path_prefix(): string
 /** Blocks a request whose decision waited for REST authentication that never came. */
 function enforce_deferred(): void
 {
-    $d = $GLOBALS['gobuildwp_sp_deferred'] ?? null;
+    $d = $GLOBALS['wppilot_kit_sp_deferred'] ?? null;
     if (!is_array($d)) {
         return;
     }
-    $GLOBALS['gobuildwp_sp_deferred'] = null;
+    $GLOBALS['wppilot_kit_sp_deferred'] = null;
     act(['action' => 'block'] + $d, $d['ip'], $d['path']);
 }
 
@@ -177,7 +180,7 @@ function decide(array $ctx, array $settings, array $blocks, ?array $blocklist = 
 }
 
 /** @var array{action: string, type: string, rule: string, detail: string, ip: string, path: string}|null */
-$GLOBALS['gobuildwp_sp_deferred'] = null;
+$GLOBALS['wppilot_kit_sp_deferred'] = null;
 
 /**
  * @param array<string, mixed> $settings
@@ -210,7 +213,7 @@ function guard_request(array $settings): void
 function act(array $decision, string $ip, string $path): void
 {
     if ($decision['action'] === 'defer') {
-        $GLOBALS['gobuildwp_sp_deferred'] = $decision + ['ip' => $ip, 'path' => $path];
+        $GLOBALS['wppilot_kit_sp_deferred'] = $decision + ['ip' => $ip, 'path' => $path];
         return;
     }
     $action = $decision['action'] === 'log' ? 'logged' : 'blocked';
@@ -254,11 +257,7 @@ function cookie_user(): array
 /** Whether this request carries the access token paired with GoBuildWP Cloud. */
 function cloud_token_call(): bool
 {
-    if (!function_exists('wppilot_current_token_id') || !function_exists('wppilot_cloud_token_is_linked') || !function_exists('wppilot_cloud_link')) {
-        return false;
-    }
-    $token = wppilot_current_token_id();
-    return $token > 0 && wppilot_cloud_token_is_linked($token, wppilot_cloud_link());
+    return Runtime\has_host() && Runtime\host()->extension('cloud-token-call') === true;
 }
 
 /**
@@ -266,11 +265,11 @@ function cloud_token_call(): bool
  */
 function filter_rest_auth(mixed $result): mixed
 {
-    $d = $GLOBALS['gobuildwp_sp_deferred'] ?? null;
+    $d = $GLOBALS['wppilot_kit_sp_deferred'] ?? null;
     if (!is_array($d) || is_wp_error($result)) {
         return $result;
     }
-    $GLOBALS['gobuildwp_sp_deferred'] = null;
+    $GLOBALS['wppilot_kit_sp_deferred'] = null;
     if (current_user_can('manage_options') || cloud_token_call()) {
         return $result;
     }
@@ -278,7 +277,7 @@ function filter_rest_auth(mixed $result): mixed
     if ($d['type'] === 'firewall') {
         escalate($d['ip']);
     }
-    return new WP_Error('gobuildwp_blocked', 'Blocked by website protection. Reference: ' . $event['id'], ['status' => 403]);
+    return new WP_Error(Runtime\public_name('wppilot_kit_blocked'), 'Blocked by website protection. Reference: ' . $event['id'], ['status' => 403]);
 }
 
 function respond_blocked(string $ref, string $message): void
@@ -311,13 +310,15 @@ function filter_authenticate(mixed $user, mixed $username = '', mixed $password 
 {
     $settings = settings();
     $ip = current_ip();
-    if ($ip !== '' && !ip_in_list($ip, $settings['allowlist']) && block_for($ip, blocks(), true) !== null) {
-        return new WP_Error('gobuildwp_locked', '<strong>Error:</strong> Too many failed logins from your address. Try again later.');
+    // A lockout recorded against a shared proxy address (before this check existed) would refuse
+    // every visitor; ignore it rather than keep the whole site locked out.
+    if ($ip !== '' && !ip_in_list($ip, $settings['allowlist']) && !ip_is_shared_proxy($_SERVER, $ip) && block_for($ip, blocks(), true) !== null) {
+        return new WP_Error(Runtime\public_name('wppilot_kit_locked'), '<strong>Error:</strong> Too many failed logins from your address. Try again later.');
     }
     if ($settings['login']['generic_errors'] && is_wp_error($user)) {
         $code = $user->get_error_code();
         if (in_array($code, ['invalid_username', 'invalid_email', 'incorrect_password'], true)) {
-            return new WP_Error('gobuildwp_login_failed', '<strong>Error:</strong> The username or password is incorrect.');
+            return new WP_Error(Runtime\public_name('wppilot_kit_login_failed'), '<strong>Error:</strong> The username or password is incorrect.');
         }
     }
     return $user;
@@ -332,6 +333,11 @@ function on_login_failed(mixed $username = ''): void
     }
     $name = is_string($username) ? substr($username, 0, 60) : '';
     record_event('login', 'failed', $ip, 'login_failed', '', $name !== '' ? 'User: ' . $name : '');
+    // Behind Cloudflare or a reverse proxy with the IP source left on REMOTE_ADDR, every visitor
+    // shares this address: counting failures against it would lock everyone out after five typos.
+    if (ip_is_shared_proxy($_SERVER, $ip)) {
+        return;
+    }
     if (note_failure($ip, $settings['login'])) {
         $minutes = (int) $settings['login']['lockout_minutes'];
         add_block($ip, $minutes, 'Too many failed logins', 'login_lockout');

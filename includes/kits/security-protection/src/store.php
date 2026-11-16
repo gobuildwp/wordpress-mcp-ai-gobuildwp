@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace GoBuildWP\Kits\SecurityProtection;
 
 use WP_Error;
+use WPPilot\Kits\Runtime;
 
 if (!defined('ABSPATH')) {
     exit();
@@ -76,7 +77,7 @@ function settings(): array
 function sanitize_settings(array $change, array $base): array|WP_Error
 {
     $out = $base;
-    $bad = static fn(string $what): WP_Error => new WP_Error('gobuildwp_protection_invalid', sprintf('Invalid setting: %s.', $what));
+    $bad = static fn(string $what): WP_Error => new WP_Error(Runtime\public_name('wppilot_kit_protection_invalid'), sprintf('Invalid setting: %s.', $what));
     foreach ($change as $key => $value) {
         switch ($key) {
             case 'firewall':
@@ -269,28 +270,28 @@ function add_block(string $ip, int $minutes, string $reason, string $source, ?in
     $now ??= time();
     $cidr = normalize_cidr($ip);
     if ($cidr === '') {
-        return new WP_Error('gobuildwp_protection_invalid', 'Invalid setting: ip must be an IP address or CIDR range.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_protection_invalid'), 'Invalid setting: ip must be an IP address or CIDR range.');
     }
     if ($minutes < 0 || $minutes > 525600) {
-        return new WP_Error('gobuildwp_protection_invalid', 'Invalid setting: minutes must be 0–525600.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_protection_invalid'), 'Invalid setting: minutes must be 0–525600.');
     }
     // A /8 or a /32 of IPv6 shuts out whole providers, the owner's own office among them.
     if (str_contains($cidr, '/')) {
         $bits = (int) substr($cidr, (int) strpos($cidr, '/') + 1);
         $min = str_contains($cidr, ':') ? MIN_BLOCK_PREFIX_V6 : MIN_BLOCK_PREFIX_V4;
         if ($bits < $min) {
-            return new WP_Error('gobuildwp_protection_invalid', sprintf('Invalid setting: a blocked range must be /%d or narrower.', $min));
+            return new WP_Error(Runtime\public_name('wppilot_kit_protection_invalid'), sprintf('Invalid setting: a blocked range must be /%d or narrower.', $min));
         }
     }
     if (ip_in_list($cidr, settings()['allowlist'])) {
-        return new WP_Error('gobuildwp_protection_allowlisted', 'That address is on the allowlist; remove it there first.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_protection_allowlisted'), 'That address is on the allowlist; remove it there first.');
     }
     // A block asked for by a person or an agent must not shut out the person asking: the address of
     // this request, or the addresses the signed-in user logged in from.
     if ($source === 'manual') {
         foreach (array_merge([current_ip()], login_ips(get_current_user_id())) as $own) {
             if ($own !== '' && ip_matches($own, $cidr)) {
-                return new WP_Error('gobuildwp_protection_self_block', 'That block would lock out your own address. Block a narrower range or a different address.');
+                return new WP_Error(Runtime\public_name('wppilot_kit_protection_self_block'), 'That block would lock out your own address. Block a narrower range or a different address.');
             }
         }
     }
@@ -510,7 +511,7 @@ function status(array $server): array
         'client_ip_source' => $settings['ip_source'],
         'client_ip' => client_ip($server, $settings['ip_source']),
         'trusted_proxies' => trusted_proxies(),
-        'protection_disabled' => defined('GOBUILDWP_DISABLE_PROTECTION') && constant('GOBUILDWP_DISABLE_PROTECTION') === true,
+        'protection_disabled' => Runtime\flag('WPPILOT_KIT_DISABLE_PROTECTION'),
         'proxy_headers_seen' => proxy_headers_seen($server),
         'recent' => events(20),
     ];

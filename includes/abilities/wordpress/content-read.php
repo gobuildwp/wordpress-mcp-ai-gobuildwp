@@ -194,6 +194,8 @@ function wordpress_get_content(array $input): array|WP_Error
     if (($input['include_content'] ?? true) === true) {
         $result['content'] = $post->post_content;
         $result['content_sha256'] = hash('sha256', $post->post_content);
+        // A later content write from this agent is checked against what it saw here.
+        \wppilot_content_note_read((int) $post->ID);
     }
     if (($input['include_meta'] ?? false) === true) {
         $result['meta'] = wordpress_public_post_meta($post->ID);

@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace GoBuildWP\Kits\SecurityLive;
 
+use WPPilot\Kits\Runtime;
+
 if (!defined('ABSPATH')) {
     exit();
 }
@@ -14,9 +16,10 @@ if (!defined('ABSPATH')) {
 /**
  * Failed sign-ins, rolled up: counts per network (IPv4 /24, IPv6 /48) in a short window and
  * records one event when a network or the whole site crosses a threshold, never one per attempt.
- * Nothing is blocked; the counts live in one small option.
+ * Nothing is blocked; the counts live in one small option, read and written under the host's
+ * public name for it (Runtime\public_name()), so a site keeps the counts it already has.
  */
-const LOGINS_OPTION = 'gobuildwp_live_login_failures';
+const LOGINS_OPTION = 'wppilot_kit_live_login_failures';
 const LOGIN_WINDOW = 900;
 const LOGIN_NETWORK_THRESHOLD = 10;
 const LOGIN_SITE_THRESHOLD = 50;
@@ -48,7 +51,7 @@ function login_network(?string $remote = null): string
 function login_state(int $now): array
 {
     /** @var mixed $raw */
-    $raw = get_option(LOGINS_OPTION, []);
+    $raw = get_option(Runtime\public_name(LOGINS_OPTION), []);
     $raw = is_array($raw) ? $raw : [];
     $fresh = static fn(mixed $w): bool => is_array($w) && isset($w['start'], $w['count']) && is_int($w['start']) && is_int($w['count']) && $w['start'] > $now - LOGIN_WINDOW;
     $norm = static fn(array $w): array => ['start' => (int) $w['start'], 'count' => (int) $w['count'], 'flagged' => !empty($w['flagged'])];
@@ -99,7 +102,7 @@ function on_login_failed(mixed $username = '', ?int $now = null, ?string $remote
             $state['nets'] = array_slice($state['nets'], -LOGIN_MAX_NETWORKS, null, true);
         }
     }
-    update_option(LOGINS_OPTION, $state, false);
+    update_option(Runtime\public_name(LOGINS_OPTION), $state, false);
 }
 
 /** wp_login: a sign-in from a network that just had a burst of failures is worth a look. */

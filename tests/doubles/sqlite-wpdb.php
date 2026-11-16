@@ -273,3 +273,8 @@ if (!defined('HOUR_IN_SECONDS')) {
 if (!defined('ARRAY_A')) {
     define('ARRAY_A', 'ARRAY_A');
 }
+
+// The name exported kit tests use (see Kit_Test_State in wordpress.php).
+if (!class_exists('Kit_Test_Sqlite_Wpdb', false)) {
+    class_alias(WPPilot_Test_Sqlite_Wpdb::class, 'Kit_Test_Sqlite_Wpdb');
+}

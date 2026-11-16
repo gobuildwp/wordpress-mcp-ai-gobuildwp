@@ -56,6 +56,7 @@ function wppilot_build_paste_to_agent_paragraph(
         '',
         'Connection details:',
         '- Server URL: ' . $rest_url,
+        '- Fallback URL, if the server URL answers 403 or 404: ' . wppilot_mcp_fallback_url('mcp/wppilot'),
         '- Username: ' . $username,
         '- Application password: ' . $password_value,
         '- Server name to use in the config: ' . $name_placeholder,
@@ -669,7 +670,7 @@ function wppilot_handle_download_mcpb(): void
     }
 
     $username = wp_get_current_user()->user_login;
-    $rest_url = rest_url('mcp/wppilot');
+    $rest_url = wppilot_mcp_endpoint_url('mcp/wppilot');
 
     $mcp_name = is_string($_POST['wppilot_mcpb_name'] ?? null)
         ? (string) preg_replace('/[^a-z0-9-]/', replacement: '', subject: sanitize_key(wp_unslash($_POST['wppilot_mcpb_name'])))

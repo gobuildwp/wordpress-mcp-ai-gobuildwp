@@ -153,6 +153,13 @@ final class ClientRepository implements ClientRepositoryInterface
 
     public function validateClient(mixed $clientIdentifier, mixed $clientSecret, mixed $grantType): bool
     {
+        if (
+            function_exists('WPPilot\\OAuth\\AppApproval\\is_approved')
+            && !\WPPilot\OAuth\AppApproval\is_approved((string) $clientIdentifier)
+        ) {
+            return false;
+        }
+
         return $this->getClientEntity($clientIdentifier) !== null;
     }
 

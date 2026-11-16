@@ -92,12 +92,103 @@ final class WPPilotHost implements Host, ProfileGate
             // Whether this request is a GoBuildWP Cloud call whose signature verified (Security Guardian R3).
             return function_exists('gobuildwp_cloud_request_verified') && \gobuildwp_cloud_request_verified();
         }
+        if ($point === 'cloud-token-call') {
+            // Whether this request carries the access token paired with GoBuildWP Cloud.
+            if (!function_exists('wppilot_current_token_id') || !function_exists('wppilot_cloud_token_is_linked') || !function_exists('wppilot_cloud_link')) {
+                return false;
+            }
+            $token = \wppilot_current_token_id();
+            return $token > 0 && \wppilot_cloud_token_is_linked($token, \wppilot_cloud_link());
+        }
+        if ($point === 'cloud-rest-namespace') {
+            // The REST namespace GoBuildWP Cloud calls this site's routes under.
+            return 'gobuildwp/v1';
+        }
+        if ($point === 'cloud-rest-permission') {
+            // The permission callback of GoBuildWP's own Cloud REST routes: the linked token, signed.
+            return function_exists('wppilot_cloud_rest_permission') ? 'wppilot_cloud_rest_permission' : null;
+        }
+        if ($point === 'cloud-note-event') {
+            // Records an event and schedules one push of it to GoBuildWP Cloud.
+            return function_exists('wppilot_cloud_note_event')
+                ? static function (string $event): void {
+                    \wppilot_cloud_note_event($event);
+                }
+                : null;
+        }
+        if ($point === 'protected-option-prefixes') {
+            // GoBuildWP's own options: they hold the connection's tokens, the Cloud pairing and its
+            // safety settings. A security fix never cleans them, and the search-replace kit's
+            // options target never reads or writes them.
+            return ['gobuildwp_', 'wppilot_'];
+        }
+        if ($point === 'auto-redirects-elsewhere') {
+            // GoBuildWP Pro creates slug-change redirects in the site's redirect plugin itself.
+            return function_exists('WPPilot\\Pro\\Abilities\\Redirects\\auto_redirect_boot');
+        }
+        if ($point === 'protected-table-prefixes') {
+            // GoBuildWP's own tables (ledger, tokens, connections), which db-write never changes.
+            return ['gobuildwp_', 'wppilot_'];
+        }
+        if ($point === 'protected-tables') {
+            /**
+             * Tables db-write must never change, with or without the site prefix. Can only add names.
+             *
+             * @param list<string> $tables
+             */
+            return apply_filters('wppilot_db_protected_tables', []);
+        }
+        if ($point === 'unscanned-option-prefixes') {
+            // GoBuildWP's own preview options, which the database scan skips as it skips the kits' own.
+            return ['wppilot_preview_'];
+        }
         if ($point === 'cloud-unpaired') {
             // Whether a site not connected to GoBuildWP Cloud may still use its PageSpeed proxy.
             // The WordPress.org edition contacts the Cloud only once an administrator connects it.
             return function_exists('wppilot_is_wordpress_org_edition') ? !\wppilot_is_wordpress_org_edition() : null;
         }
+        if ($point === 'public-name') {
+            // The names the kits went by before they could be exported; see public_name().
+            return [self::class, 'public_name'];
+        }
+        if ($point === 'cloud-name') {
+            return 'GoBuildWP Cloud';
+        }
         return apply_filters('wppilot_kit_extension', null, $point);
+    }
+
+    /**
+     * GoBuildWP's public name for one of a kit's own names.
+     *
+     * The security kits shipped inside GoBuildWP before they could be exported, under names sites
+     * and clients already depend on: result codes Cloud matches (gobuildwp_security_fix_unchanged,
+     * gobuildwp_cloud_pro_required), the GOBUILDWP_DISABLE_2FA and GOBUILDWP_DISABLE_PROTECTION
+     * lockout escape hatches and GOBUILDWP_TRUSTED_PROXIES in wp-config.php, the stored
+     * gobuildwp_live_login_failures option, the wp-content/gobuildwp-protection folder and the
+     * markers that tell the pre-WordPress firewall's files and .user.ini/.htaccess blocks apart.
+     * The kits now spell those in their own wppilot_kit_ form, which the exporter renames for
+     * another plugin; this maps them back, so nothing a GoBuildWP site already has changes.
+     *
+     * Kit options already named gobuildwp_kit_* never pass through here.
+     */
+    public static function public_name(string $name): string
+    {
+        $exact = [
+            'wppilot-kit pre-WordPress firewall' => 'GoBuildWP pre-WordPress firewall',
+            '; BEGIN wppilot-kit protection' => '; BEGIN GoBuildWP protection',
+            '; END wppilot-kit protection' => '; END GoBuildWP protection',
+            '# BEGIN wppilot-kit protection' => '# BEGIN GoBuildWP protection',
+            '# END wppilot-kit protection' => '# END GoBuildWP protection',
+        ];
+        if (isset($exact[$name])) {
+            return $exact[$name];
+        }
+        foreach (['wppilot_kit_' => 'gobuildwp_', 'WPPILOT_KIT_' => 'GOBUILDWP_', 'wppilot-kit-' => 'gobuildwp-'] as $kit => $public) {
+            if (str_starts_with($name, $kit)) {
+                return $public . substr($name, strlen($kit));
+            }
+        }
+        return $name;
     }
 
     /**
@@ -225,6 +316,33 @@ un_ability().
     public function confirm_guard(string $ability_name, array $input): bool|WP_Error
     {
         return true;
+    }
+}
+
+/**
+ * Filters the kits fired under GoBuildWP names before they could be exported: each kit-form hook
+ * also runs the callbacks on its old name, so a snippet or Pro's rescue installer that hooks
+ * gobuildwp_live_known_file (or a gobuildwp_protection_* filter) keeps working. Kit hook => [old
+ * hook, accepted args].
+ */
+const LEGACY_FILTERS = [
+    'wppilot_kit_protection_trusted_proxies' => ['gobuildwp_protection_trusted_proxies', 1],
+    'wppilot_kit_protection_cloudflare_ranges' => ['gobuildwp_protection_cloudflare_ranges', 1],
+    'wppilot_kit_protection_prepend_root' => ['gobuildwp_protection_prepend_root', 1],
+    'wppilot_kit_protection_prepend_site_root' => ['gobuildwp_protection_prepend_site_root', 1],
+    'wppilot_kit_live_known_file' => ['gobuildwp_live_known_file', 3],
+];
+
+/** Hook each kit-form filter in LEGACY_FILTERS to its old name; called once, when the kits boot. */
+function bridge_legacy_filters(): void
+{
+    foreach (LEGACY_FILTERS as $kit_hook => [$old_hook, $args]) {
+        add_filter(
+            $kit_hook,
+            static fn(mixed ...$values): mixed => apply_filters($old_hook, ...$values),
+            10,
+            $args,
+        );
     }
 }
 

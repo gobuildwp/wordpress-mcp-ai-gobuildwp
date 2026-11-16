@@ -296,6 +296,19 @@ function consent_grant_details(string $scope, ?bool $directory_edition = null): 
 {
     $directory_edition ??= \wppilot_is_wordpress_org_edition();
 
+    if ($scope === 'mcp:read') {
+        return [
+            'label' => __('read-only access to your WordPress site', domain: 'wppilot'),
+            'description' => __(
+                'Read-only access permits running GoBuildWP abilities that only read: content, settings, and reports. Nothing on the site can be changed through this grant.',
+                domain: 'wppilot',
+            ),
+            'risks' => [
+                __('Read posts, pages, settings, and other site data your account can see.', domain: 'wppilot'),
+            ],
+        ];
+    }
+
     return [
         'label' => __('full access to your WordPress site', domain: 'wppilot'),
         'description' => __(

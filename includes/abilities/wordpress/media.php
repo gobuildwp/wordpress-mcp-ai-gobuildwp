@@ -205,7 +205,9 @@ function wordpress_import_media_url(array $input): array|WP_Error
     require_once ABSPATH . 'wp-admin/includes/media.php';
     require_once ABSPATH . 'wp-admin/includes/image.php';
 
-    $temporary = download_url($url, timeout: 30);
+    // Not download_url(): it resolves the host again after the check above and follows
+    // redirects anywhere. This resolves, checks and pins every hop (includes/safe-fetch.php).
+    $temporary = \wppilot_safe_download_url($url, 30);
     if (is_wp_error($temporary)) {
         // download_url() reports every refused download as code http_404, whatever the real
         // status, with only the reason phrase ("Bad Request") as message: it names neither

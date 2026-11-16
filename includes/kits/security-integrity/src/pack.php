@@ -7,13 +7,15 @@ declare(strict_types=1);
 
 namespace GoBuildWP\Kits\SecurityIntegrity;
 
+use WPPilot\Kits\Runtime;
+
 if (!defined('ABSPATH')) {
     exit();
 }
 
 /**
  * The rule pack: extra suspicious-code rules and known-bad file hashes that GoBuildWP Cloud sends
- * between plugin releases (POST gobuildwp/v1/cloud/rules).
+ * between plugin releases (POST /cloud/rules under the host's Cloud REST namespace).
  *
  * A pack is taken only from a request whose GoBuildWP Cloud signature this site verified; never
  * from an MCP tool's arguments, an unsigned call or any other credential. Every rule is checked
@@ -111,8 +113,8 @@ function validate_rule(mixed $rule): ?array
  */
 function accept_pack(mixed $body): array|\WP_Error
 {
-    if (!function_exists('gobuildwp_cloud_request_verified') || !\gobuildwp_cloud_request_verified()) {
-        return new \WP_Error('gobuildwp_rules_unsigned', 'Only a signed GoBuildWP Cloud request may change the rule pack.', ['status' => 403]);
+    if (!\WPPilot\Kits\Runtime\has_host() || \WPPilot\Kits\Runtime\host()->extension('cloud-verified') !== true) {
+        return new \WP_Error(Runtime\public_name('wppilot_kit_rules_unsigned'), 'Only a signed request from the cloud service may change the rule pack.', ['status' => 403]);
     }
     $offered = is_array($body) ? ($body['pack'] ?? null) : null;
     $stored = pack();
@@ -124,7 +126,7 @@ function accept_pack(mixed $body): array|\WP_Error
     }
     $pack = validate_pack($offered);
     if ($pack === null) {
-        return new \WP_Error('gobuildwp_rules_invalid', 'The rule pack could not be read.', ['status' => 400]);
+        return new \WP_Error(Runtime\public_name('wppilot_kit_rules_invalid'), 'The rule pack could not be read.', ['status' => 400]);
     }
     update_option(PACK_OPTION, ['version' => $pack['version'], 'rules' => $pack['rules'], 'hashes' => $pack['hashes'], 'at' => time()], false);
     pack_reset();
@@ -132,7 +134,7 @@ function accept_pack(mixed $body): array|\WP_Error
 }
 
 /**
- * POST gobuildwp/v1/cloud/rules.
+ * POST /cloud/rules under the host's Cloud REST namespace.
  *
  * @param mixed $request
  * @return mixed array|\WP_Error

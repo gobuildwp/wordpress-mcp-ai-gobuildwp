@@ -14,8 +14,8 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * search-replace: find and replace across posts and post meta from a reviewed, stored plan, with
- * one undoable ledger row per post.
+ * search-replace: find and replace across posts and post meta, or across site options, from a reviewed, stored plan, with
+ * one undoable ledger row per post or option.
  *
  * The job kind is registered on every request, not only when an apply queues one: the Runner's
  * cron tick runs in a later request, and a kind nobody registered there leaves the job waiting.
@@ -24,6 +24,7 @@ require_once __DIR__ . '/src/engine.php';
 require_once __DIR__ . '/src/plans.php';
 require_once __DIR__ . '/src/scan.php';
 require_once __DIR__ . '/src/apply.php';
+require_once __DIR__ . '/src/options.php';
 
 return [
     'ability_files' => [
@@ -34,5 +35,6 @@ return [
     ],
     'boot' => static function (Host $host): void {
         $host->jobs()->register(JOB_KIND, static fn(array $payload, array $state): array => job_step($payload, $state));
+        register_option_strategy($host->ledger());
     },
 ];

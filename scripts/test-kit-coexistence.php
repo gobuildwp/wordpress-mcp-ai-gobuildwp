@@ -63,9 +63,14 @@ const PREFIX = 'kitprobe';
 
 /**
  * Names WordPress itself owns. Both copies reading or taking core's cron lock is the point, not a
- * collision: it is how each one stays out of the way of wp-cron.
+ * collision: it is how each one stays out of the way of wp-cron. So is reading core's update
+ * transients, and listening to (or, finishing a two-factor login as core would, firing) core's
+ * login and XML-RPC hooks.
  */
-const CORE_NAMES = ['transient' => ['doing_cron' => true]];
+const CORE_NAMES = [
+    'transient' => ['doing_cron' => true, 'update_plugins' => true, 'update_themes' => true],
+    'hook' => ['wp_login' => true, 'wp_login_failed' => true, 'xmlrpc_enabled' => true],
+];
 const NS = 'KitProbe\\Kits';
 
 /** Call => [kind, argument position, argument name]. */
@@ -94,7 +99,7 @@ const NAMING_CALLS = [
  * WordPress's own options. Every plugin reads them (which page is the front page, the site name),
  * so two copies of a kit both naming one is the site being read, not a clash between the copies.
  */
-const CORE_OPTIONS = ['show_on_front', 'page_on_front', 'page_for_posts', 'blogname', 'blogdescription', 'home', 'siteurl', 'permalink_structure', 'blog_public', 'gmt_offset'];
+const CORE_OPTIONS = ['show_on_front', 'page_on_front', 'page_for_posts', 'blogname', 'blogdescription', 'home', 'siteurl', 'permalink_structure', 'blog_public', 'gmt_offset', 'users_can_register', 'default_role', 'active_plugins', 'wp_page_for_privacy_policy'];
 
 /**
  * Storage kinds a kit.json `vendor_storage` may declare, and the kind this gate files each under.
@@ -172,6 +177,10 @@ function static_names(array $files): array
             // WordPress's own keys (_wp_attachment_image_alt, _wp_attached_file) are shared by
             // every plugin that edits media; both copies writing them is the point, not a clash.
             if (str_starts_with($value, '_wp_')) {
+                continue;
+            }
+            // A ledger strategy name (OPTION_STRATEGY = 'kits/search-replace-option') is not storage.
+            if (str_contains($name, 'STRATEGY')) {
                 continue;
             }
             if (preg_match('/OPTION|TRANSIENT|META|KEY/', $name) === 1) {
@@ -378,6 +387,8 @@ function load_both(string $free, string $pro, string $export, string $installed 
     // A network: a kit that skips itself on a single site (multisite) must load here, or its
     // names are never compared.
     \WPPilot_Test_State::$multisite = true;
+    // An empty database, so a read-only ability that queries one runs instead of fataling.
+    $GLOBALS['wpdb'] = new \Kit_Coexistence_Wpdb();
 
     // What WPPilotHost calls; the rest of GoBuildWP is not loaded here.
     $stubs = [
@@ -392,6 +403,16 @@ function load_both(string $free, string $pro, string $export, string $installed 
         'wppilot_safety_check_ability' => static fn(\WP_Ability $ability): bool|\WP_Error => min_profile_above_production($ability->get_meta())
             ? new \WP_Error('wppilot_safety_profile_blocked', 'blocked by the stubbed Production Safe profile')
             : true,
+        // WordPress's own URL check, which the test doubles do not define (the runtime's Page fetch uses it).
+        'wp_http_validate_url' => static fn(string $url): string|false => filter_var($url, FILTER_VALIDATE_URL) !== false ? $url : false,
+        // More of WordPress the doubles leave out, which the launch-check and bot-access kits call.
+        'trailingslashit' => static fn(string $value): string => rtrim($value, '/' . chr(92)) . '/',
+        'site_url' => static fn(string $path = ''): string => home_url($path),
+        'is_ssl' => static fn(): bool => true,
+        'get_the_title' => static fn(mixed $post = 0): string => '',
+        'get_permalink' => static fn(mixed $post = 0): string|false => false,
+        // No network here: a page fetch fails the way an unreachable site does.
+        'wp_safe_remote_get' => static fn(string $url, array $args = []): \WP_Error => new \WP_Error('http_request_failed', 'no network in the coexistence gate'),
     ];
     $GLOBALS['kit_coexistence_stubs'] = $stubs;
     foreach (array_keys($stubs) as $function) {
@@ -511,11 +532,22 @@ function load_both(string $free, string $pro, string $export, string $installed 
             }
             continue;
         }
-        if (($args['permission_callback'])([]) !== true) {
+        $permission = ($args['permission_callback'])([]);
+        if ($permission instanceof \WP_Error && str_ends_with($permission->get_error_code(), '_cloud_pro_required')) {
+            // A Cloud-only action (require_cloud_request()): refused here, where no Cloud call is
+            // being served, exactly as on a site. That refusal is the behaviour under test.
+            continue;
+        }
+        if ($permission !== true) {
             $problems[] = "{$name}: permission refused for an administrator";
             continue;
         }
-        $result = ($args['execute_callback'])([]);
+        try {
+            $result = ($args['execute_callback'])([]);
+        } catch (\Error $error) {
+            $problems[] = "{$name}: " . $error->getMessage();
+            continue;
+        }
         // A read that needs input (a search string, a job id, an attachment) refuses an empty call
         // with a 4xx WP_Error; that still proves it loaded and ran on its own runtime. Anything
         // else (a 5xx, a non-array) is a real failure.

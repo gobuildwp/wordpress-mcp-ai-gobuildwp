@@ -157,6 +157,9 @@ wp_register_ability('wppilot/revert-template', [
             return new WP_Error('kit_block_theme_template_missing', 'No such template.', ['status' => 404]);
         }
         if (($found['source'] ?? '') !== 'custom') {
+            // Nothing changes: discard the ledger row the host opened for this call (an empty
+            // batch records nothing), so a no-op leaves no change-log entry.
+            Runtime\host()->ledger()->record_items('wppilot/revert-template', []);
             return ['id' => $id, 'reverted' => false, 'reason' => 'This template is not customised; it already is the theme file\'s version.'];
         }
         if (!($found['has_theme_file'] ?? false)) {

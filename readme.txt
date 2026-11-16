@@ -4,7 +4,7 @@ Tags: mcp, ai, claude, elementor, agent
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.20.1
+Stable tag: 1.21.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -178,6 +178,39 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 
 == Changelog ==
 
+= 1.21.0 =
+* New: maintenance mode with a 503 page and Retry-After for 1 minute to 7 days, switching itself off, and scheduled windows up to 30 days ahead. Administrators still see the site.
+* New: admin IP lock for wp-login.php and wp-admin, with Cloudflare and proxy support. A list that would lock out the address saving it is refused.
+* New: redirects (301, 302, 410) with hit counts, a path tracer and suggestions from the 404 log. Loops and long chains are refused; a published page whose URL changes gets a 301.
+* New: classic widgets: list widget areas, add, change, move and remove widgets, with undo.
+* New: gutenberg-edit-block edits one block by path; markdown-to-blocks turns Markdown into core blocks.
+* New: read-pdf returns the text of a Media Library PDF page by page; create-child-theme creates a child theme with undo.
+* New: search-replace can change site options as well as posts; bulk-moderate-comments moderates up to 100 comments in one call.
+* New: get-rendered-html, bot-access-report (which search and AI crawlers robots.txt lets in) and launch-checklist.
+* New: REST bridge (rest-request) to the site's own REST API, one namespace at a time, once an administrator switches it on.
+* New: db-insert-row, db-update-rows and db-delete-rows for a plugin's own tables, on Developer Full Access only, with undo.
+* New: WP-CLI command rules (db drop, eval, shell and similar are refused), version pins with expect, and in-process reads where proc_open or the wp binary is missing.
+* New: Pause agents from the admin bar, Settings or GoBuildWP Cloud, with signed, replay-proof pause and resume and an "Only resume locally" option.
+* New: GoBuildWP Cloud bulk writes that need a person are queued for approval on each site, with Approve all and Deny all.
+* New: in-chat approval card; new installs start on "A person approves".
+* New: write receipts, idempotency_key on writes, and verify-change-log for the SHA-256 hash-chained change ledger.
+* New: per-connection access levels, a Drafts only token level, an MCP IP allowlist, approval for new OAuth apps, held new abilities, settings as code, an MCP request log and a connection survival kit.
+* Security: WPPILOT_DISABLE_MCP switches off all AI agent access from wp-config.php.
+* Security: write-file, edit-file and enable-file refuse PHP that would not parse and write atomically.
+* Security: import-media-url checks every redirect hop and IPv6 address and pins the connection to the checked address.
+* Security: an approval for a destructive call is bound to the state of what it writes to.
+* Fixed: a content write that removes more than half a page's text or media is refused until the user agrees; a write after someone else edited the post, or while it is open in the editor, is refused.
+* Fixed: undoing a post change after a newer edit is refused and names what moved (force=true overrides); undo after a visitor commented no longer reports a failed restore.
+* Fixed: Read Only connections and narrow tokens get a refusal that names the connection or token, not the safety profile.
+* Fixed: moderate-comment undo on an approved comment; stale .well-known OAuth documents in page caches; Diagnostics can repair missing OAuth tables.
+
+= 1.20.2 =
+* Fixed: OAuth answered HTTP 500 on every MCP call when WPS Hide Login (or another plugin checking the login state during plugins_loaded) was active with pretty permalinks.
+
+= 1.20.1 =
+* Fixed: GoBuildWP and GoBuildWP Pro stay active during native WordPress updates, so GoBuildWP Cloud can reconnect and verify the installed version.
+* Fixed: plugin startup requests WordPress's configured higher memory limit, covering front-end requests and update health checks.
+
 = 1.20.0 =
 * New: website protection is on from activation: login lockout, user-enumeration blocking and the firewall in log mode work without GoBuildWP Cloud. Define GOBUILDWP_DISABLE_PROTECTION as true in wp-config.php to switch it all off.
 * New: a pre-WordPress firewall. GoBuildWP Cloud can install a small PHP file that PHP loads before WordPress and every plugin, so blocked addresses, the reputation blocklist and XML-RPC (when it is off) are refused even while the site is broken. It is removed on deactivation and uninstall.
@@ -270,6 +303,15 @@ The PHP dependencies under `vendor/` are installed with `composer install --no-d
 Earlier versions are listed in CHANGELOG.txt, included with the plugin.
 
 == Upgrade Notice ==
+
+= 1.21.0 =
+Maintenance mode, admin IP lock, redirects, widgets, single-block edits, Markdown import, PDF reading, child themes, a REST bridge and Pause agents, plus content-loss, stale-read and editor-lock guards, write receipts and a hash-chained audit log.
+
+= 1.20.2 =
+Fixes HTTP 500 on every MCP call when WPS Hide Login is active.
+
+= 1.20.1 =
+Keeps GoBuildWP active during native updates and requests the higher memory limit at startup.
 
 = 1.20.0 =
 Protection is on by default (login lockout, enumeration block, firewall in log mode). Adds a pre-WordPress firewall and a fleet-wide reputation blocklist from GoBuildWP Cloud, binds Cloud requests to each site, and fixes several permission checks.

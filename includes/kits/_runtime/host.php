@@ -51,7 +51,20 @@ interface Host
      * `cloud-sign` a callable that signs a payload for it ({base, body, headers}, or null when the
      * site is not paired). `cloud-verified` is true only while the host is serving a request from
      * its cloud service whose signature it verified; kits reach it through
-     * Runtime\require_cloud_request().
+     * Runtime\require_cloud_request(). `cloud-token-call` is true when the request carries the
+     * access token paired with the cloud service; `cloud-rest-namespace` the REST namespace the
+     * cloud service calls this site under, `cloud-rest-permission` the permission callback
+     * of the host's own cloud REST routes, and `cloud-note-event` a callable taking an event name
+     * that tells the cloud service something changed (each null when the host has none).
+     * `protected-option-prefixes` and `unscanned-option-prefixes` list the host's own option
+     * prefixes a kit must not change, and need not scan. `protected-table-prefixes` lists the
+     * host's own table name prefixes (after the site prefix) a kit must not write rows to, and
+     * `protected-tables` further table names (with or without the site prefix) the site protects.
+     * `auto-redirects-elsewhere` is true when the host creates slug-change redirects itself, so a
+     * kit must not create them too.
+     * `public-name` is a callable taking one of the kit's own names (a result code, constant,
+     * folder or marker) and returning the name the host shows for it; kits reach it through
+     * Runtime\public_name(). `cloud-name` is the cloud service's display name, for messages.
      */
     public function extension(string $point): mixed;
 

@@ -690,6 +690,8 @@ final class CloudPairingTest extends TestCase
             'php_version' => PHP_VERSION,
             'pro_version' => null,
             'safety_profile' => 'production',
+            'agents_paused' => ['paused' => false, 'pinned' => false, 'by' => 0, 'at' => 0, 'source' => '', 'reason' => '', 'actor' => '', 'resume_local_only' => false],
+            'cloud_approvals' => [],
             'abilities_enabled' => true,
             'home_url' => 'https://example.test',
             'updates' => ['checked_at' => null, 'core' => null, 'plugins' => [], 'themes' => [], 'translations' => 0],

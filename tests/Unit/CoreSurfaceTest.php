@@ -48,7 +48,7 @@ final class CoreSurfaceTest extends TestCase
     public function testCoreSurfaceRegistersWithFreeAlone(): void
     {
         self::assertNotEmpty(WPPILOT_TEST_BOOT_ABILITIES);
-        self::assertCount(62, WPPILOT_TEST_BOOT_ABILITIES);
+        self::assertCount(71, WPPILOT_TEST_BOOT_ABILITIES);
     }
 
     public function testNoAbilityIsRegisteredTwice(): void
@@ -88,25 +88,32 @@ final class CoreSurfaceTest extends TestCase
             'wppilot/list-media', 'wppilot/get-media', 'wppilot/import-media-url',
             'wppilot/update-media', 'wppilot/delete-media',
             'wppilot/set-featured-image', 'wppilot/remove-featured-image',
-            'wppilot/attach-media', 'wppilot/detach-media',
+            'wppilot/attach-media', 'wppilot/detach-media', 'wppilot/read-pdf',
             // Comments.
             'wppilot/list-comments', 'wppilot/get-comment', 'wppilot/create-comment',
             'wppilot/update-comment', 'wppilot/moderate-comment', 'wppilot/delete-comment',
+            'wppilot/bulk-moderate-comments',
             // Menus.
             'wppilot/list-menus', 'wppilot/list-menu-items', 'wppilot/upsert-menu-item',
             'wppilot/delete-menu-item', 'wppilot/create-menu', 'wppilot/update-menu',
             'wppilot/delete-menu', 'wppilot/list-menu-locations', 'wppilot/assign-menu-location',
             'wppilot/reorder-menu-items',
+            // Widgets.
+            'wppilot/list-widgets', 'wppilot/add-widget', 'wppilot/update-widget', 'wppilot/remove-widget',
+            // Rendered output.
+            'wppilot/get-rendered-html',
             // Revisions.
             'wppilot/list-revisions', 'wppilot/get-revision', 'wppilot/restore-revision',
             // Users and settings.
             'wppilot/list-users', 'wppilot/get-user',
             'wppilot/get-site-settings', 'wppilot/update-site-settings',
+            // REST bridge.
+            'wppilot/rest-request',
             // Plugins and themes.
             'wppilot/list-extensions', 'wppilot/search-extensions', 'wppilot/get-extension',
             'wppilot/activate-plugin', 'wppilot/deactivate-plugin', 'wppilot/update-plugin',
             'wppilot/install-plugin', 'wppilot/delete-plugin',
-            'wppilot/switch-theme', 'wppilot/update-theme',
+            'wppilot/switch-theme', 'wppilot/update-theme', 'wppilot/create-child-theme',
             'wppilot/install-theme', 'wppilot/delete-theme',
         ];
 

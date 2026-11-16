@@ -36,6 +36,12 @@ wp_register_ability('wppilot/gutenberg-write-content', [
                 'description' => 'Top-level Gutenberg block specs: [{name, attributes, innerBlocks}]. Only registered wppilot/* dynamic-only blocks are accepted here.',
                 'items' => ['type' => 'object', 'additionalProperties' => true],
             ],
+            'confirm_content_loss' => [
+                'type' => 'boolean',
+                'default' => false,
+                'description' => 'Set true only when the user wants this write even though it removes more than half the visible text or media, or overwrites an edit made after you read the post. Separate from confirm, which every call to this ability needs.',
+            ],
+            'wait_seconds' => \wppilot_post_lock_wait_schema(),
         ],
         'required' => ['block_spec'],
         'anyOf' => [
@@ -106,7 +112,16 @@ function gutenberg_write_content(array $input): array|WP_Error
         return $dynamic_error;
     }
 
+    $locked = \wppilot_post_lock_guard($target->ID, \wppilot_post_lock_wait_seconds($input['wait_seconds'] ?? 0));
+    if ($locked instanceof WP_Error) {
+        return $locked;
+    }
+
     $content = serialize_dynamic_blocks($blocks);
+    $loss = \wppilot_content_write_guard($target, $content, ($input['confirm_content_loss'] ?? false) === true);
+    if ($loss !== null) {
+        return $loss;
+    }
     $updated = wp_update_post(
         [
             'ID' => $target->ID,
@@ -120,6 +135,7 @@ function gutenberg_write_content(array $input): array|WP_Error
     if (is_wp_error($updated)) {
         return $updated;
     }
+    \wppilot_content_note_read($target->ID);
 
     return [
         'target_id' => $target->ID,

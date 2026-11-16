@@ -659,6 +659,29 @@ function wordpress_upsert_menu_item(array $input): array|WP_Error
 
         $args[$target] = (int) $input[$source];
     }
+    // A post_type or taxonomy item pointing at an object that does not exist is
+    // an orphan that list-menu-items hides, so refuse it before writing.
+    if (array_key_exists('object_id', $input) || array_key_exists('type', $input) || array_key_exists('object', $input)) {
+        $target_type = (string) ($args['menu-item-type'] ?? '');
+        $target_id = (int) ($args['menu-item-object-id'] ?? 0);
+        $target_object = (string) ($args['menu-item-object'] ?? '');
+        $missing = false;
+        if ($target_type === 'post_type') {
+            $target_post = $target_id > 0 ? get_post($target_id) : null;
+            $missing = !$target_post instanceof WP_Post
+                || ($target_object !== '' && $target_post->post_type !== $target_object);
+        } elseif ($target_type === 'taxonomy') {
+            $target_term = $target_id > 0 ? get_term($target_id, $target_object !== '' ? $target_object : '') : null;
+            $missing = !$target_term instanceof \WP_Term;
+        }
+        if ($missing) {
+            return new WP_Error(
+                'wppilot_menu_item_object_not_found',
+                __('The menu item target object does not exist.', domain: 'wppilot'),
+                ['status' => 404, 'type' => $target_type, 'object' => $target_object, 'object_id' => $target_id],
+            );
+        }
+    }
     if (array_key_exists('classes', $input)) {
         $args['menu-item-classes'] = implode(' ', array_filter(array_map(
             static fn(mixed $class): string => sanitize_html_class((string) $class),

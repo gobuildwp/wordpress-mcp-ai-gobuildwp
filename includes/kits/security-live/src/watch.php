@@ -215,7 +215,7 @@ function queue_buckets(array $buckets): void
     /** @var mixed $queued */
     $queued = get_option(QUEUE_OPTION, []);
     $queued = is_array($queued) ? $queued : [];
-    $queued = array_slice(array_values(array_unique([...$queued, ...$buckets])), 0, 50);
+    $queued = array_slice(array_values(array_unique(array_merge($queued, $buckets))), 0, 50);
     update_option(QUEUE_OPTION, $queued, false);
     if (function_exists('wp_schedule_single_event') && function_exists('wp_next_scheduled')) {
         $at = time() + 60;
@@ -380,7 +380,7 @@ function take_queued(array $cursor): array
             unset($tail[$i]);
         }
     }
-    $cursor['buckets'] = [...$head, ...$front, ...array_values($tail)];
+    $cursor['buckets'] = array_merge($head, $front, array_values($tail));
     return $cursor;
 }
 
@@ -410,12 +410,12 @@ function finish_cycle(array &$cursor, int $now): void
 
 /**
  * Record a new must-use plugin or wp-content PHP file: high, unless a GoBuildWP plugin
- * vouches for it. The `gobuildwp_live_known_file` filter returns a note when the file is
+ * vouches for it. The `wppilot_kit_live_known_file` filter returns a note when the file is
  * one it wrote, byte for byte (GoBuildWP Pro's Site Rescue); that is logged as info.
  */
 function record_added(string $abs, string $path, string $area, string $rule, ?int $now = null): bool
 {
-    $known = apply_filters('gobuildwp_live_known_file', null, $abs, $path);
+    $known = apply_filters('wppilot_kit_live_known_file', null, $abs, $path);
     if (is_string($known) && $known !== '') {
         return record('info', 'file_added', $path, ['path' => $path, 'area' => $area, 'result' => 'added', 'rule_id' => $rule, 'note' => $known], $now) > 0;
     }

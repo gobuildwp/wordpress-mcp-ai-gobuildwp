@@ -49,17 +49,19 @@ return [
         });
         // GoBuildWP Cloud's rule pack. The route answers only a request whose Cloud signature
         // verified (src/pack.php accept_pack); the engine loads only when it is called.
-        add_action('rest_api_init', static function (): void {
-            if (!function_exists('register_rest_route') || !function_exists('wppilot_cloud_rest_permission')) {
+        add_action('rest_api_init', static function () use ($host): void {
+            $namespace = $host->extension('cloud-rest-namespace');
+            $permission = $host->extension('cloud-rest-permission');
+            if (!function_exists('register_rest_route') || !is_string($namespace) || $namespace === '' || !is_callable($permission)) {
                 return;
             }
-            register_rest_route('gobuildwp/v1', '/cloud/rules', [
+            register_rest_route($namespace, '/cloud/rules', [
                 'methods' => 'POST',
                 'callback' => static function ($request) {
                     require_once __DIR__ . '/src/load.php';
                     return rest_rules($request);
                 },
-                'permission_callback' => 'wppilot_cloud_rest_permission',
+                'permission_callback' => $permission,
             ]);
         });
     },

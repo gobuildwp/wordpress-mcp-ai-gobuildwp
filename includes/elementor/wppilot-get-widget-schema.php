@@ -509,7 +509,8 @@ function schema_get_widgets(array $input): array
 
     $response = [
         'success' => true,
-        'widgets' => $widgets,
+        // An empty PHP array would encode as a JSON list; keep it a map.
+        'widgets' => $widgets === [] ? new \stdClass() : $widgets,
     ];
 
     if ($missing !== []) {

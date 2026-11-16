@@ -162,6 +162,10 @@ function wppilot_render_connect_page(): void
          */ ?>
         <?php wppilot_render_dashboard_sections(); ?>
 
+        <?php wppilot_ip_allowlist_render_panel(); ?>
+
+        <?php wppilot_connection_level_render_panel(); ?>
+
         <?php if (!$mcp_ready && wppilot_get_mcp_passwords() !== []): ?>
             <?php wppilot_render_manage_passwords_section(context: 'disabled'); ?>
         <?php endif; ?>
@@ -438,10 +442,11 @@ function wppilot_render_connect_client_section(
     $password_active =
         !$token_active && wppilot_password_method_preselected($new_password, $existing_password, $existing_error);
     $has_password = $new_password !== null || $existing_password !== null;
-    $rest_url = rest_url('mcp/wppilot');
+    // The fallback ?rest_route= form once Diagnostics has seen /wp-json/ blocked.
+    $rest_url = wppilot_mcp_endpoint_url('mcp/wppilot');
     // OAuth lives on its own MCP server so the canonical route above stays Application-Password-only
     // and untouched by the OAuth challenge. See wppilot_register_oauth_mcp_server().
-    $oauth_rest_url = rest_url('mcp/wppilot-oauth');
+    $oauth_rest_url = wppilot_mcp_endpoint_url('mcp/wppilot-oauth');
     $username = wp_get_current_user()->user_login;
     $display_password = $new_password ?? $existing_password ?? 'YOUR-APP-PASSWORD';
     ?>

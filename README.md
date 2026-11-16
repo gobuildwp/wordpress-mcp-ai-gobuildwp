@@ -1,7 +1,7 @@
 # GoBuildWP: WordPress MCP server and AI website builder for Claude, ChatGPT, Cursor and Codex
 
 <!-- current-releases:start -->
-Current releases: **GoBuildWP Free 1.20.0 / Pro 1.14.4**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
+Current releases: **GoBuildWP Free 1.21.0 / Pro 1.14.5**. Pro requires Free 1.18.1 or newer; that minimum is not the latest Free release.
 <!-- current-releases:end -->
 
 [![Version](https://img.shields.io/github/v/release/gobuildwp/wordpress-mcp-ai-gobuildwp?color=6D28D9&label=version)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases)
@@ -17,32 +17,62 @@ Current releases: **GoBuildWP Free 1.20.0 / Pro 1.14.4**. Pro requires Free 1.18
 
 > **GoBuildWP was previously called WPPilot.** It is the same plugin, with the same slug and settings, and existing installs keep working.
 
-Website: <https://gobuildwp.com> · Docs: <https://gobuildwp.com/docs> · Client setup guides: <https://gobuildwp.com/wordpress-mcp> · Release notes and build demos on X: <https://x.com/gobuildwp>
+Website: <https://gobuildwp.com> · Docs: <https://gobuildwp.com/docs> · Client setup guides: <https://gobuildwp.com/wordpress-mcp> · Video tutorials: <https://www.youtube.com/@Gobuildwpai> · Release notes on X: <https://x.com/gobuildwp>
 
 ---
 
-## What's new in 1.19.0
+## What's new in 1.21.0
 
-- **Security scans with GoBuildWP Cloud.** File integrity against the official WordPress.org checksums, PHP hidden in uploads and images, and injected scripts and spam links in the database, scanned in the background in small steps.
-- **Fixes you can undo.** Quarantine or restore a file, clean an infected file or setting, demote an unexpected administrator, unpublish an injected post.
-- **Website protection.** Firewall, login lockouts, IP blocks, virtual patches for known plugin vulnerabilities, and two-factor sign-in for chosen roles. Security writes run only for a signed GoBuildWP Cloud request.
-- **Database cleanup and a 404 log.** Remove old spam, trashed comments and revisions with an undo, and see which paths return 404.
-- **AI change notifications in wp-admin.** A Dashboard widget, a notice and a menu count for changes AI agents made.
+The biggest free release yet: more ways for an AI agent to run a WordPress site, and more guards so it cannot break one. Full list: [CHANGELOG.txt](CHANGELOG.txt) and the [1.21.0 release notes](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases/tag/v1.21.0).
 
-## What's new in 1.18.8
+**New abilities**
 
-- **Works with strict MCP clients when ACF Pro is active.** ACF Pro's native no-input abilities declare a `"type": "null"` input schema, which made Cloudflare MCP Portals and other strict clients reject the whole tool list. Both transports now serve an empty object schema for them, and calling them with `{}` works.
-- **Safety hints on the modern transport.** `tools/list` now carries `readOnlyHint`, `destructiveHint`, `idempotentHint` and `openWorldHint`, as the legacy adapter did.
-- **Pro: custom premium WordPress themes with AI.** Describe the site to ChatGPT, Claude or your AI IDE and it writes a real classic or hybrid theme: PHP templates, CSS and JavaScript you own. GoBuildWP Pro keeps it as a managed project with source review, an isolated private preview, approved installation and activation, and recovery that never overwrites newer content. How it works: <https://gobuildwp.com/ai-wordpress-theme-builder> · Watch Claude build an animated agency theme: <https://www.youtube.com/watch?v=KJk96c-XW4c>
+- **Maintenance mode, with scheduled windows.** A 503 page with Retry-After for 1 minute to 7 days that switches itself off; administrators still see the site. Schedule it up to 30 days ahead.
+- **Admin IP lock.** Restrict wp-login.php and wp-admin to your IP addresses and ranges, with Cloudflare support. A list that would lock you out is refused.
+- **Redirects.** 301, 302 and 410 redirects with hit counts, a path tracer, and suggestions from the 404 log. Loops and long chains are refused; a page whose URL changes gets a 301 automatically.
+- **Classic widgets.** List widget areas, add, change, move and remove widgets, with undo.
+- **Edit one Gutenberg block** by path instead of resending the page, and **Markdown to blocks** for headings, lists, quotes, code, images and tables.
+- **Read a PDF** from the Media Library, page by page, in plain PHP.
+- **Create a child theme** so theme customisations survive the parent's next update.
+- **Search and replace in site options** (widgets, theme mods, plugin settings), not only posts.
+- **Bulk comment moderation**: approve, unapprove, spam or trash up to 100 comments in one call after a count preview.
+- **Rendered HTML**: the HTML a logged-out visitor is served, cache and all.
+- **Bot access report**: which search and AI crawlers (ChatGPT, Claude, Perplexity, Google and more) robots.txt lets in, and which actually visit.
+- **Pre-launch checklist**: search visibility, HTTPS, errors shown to visitors, favicon, analytics, privacy page, broken links.
+- **REST bridge**: call one namespace of the site's own REST API as the connected user, once an administrator switches it on.
+- **Database row writes** in a plugin's own table (Developer Full Access only), each row recorded for undo.
+- **WP-CLI without a wp binary**: core version, plugin and theme lists and option reads run in-process. Version pins (`expect`) stop a command written for one WooCommerce version running on another, and a deny list blocks `db drop`, `eval`, `shell` and similar.
 
-## What's new in 1.18.7
+**Safety and control**
 
-- **Build a whole Elementor page in one call.** `wppilot/elementor-build-page` takes the page as one nested description (`{type, settings, styles, children}`) on v3 containers or v4 atomic elements. The whole page is validated before anything is written, so a rejected widget never leaves a half-built page; the error carries that widget's compact schema so the agent can fix it in the next call. `dry_run=true` checks a description without touching the page, and the build is one undoable change.
-- **Style edits no longer wipe a layout.** `wppilot/elementor-edit-element` now merges styles property by property within the same breakpoint and state. Before, one small edit such as right-aligning a row deleted the row's other desktop styles and every tablet, mobile and hover variant.
-- **Clearer errors.** Block-note abilities say "No note has that ID" instead of "Permission denied" for an ID that does not exist, and `wppilot/import-media-url` names the host and the real HTTP status when a site refuses a download.
-- **Pro 1.13.0: whole websites in Elementor.** Plan every page and the menu in one checked call (`elementor-plan-site`), build the pages as drafts in short, resumable batches with a cross-page design review (`elementor-build-site`), then publish them with the front page and menu after a person approves (`elementor-publish-site`). Pages use the Elementor Canvas template by default, so the theme does not print a second header and page title above each page. The whole site, publish included, is one undo on the Changes screen.
+- **Pause agents** from the admin bar, Settings or GoBuildWP Cloud. Signed, replay-proof pause and resume from Cloud, with an "Only resume locally" option.
+- **Approve Cloud bulk writes on the site.** A Cloud job that needs a person queues one approval screen per site with Approve all / Deny all; the site, not Cloud, sets confirm.
+- **In-chat approval card.** New installs start on "A person approves", so the agent can no longer approve its own destructive calls.
+- **Content-loss guard**: a write that removes more than half a page's text or media is refused until the user agrees.
+- **Stale-read guard and editor lock**: an agent cannot overwrite edits made in the block editor after it read the post, or while someone has it open.
+- **Undo refuses to clobber newer edits** and names what moved; `force=true` overrides.
+- **Write receipts and idempotency keys**: every write returns its change id and the undo call, and a retried write with the same key runs once.
+- **Provable audit**: the change ledger is a SHA-256 hash chain; `wppilot/verify-change-log` finds the first edited or deleted row.
+- **Per-connection access levels, a Drafts only token level, an MCP IP allowlist, approval for new OAuth apps, held new abilities, settings as code, an MCP request log**, and `WPPILOT_DISABLE_MCP` to switch off all agent access from wp-config.php.
+- **Safe PHP file writes**: code that would not parse is refused and files are written atomically.
 
-Tested on WordPress 7.1 with Elementor 4.3.5 over a real MCP connection: every free read-only ability and the write abilities with their undo, a full landing page from one `elementor-build-page` call, and a three-page Pro site planned, built, published and rendered. Full history: [CHANGELOG.txt](CHANGELOG.txt).
+**Fixes**
+
+- Undo after a visitor commented on the post no longer reports a failed restore.
+- Read Only connections and narrow tokens now get a refusal that names the connection or token, not the safety profile.
+- `import-media-url` checks every redirect hop and IPv6 address and pins the connection, closing a server-side request forgery path.
+- OAuth no longer answers HTTP 500 on every MCP call when WPS Hide Login is active (1.20.2), stale `.well-known` OAuth documents are purged from page caches, and Diagnostics can repair missing OAuth tables.
+
+Watch the new features in action on the [GoBuildWP YouTube channel](https://www.youtube.com/@Gobuildwpai/videos).
+
+## Earlier releases
+
+- **1.20.1**: GoBuildWP and Pro stay active during native WordPress updates, so Cloud reconnects and verifies the new version; plugin startup asks for WordPress's higher memory limit.
+- **1.19.0**: security scans with GoBuildWP Cloud (file integrity, PHP in uploads, injected scripts and spam links), undoable fixes, firewall and login lockouts, two-factor sign-in, database cleanup, a 404 log and AI change notifications in wp-admin.
+- **1.18.8**: works with strict MCP clients when ACF Pro is active; `tools/list` carries read-only and destructive hints.
+- **1.18.7**: build a whole Elementor page in one call (`wppilot/elementor-build-page`), validated before anything is written, as one undoable change.
+
+Full history: [CHANGELOG.txt](CHANGELOG.txt).
 
 ## What GoBuildWP does
 
@@ -104,7 +134,7 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 
 ## What the free plugin can do
 
-236 registered abilities, plus one MCP prompt per skill you save. The WooCommerce, SEO, form, backup, security and Site Kit abilities register only while their plugin is active, and developer abilities only under Developer Full Access, so a fresh install with none of those plugins registers 170 on the default profile. Each ability can be switched off individually on the Abilities screen.
+262 registered abilities, plus one MCP prompt per skill you save. The WooCommerce, SEO, form, backup, security and Site Kit abilities register only while their plugin is active, and developer abilities only under Developer Full Access, so a fresh install with none of those plugins registers 177 on the default profile. Each ability can be switched off individually on the Abilities screen.
 
 <details>
 <summary><strong>Full table of free abilities by domain</strong></summary>
@@ -113,20 +143,21 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 | --- | --- | --- |
 | **Content** | `8` | List, search and read posts, pages and public custom post types. Create, update, trash, restore, and permanently delete with explicit confirmation. |
 | **Taxonomies** | `7` | Discover taxonomies, list and read terms, create, update, delete with confirmation, and assign terms to content. |
-| **Media** | `10` | List, read, import from a URL, search openly-licensed stock, update metadata and alt text, set and clear featured images, attach and detach, delete with confirmation. |
-| **Comments** | `6` | List and read with commenter email and IP withheld below `moderate_comments`. Reply, edit, approve, hold, spam, unspam, trash, restore, delete with confirmation. |
+| **Media** | `11` | List, read, read the text of a PDF, import from a URL, search openly-licensed stock, update metadata and alt text, set and clear featured images, attach and detach, delete with confirmation. |
+| **Comments** | `7` | List and read with commenter email and IP withheld below `moderate_comments`. Reply, edit, approve, hold, spam, unspam, trash, restore, delete with confirmation. Approve, unapprove, spam or trash up to 100 at a time by id or filter, after a count preview. |
 | **Menus** | `10` | Create, rename and delete menus, add, update, reorder and remove items, list theme locations and assign menus to them. |
+| **Widgets** | `4` | List the theme's widget areas with the block and legacy widgets in each. Add, change, move and remove a widget (to the inactive widgets, or deleted with confirmation). Legacy settings go through the widget's own save routine. Every write can be undone. |
 | **Revisions** | `3` | List with autosaves distinguished, read against the live post, and restore. |
 | **Users** | `4` | Privacy-minimized reads. Login name, roles and registration date need `list_users`; the email address needs `edit_users`. |
-| **Site** | `2` | Site information and an explicit settings allowlist. |
-| **Plugins and themes** | `12` | Search the WordPress.org plugin directory and read one extension in detail. Activate, deactivate, update and switch themes with explicit confirmation. Install and delete are Developer Full Access only: they write executable code to the server. |
-| **Gutenberg** | `11` | Block-editor content, staged pending changes and browser finalization for native blocks. |
+| **Site** | `3` | Site information, an explicit settings allowlist, and a REST bridge that calls the site's own REST API as the connected user, one namespace at a time once an administrator turns its Read or Write switch on. |
+| **Plugins and themes** | `13` | Search the WordPress.org plugin directory and read one extension in detail. Activate, deactivate, update and switch themes with explicit confirmation. Create a child theme of an installed theme, with undo. Install and delete are Developer Full Access only: they write executable code to the server. |
+| **Gutenberg** | `13` | Block-editor content, single-block edits by path, Markdown import, staged pending changes and browser finalization for native blocks. |
 | **Elementor** | `18` | Read a document, inspect the widgets and style properties this install offers, build a whole page from one description, and edit the element tree: add, edit, move, duplicate, reorder and delete. Page settings included. [Detail below.](#elementor-mcp-free-elementor-editing) |
 | **Design system** | `19` | Typed design tokens, saved designs and activation, plus the checks that grade a built page against them: contrast, composition, layout grammars and a rendered-page verification pass. |
-| **Preview** | `8` | Compute what a write would change without performing it, then apply the reviewed result. Plus a view link, so an agent with a browser can look at the page it built, including a draft, and a capture store that compares two screenshots of a page and reports which regions moved. |
+| **Preview** | `9` | Compute what a write would change without performing it, then apply the reviewed result. Plus a view link, so an agent with a browser can look at the page it built, including a draft, a capture store that compares two screenshots of a page and reports which regions moved, and the HTML a logged-out visitor is served for a page, with scripts and styles stripped on request. |
 | **Skills** | `4` + prompts | Reusable skills and site-wide instructions. Each saved skill also registers one MCP prompt, so this grows with the skills you write. |
-| **Changes** | `8` | Read the redacted change ledger, attributed to the agent credential that made each write, export it as rows for a client report or an audit, roll a change back, and undo or redo everything one agent session did. |
-| **Diagnostics** | `5` | Scoped health, performance and configuration-security checks, a Connection Doctor that finds what blocks an MCP client and names the fix, and a site issues log: the PHP fatal errors behind "There has been a critical error", with the file and plugin they came from, plus paused plugins, rolled-back updates and failed backups. |
+| **Changes** | `9` | Read the redacted change ledger, attributed to the agent credential that made each write, export it as rows for a client report or an audit, roll a change back, undo or redo everything one agent session did, and verify the ledger's hash chain to find the first row edited or deleted outside GoBuildWP. |
+| **Diagnostics** | `7` | Scoped health, performance and configuration-security checks, a pre-launch checklist (search visibility, HTTPS, errors shown to visitors, favicon, analytics, privacy page, broken links, forms to test), a bot access report (which search and AI crawlers robots.txt lets in and which visit), a Connection Doctor that finds what blocks an MCP client and names the fix, and a site issues log: the PHP fatal errors behind "There has been a critical error", with the file and plugin they came from, plus paused plugins, rolled-back updates and failed backups. |
 | **Search and replace** | `4` | Preview a search-and-replace across posts and their meta (serialized and builder JSON included) as a reviewed plan, apply only posts unchanged since, 100 per call or as a background job, cancel it, and undo one post or the whole run. |
 | **Media and accessibility** | `5` | Resize, crop, rotate or flip an image as a copy or in place, with undo. Audit a served page against WCAG 2.2, find images with missing or filename alt text, show an image to the model so it can write real alt text, and set alt text in bulk with undo. |
 | **Content audit** | `2` | Broken internal links, orphan pages, thin content, missing SEO descriptions and structured-data problems across the site, as a background job. |
@@ -136,7 +167,11 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 | **Block Notes** | `4` | Leave a note on a block for a person, reply, resolve, and read the notes they resolved. Every one can be undone. |
 | **Site tools** | `8` | WP-Cron list, run and delete (undoable), Site Health tests, transient flush, and, on Developer Full Access and audited, an options explorer and a read-only database SELECT with redaction. |
 | **Database cleanup** | `2` | Preview, then permanently remove spam comments, trashed comments and post revisions older than a number of days, oldest first and up to a limit, with undo through the change log. |
+| **Database rows** | `3` | On Developer Full Access, insert, update (up to 200) and delete (up to 50, confirmed) rows in a plugin's own table by an equality match and an expected row count, each row recorded for undo. WordPress core, credential and GoBuildWP tables are refused. |
 | **404 log** | `1` | The paths visitors hit that returned 404, most-hit first, with the referring host and when each was last seen, to find broken links and moved pages that need a redirect. |
+| **Maintenance mode** | `2` | Show visitors a 503 "down for maintenance" page with Retry-After for a set number of minutes, then switch back by itself. Administrators still see the site, with a notice in the admin bar; wp-admin, login and the REST API are never blocked. |
+| **Admin IP lock** | `2` | Restrict wp-login.php and wp-admin to a list of IP addresses and ranges, with Cloudflare and proxy support. A list that leaves out the address saving it is refused, the front end, REST API and admin-ajax are never restricted, and a wp-config.php constant or a WP-CLI command switches it off. |
+| **Redirects** | `5` | The site's own 301, 302 and 410 redirects, exact or by prefix: list with hit counts, create, delete with confirmation, trace where a path ends up, and turn the 404 log into suggested redirects. Loops, chains of more than 3 redirects and the dashboard, login and REST URLs are refused, every change can be undone, and a published page whose URL changes gets a 301 from its old one. |
 | **Multisite** | `2` | List a network's sites and run an ability on one of them through that site's own safety profile and gates. Loads only on a multisite network. |
 | **WooCommerce** | `13` | Check the setup, list and read products, variations, categories, tags and store settings, read orders and customers, and edit one product's name, description, prices and stock with undo. |
 | **SEO** | `14` | One post's SEO title, meta description and robots in Yoast SEO, Rank Math, All in One SEO, SEOPress, The SEO Framework, Slim SEO and SmartCrawl, read and set with undo. |
@@ -150,13 +185,37 @@ WordPress MCP servers differ most in what happens *after* an agent writes: who c
 
 Content creation is draft-first: an absent, blank or malformed status resolves to `draft` before any capability check, so nothing is published by accident.
 
-## Learn: videos and guides
+## Learn: video tutorials and guides
 
-- **Video: build a custom WordPress theme with Claude and GoBuildWP Pro.** From a creative brief to Afterglyph, an animated agency theme with GSAP and ScrollTrigger: site connection, the brief, private preview, approval and content editing. <https://www.youtube.com/watch?v=KJk96c-XW4c>
+Tutorials on the [GoBuildWP YouTube channel](https://www.youtube.com/@Gobuildwpai/videos):
+
+| Video | What you will see |
+| --- | --- |
+| [Connect WordPress to any AI client with MCP](https://www.youtube.com/watch?v=Rj5jkf1C8m8) | Install the free plugin and connect Claude, ChatGPT, Cursor or another MCP client. |
+| [Build a full Elementor website with one prompt](https://www.youtube.com/watch?v=Gg76mveBNO0) | Claude or ChatGPT builds a complete native Elementor site through the WordPress MCP. |
+| [Edit Elementor pages with AI prompts](https://www.youtube.com/watch?v=gg6ctghh26c) | Change headings, buttons and layouts on a live Elementor page from a chat. |
+| [WordPress SEO with AI, step by step](https://www.youtube.com/watch?v=9WFCpZpxOY0) | Claude or ChatGPT audits and fixes SEO titles, descriptions and content across the site. |
+| [Manage multiple WordPress sites with AI](https://www.youtube.com/watch?v=rl1bQ9Ygvvg) | One AI client, many sites, through the free MCP and GoBuildWP Cloud. |
+| [A premium WordPress theme from one AI prompt (Pro)](https://www.youtube.com/watch?v=KJk96c-XW4c) | Claude builds Afterglyph, an animated agency theme with GSAP: brief, private preview, approval and content editing. |
+
+Short demos:
+
+- [One WordPress plugin, 27 AI clients](https://www.youtube.com/watch?v=oKY0U2r16hM)
+- [I restyled an Elementor card without any CSS](https://www.youtube.com/watch?v=TBnu8ZLSX_s)
+- [Bulk SEO updates in WordPress, with a dry run first](https://www.youtube.com/watch?v=W-msiz0Umv8)
+- [My 7-step WordPress SEO checklist with AI](https://www.youtube.com/watch?v=Z4fsXgW9Blg)
+- [Which WordPress SEO tools are free?](https://www.youtube.com/watch?v=fMdqOJEL6PI)
+- [AI SEO works with Rank Math, Yoast and 5 more](https://www.youtube.com/watch?v=kqWK1oRSXBo)
+- [AI in WooCommerce: what is free and what is Pro](https://www.youtube.com/watch?v=efqSMrhgqRk)
+- [I let AI handle my WooCommerce orders](https://www.youtube.com/watch?v=kIdZIQzmjKY)
+- [Set up WooCommerce so AI never sees payment keys](https://www.youtube.com/watch?v=dSEby1XoZcM)
+
+Guides:
+
 - **AI WordPress theme builder (Pro):** how the managed theme workflow goes from brief to installed theme. <https://gobuildwp.com/ai-wordpress-theme-builder>
 - **Connect your AI client:** step-by-step setup for ChatGPT, Claude, Cursor and other MCP clients. <https://gobuildwp.com/wordpress-mcp>
 - **Documentation and ability reference:** <https://gobuildwp.com/docs>
-- **Release notes and build demos on X:** <https://x.com/gobuildwp>
+- **Release notes and build demos:** [YouTube](https://www.youtube.com/@Gobuildwpai) · [X](https://x.com/gobuildwp)
 
 ## Quick setup
 
@@ -258,7 +317,7 @@ GoBuildWP serves both protocol revisions during the migration window: the statel
 | **Gutenberg and blocks** | **Free**: block content, staged block batches, block themes (global styles, templates, patterns, navigation), Block Notes | **Pro**: GenerateBlocks, Kadence Blocks, Spectra and Spectra One modules (each needs that plugin) | — |
 | **Other page builders** | — (Free refuses writes that a builder would ignore, instead of reporting a false success) | **Pro**: Bricks, Divi, Oxygen, Beaver Builder, Breakdance, WPBakery, Etch, Mosaic, Flatsome UX Builder (each needs that builder) | — |
 | **WooCommerce** | **Free**: 13 abilities: catalogue, store, order and customer reads, and one product's name, description, prices and stock with undo (WooCommerce 9.0+) | **Pro**: 50 more: create and delete products, full product editing, bulk prices and stock, orders, refunds, coupons, store settings, sales reports | — |
-| **SEO** | **Free**: one post's SEO title, description and robots in 7 SEO plugins; site content audit (broken links, orphans, missing descriptions) | **Pro**: focus keywords, canonicals, social previews, schema, redirects, bulk SEO, reviewable content-fix plans | **Cloud Pro**: SEO report from Search Console, read through each site's Site Kit |
+| **SEO** | **Free**: one post's SEO title, description and robots in 7 SEO plugins; site content audit (broken links, orphans, missing descriptions); 301, 302 and 410 redirects with automatic redirects on a URL change and suggestions from the 404 log | **Pro**: focus keywords, canonicals, social previews, schema, regex redirects and redirects in SEO and redirect plugins, bulk SEO, reviewable content-fix plans | **Cloud Pro**: SEO report from Search Console, read through each site's Site Kit |
 | **PageSpeed and performance** | **Free**: PageSpeed Insights (Lighthouse, Core Web Vitals) with no Google key; performance health checks | **Pro**: cache plugin abilities (purge, settings, warm, measure) and step-by-step PageSpeed fix plans that re-measure after each change | **Cloud**: answers the free PageSpeed check when Site Kit cannot, no account needed |
 | **Security checks** | **Free**: configuration-security checks; Wordfence and Solid Security status, scan findings and lockouts | **Pro**: hardening plan you confirm, applied with before-and-after checks and rollback; IP block and unblock; start scans | — |
 | **Updates** | **Free**: update plugins and themes with explicit confirmation (recorded, not reversible) | **Pro**: safe updates: backup check, before-and-after page checks, automatic rollback, undo for 7 days | **Cloud**: see pending updates (sites on Free 1.18.0+). **Cloud Pro**: start updates from Cloud |
@@ -312,7 +371,7 @@ Every call is capability-checked against the connected WordPress user, so an age
 
 ## Gutenberg MCP and block themes
 
-Block editing is in the **free** plugin. An agent can read and write block-editor content, and stage changes as a pending batch. Core blocks are validated and serialised by the block editor's own JavaScript, so staged batches are finalised in a browser tab through the Block Editor Queue rather than written blind. The plugin says so instead of failing silently.
+Block editing is in the **free** plugin. An agent can read and write block-editor content, and stage changes as a pending batch. Core blocks are validated and serialised by the block editor's own JavaScript, so staged batches are finalised in a browser tab through the Block Editor Queue rather than written blind. The plugin says so instead of failing silently. One block can be changed by its path without resending the page, refused if it changed since the agent read it, and Markdown can be turned into native blocks.
 
 On a block theme, the free block themes abilities edit Global Styles, templates and template parts (header, footer), the site's own patterns and block navigation menus through WordPress's own REST controllers, and every change can be undone. Block Notes let an agent leave a note on a block for a person and read the ones they resolved. Pro adds modules for GenerateBlocks, Kadence Blocks, Spectra and Spectra One. [MCP for Gutenberg](https://gobuildwp.com/mcp-for-gutenberg)
 
@@ -490,7 +549,7 @@ Yes. Free reads the catalogue, store settings, orders and customers and edits on
 That is what the safety model is for. Start on Read Only and verify one call before allowing writes. Production Safe blocks raw PHP, WP-CLI, filesystem, database and extension installation; destructive calls need confirmation, optionally from a person; WordPress capabilities still apply; and supported changes can be undone.
 
 **Do I need Pro or Cloud?**
-No. The free plugin is a complete WordPress MCP server with 236 abilities and needs no licence, activation key or account. Pro and Cloud are optional.
+No. The free plugin is a complete WordPress MCP server with 262 abilities and needs no licence, activation key or account. Pro and Cloud are optional.
 
 **How does it relate to the WordPress Abilities API and the MCP Adapter?**
 It is built on both. Abilities are registered through the Abilities API, and the MCP Adapter is bundled to serve the legacy protocol revision. GoBuildWP adds authentication, safety profiles, confirmation gates, rate limiting, the change ledger with undo, and the abilities themselves.

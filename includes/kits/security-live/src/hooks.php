@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace GoBuildWP\Kits\SecurityLive;
 
 use GoBuildWP\Kits\SecurityIntegrity as SI;
+use WPPilot\Kits\Runtime;
 
 if (!defined('ABSPATH')) {
     exit();
@@ -59,7 +60,7 @@ function cron_schedules(mixed $schedules): mixed
         return $schedules;
     }
     $minutes = settings()['interval_minutes'];
-    $schedules[CRON_SCHEDULE] = ['interval' => $minutes * 60, 'display' => sprintf('Every %d minutes (GoBuildWP live security)', $minutes)];
+    $schedules[CRON_SCHEDULE] = ['interval' => $minutes * 60, 'display' => sprintf('Every %d minutes (live security)', $minutes)];
     return $schedules;
 }
 
@@ -318,16 +319,21 @@ function on_after_insert_post(mixed $post_id, mixed $post, mixed $update = false
     }
 }
 
-/** POST gobuildwp/v1/cloud/live: only the linked GoBuildWP Cloud token, signed like every Cloud write. */
+/**
+ * POST /cloud/live under the host's Cloud REST namespace: only the linked GoBuildWP Cloud token,
+ * signed like every Cloud write. Not registered when the host has no Cloud routes.
+ */
 function register_route(): void
 {
-    if (!function_exists('register_rest_route') || !function_exists('wppilot_cloud_rest_permission')) {
+    $namespace = Runtime\has_host() ? Runtime\host()->extension('cloud-rest-namespace') : null;
+    $permission = Runtime\has_host() ? Runtime\host()->extension('cloud-rest-permission') : null;
+    if (!function_exists('register_rest_route') || !is_string($namespace) || $namespace === '' || !is_callable($permission)) {
         return;
     }
-    register_rest_route('gobuildwp/v1', '/cloud/live', [
+    register_rest_route($namespace, '/cloud/live', [
         'methods' => 'POST',
         'callback' => __NAMESPACE__ . '\rest_live',
-        'permission_callback' => 'wppilot_cloud_rest_permission',
+        'permission_callback' => $permission,
     ]);
 }
 
@@ -358,7 +364,7 @@ function handle_live(array $body, ?int $now = null): array|\WP_Error
         || !is_int($seconds) || $seconds < 1 || $seconds > MAX_RUN_SECONDS
         || (isset($body['run']) && !is_bool($body['run']))
         || (isset($body['configure']) && !is_array($body['configure']))) {
-        return new \WP_Error('gobuildwp_live_invalid', 'Bad request.', ['status' => 400]);
+        return new \WP_Error(Runtime\public_name('wppilot_kit_live_invalid'), 'Bad request.', ['status' => 400]);
     }
     $configured = null;
     if (isset($body['configure']) && $body['configure'] !== []) {

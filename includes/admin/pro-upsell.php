@@ -88,8 +88,9 @@ function wppilot_pro_integration_catalog(): array
         ['label' => 'WS Form', 'category' => 'forms', 'constant' => 'WS_FORM_VERSION', 'abilities' => 4],
         // Backups and security. One Pro kit serves each group, so every plugin in it shows the
         // kit's whole ability count. The status reads moved to the free plugin in 1.16.0.
+        // Duplicator is not listed: Pro's one backup ability (wppilot/backup-trigger) cannot start
+        // a Duplicator backup, and its status is already read here, so Pro adds nothing for it.
         ['label' => 'UpdraftPlus', 'category' => 'backups', 'class' => 'UpdraftPlus', 'abilities' => 1],
-        ['label' => 'Duplicator', 'category' => 'backups', 'class' => 'Duplicator\\Package\\DupPackage', 'abilities' => 1],
         ['label' => 'BackWPup', 'category' => 'backups', 'class' => 'BackWPup', 'abilities' => 1],
         ['label' => 'All-in-One WP Migration', 'category' => 'backups', 'class' => 'Ai1wm_Backups', 'abilities' => 1],
         ['label' => 'Wordfence', 'category' => 'security', 'constant' => 'WORDFENCE_VERSION', 'abilities' => 5],
@@ -530,7 +531,7 @@ function wppilot_cloud_pro_features(): array
         __('Scheduled, checked updates with rollback', domain: 'wppilot'),
         __('Bulk actions and safety policies across sites', domain: 'wppilot'),
         __('Email, Slack and Teams alerts; client reports', domain: 'wppilot'),
-        __('Up to 500 sites in one workspace', domain: 'wppilot'),
+        __('Up to 1,000 sites in one workspace', domain: 'wppilot'),
     ];
 }
 

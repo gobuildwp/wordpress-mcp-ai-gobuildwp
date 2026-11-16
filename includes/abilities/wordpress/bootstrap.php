@@ -67,11 +67,17 @@ function wppilot_load_wordpress_abilities(): void
     require_once $dir . 'restore-post.php';
     require_once $dir . 'taxonomies.php';
     require_once $dir . 'comments.php';
+    require_once $dir . 'comments-bulk.php';
     require_once $dir . 'revisions.php';
     require_once $dir . 'media.php';
+    require_once $dir . 'media-pdf.php';
     require_once $dir . 'search-images.php';
     require_once $dir . 'media-attachments.php';
     require_once $dir . 'site-management.php';
+    require_once $dir . 'rest-request.php';
     require_once $dir . 'extensions.php';
+    require_once $dir . 'child-theme.php';
     require_once $dir . 'menus.php';
+    require_once $dir . 'widgets.php';
+    require_once $dir . 'rendered-html.php';
 }

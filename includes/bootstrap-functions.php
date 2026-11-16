@@ -198,6 +198,10 @@ function wppilot_load_gutenberg_abilities(): void
     require_once $gutenberg_dir . 'get-finalizer-runtime.php';
     require_once $gutenberg_dir . 'get-content.php';
     require_once $gutenberg_dir . 'write-content.php';
+    require_once $gutenberg_dir . 'block-path.php';
+    require_once $gutenberg_dir . 'markdown.php';
+    require_once $gutenberg_dir . 'edit-block.php';
+    require_once $gutenberg_dir . 'markdown-to-blocks.php';
     require_once $gutenberg_dir . 'create-pending-batch.php';
     require_once $gutenberg_dir . 'add-pending-change.php';
     require_once $gutenberg_dir . 'enable-batch-finalization.php';

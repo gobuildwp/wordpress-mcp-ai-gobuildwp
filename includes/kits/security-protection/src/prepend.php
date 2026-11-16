@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace GoBuildWP\Kits\SecurityProtection;
 
 use WP_Error;
+use WPPilot\Kits\Runtime;
 
 if (!defined('ABSPATH')) {
     exit();
@@ -17,31 +18,37 @@ if (!defined('ABSPATH')) {
  * The pre-WordPress firewall: a copy of ../prepend/engine.php under wp-content, loaded through
  * auto_prepend_file from .user.ini (and .htaccess under mod_php), reading a state file the kit
  * rewrites whenever a block, the feed or a setting changes. It is installed by the owner or
- * GoBuildWP Cloud through the protection-prepend ability and removed on deactivation; nothing is
+ * the host's cloud service through the protection-prepend ability and removed on deactivation; nothing is
  * written to the site's files unless that was asked for.
  */
 
 const OPT_PREPEND = 'gobuildwp_kit_sp_prepend';
-const PREPEND_DIR = 'gobuildwp-protection';
-const PREPEND_MARKER = 'GoBuildWP pre-WordPress firewall';
-const PREPEND_INI_BEGIN = '; BEGIN GoBuildWP protection';
-const PREPEND_INI_END = '; END GoBuildWP protection';
-const PREPEND_HT_BEGIN = '# BEGIN GoBuildWP protection';
-const PREPEND_HT_END = '# END GoBuildWP protection';
+// The folder, the markers and the engine's constant in their kit form. Every use goes through
+// Runtime\public_name() or Runtime\flag(), so a host that installed the firewall under older
+// names keeps finding its folder, its files and its .user.ini and .htaccess blocks.
+const PREPEND_DIR = 'wppilot-kit-protection';
+const PREPEND_MARKER = 'wppilot-kit pre-WordPress firewall';
+const PREPEND_INI_BEGIN = '; BEGIN wppilot-kit protection';
+const PREPEND_INI_END = '; END wppilot-kit protection';
+const PREPEND_HT_BEGIN = '# BEGIN wppilot-kit protection';
+const PREPEND_HT_END = '# END wppilot-kit protection';
+const FIREWALL_RAN = 'WPPILOT_KIT_FIREWALL_RAN';
 const PREPEND_MAX_INGEST = 200;
+/** Second line of the file left where the engine was: marks it as the inert stand-in. */
+const PREPEND_STUB_NOTE = 'removed firewall stand-in';
 
 /** The protected folder that holds the engine, its state and its event log. */
 function prepend_root(): string
 {
     $content = defined('WP_CONTENT_DIR') ? (string) constant('WP_CONTENT_DIR') : rtrim(ABSPATH, '/\\') . '/wp-content';
-    $root = rtrim(str_replace('\\', '/', $content), '/') . '/' . PREPEND_DIR;
-    return (string) apply_filters('gobuildwp_protection_prepend_root', $root);
+    $root = rtrim(str_replace('\\', '/', $content), '/') . '/' . Runtime\public_name(PREPEND_DIR);
+    return (string) apply_filters('wppilot_kit_protection_prepend_root', $root);
 }
 
 /** The folder whose .user.ini and .htaccess PHP reads for the site: ABSPATH. */
 function prepend_site_root(): string
 {
-    return rtrim((string) apply_filters('gobuildwp_protection_prepend_site_root', str_replace('\\', '/', ABSPATH)), '/');
+    return rtrim((string) apply_filters('wppilot_kit_protection_prepend_site_root', str_replace('\\', '/', ABSPATH)), '/');
 }
 
 function prepend_engine_source(): string
@@ -75,7 +82,7 @@ function prepend_is_ours(string $path): bool
     }
     $head = (string) fread($handle, 2048);
     fclose($handle);
-    return str_contains($head, PREPEND_MARKER);
+    return str_contains($head, Runtime\public_name(PREPEND_MARKER));
 }
 
 /**
@@ -100,13 +107,13 @@ function prepend_status(): array
     $problem = null;
     if ($record !== null && !$installed) {
         $problem = 'The firewall files are missing; install it again.';
-    } elseif ($record !== null && !defined('GOBUILDWP_FIREWALL_RAN')) {
+    } elseif ($record !== null && !Runtime\flag(FIREWALL_RAN)) {
         $problem = 'Installed, but this request did not pass through it yet: PHP re-reads .user.ini every few minutes, and some hosts ignore it.';
     }
     return [
         'installed' => $installed,
         'method' => $installed ? $record['method'] : null,
-        'active' => defined('GOBUILDWP_FIREWALL_RAN'),
+        'active' => Runtime\flag(FIREWALL_RAN),
         'problem' => $problem,
     ];
 }
@@ -128,7 +135,7 @@ function set_prepend(bool $enabled): array|WP_Error
     }
     $problem = install_prepend();
     if ($problem !== null) {
-        return new WP_Error('gobuildwp_prepend_unavailable', 'The pre-WordPress firewall cannot be installed: ' . $problem);
+        return new WP_Error(Runtime\public_name('wppilot_kit_prepend_unavailable'), 'The pre-WordPress firewall cannot be installed: ' . $problem);
     }
     return prepend_status();
 }
@@ -155,25 +162,25 @@ function install_prepend(): ?string
         return 'this server does not read .user.ini files.';
     }
     if ($ini !== null && is_file($ini) && !is_link($ini)) {
-        $outside = prepend_strip_block((string) file_get_contents($ini), PREPEND_INI_BEGIN, PREPEND_INI_END);
+        $outside = prepend_strip_block((string) file_get_contents($ini), Runtime\public_name(PREPEND_INI_BEGIN), Runtime\public_name(PREPEND_INI_END));
         if (preg_match('/^\s*auto_prepend_file\s*=/m', $outside) === 1) {
             return 'the site\'s ' . basename($ini) . ' already sets auto_prepend_file.';
         }
     }
     $source = @file_get_contents(prepend_engine_source());
-    if (!is_string($source) || !str_contains($source, PREPEND_MARKER)) {
+    if (!is_string($source) || !str_contains($source, Runtime\public_name(PREPEND_MARKER))) {
         return 'the engine file is missing from the plugin.';
     }
     $root = prepend_root();
     if (is_link($root) || (!is_dir($root) && !@mkdir($root, 0755, true)) || !is_writable($root)) {
-        return 'the folder ' . PREPEND_DIR . ' under wp-content cannot be created.';
+        return 'the folder ' . Runtime\public_name(PREPEND_DIR) . ' under wp-content cannot be created.';
     }
-    if (!prepend_write($root . '/.htaccess', "# GoBuildWP: nothing in this folder is served.\n<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n    Deny from all\n</IfModule>\n")
+    if (!prepend_write($root . '/.htaccess', "# Nothing in this folder is served.\n<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n    Deny from all\n</IfModule>\n")
         || !prepend_write($root . '/index.php', "<?php\n// Silence is golden.\n")) {
-        return 'the folder ' . PREPEND_DIR . ' is not writable.';
+        return 'the folder ' . Runtime\public_name(PREPEND_DIR) . ' is not writable.';
     }
     if ((file_exists($engine) || is_link($engine)) && !prepend_is_ours($engine)) {
-        return 'firewall.php under ' . PREPEND_DIR . ' is not ours.';
+        return 'firewall.php under ' . Runtime\public_name(PREPEND_DIR) . ' is not ours.';
     }
     if (!is_file($engine) || hash_file('sha256', $engine) !== hash('sha256', $source)) {
         if (!prepend_write($engine, $source)) {
@@ -183,13 +190,13 @@ function install_prepend(): ?string
     $method = 'user_ini';
     if ($ini !== null) {
         $body = 'auto_prepend_file = "' . str_replace('"', '', $engine) . '"';
-        if (!prepend_replace_block($ini, PREPEND_INI_BEGIN, PREPEND_INI_END, $body)) {
+        if (!prepend_replace_block($ini, Runtime\public_name(PREPEND_INI_BEGIN), Runtime\public_name(PREPEND_INI_END), $body)) {
             return basename($ini) . ' in the site root could not be written.';
         }
     }
     if ($apache) {
         $body = "<IfModule mod_php.c>\n    php_value auto_prepend_file \"" . str_replace('"', '', $engine) . "\"\n</IfModule>\n<IfModule mod_php7.c>\n    php_value auto_prepend_file \"" . str_replace('"', '', $engine) . "\"\n</IfModule>";
-        if (prepend_replace_block(prepend_site_root() . '/.htaccess', PREPEND_HT_BEGIN, PREPEND_HT_END, $body)) {
+        if (prepend_replace_block(prepend_site_root() . '/.htaccess', Runtime\public_name(PREPEND_HT_BEGIN), Runtime\public_name(PREPEND_HT_END), $body)) {
             $method = 'htaccess';
         } elseif ($ini === null) {
             return '.htaccess in the site root could not be written.';
@@ -215,24 +222,78 @@ function remove_prepend(): bool
     $ok = true;
     $ini = prepend_user_ini_path();
     if ($ini !== null && is_file($ini) && !is_link($ini)) {
-        $ok = prepend_replace_block($ini, PREPEND_INI_BEGIN, PREPEND_INI_END, null) && $ok;
+        $ok = prepend_replace_block($ini, Runtime\public_name(PREPEND_INI_BEGIN), Runtime\public_name(PREPEND_INI_END), null) && $ok;
     }
     $ht = prepend_site_root() . '/.htaccess';
     if (is_file($ht) && !is_link($ht)) {
-        $ok = prepend_replace_block($ht, PREPEND_HT_BEGIN, PREPEND_HT_END, null) && $ok;
+        $ok = prepend_replace_block($ht, Runtime\public_name(PREPEND_HT_BEGIN), Runtime\public_name(PREPEND_HT_END), null) && $ok;
     }
     $root = prepend_root();
     if (is_dir($root) && !is_link($root)) {
+        // PHP caches .user.ini (user_ini.cache_ttl, 300 s by default), so every PHP worker keeps
+        // prepending firewall.php for minutes after its line is gone; a missing file there is a
+        // fatal error on every request. Leave an empty stand-in until the cache has expired, and
+        // let prepend_cleanup_stub() take it and the folder away afterwards.
+        $engine = prepend_engine_path();
+        $stub = prepend_engine_is_ours_file($engine) && prepend_write($engine, prepend_stub_source());
+        $keep = $stub ? ['firewall.php', '.htaccess', 'index.php'] : [];
         foreach (['firewall.php', 'state.php', 'state.php.tmp', 'firewall.php.tmp', 'events.log', 'events.log.ingest', '.htaccess', 'index.php', '.htaccess.tmp', 'index.php.tmp'] as $name) {
+            if (in_array($name, $keep, true)) {
+                continue;
+            }
             $file = $root . '/' . $name;
             if (is_link($file) || is_file($file)) {
                 $ok = @unlink($file) && $ok;
             }
         }
-        @rmdir($root);
+        if (!$stub) {
+            @rmdir($root);
+        }
     }
     delete_option(OPT_PREPEND);
     return $ok;
+}
+
+/** Whether $path is a regular file this kit wrote (the engine or its stand-in). */
+function prepend_engine_is_ours_file(string $path): bool
+{
+    return !is_link($path) && is_file($path) && prepend_is_ours($path);
+}
+
+/** The inert file left where the engine was. It carries the marker, so install rewrites it. */
+function prepend_stub_source(): string
+{
+    return "<?php\n\n// " . Runtime\public_name(PREPEND_MARKER) . "\n// " . PREPEND_STUB_NOTE
+        . ": PHP may still prepend this file until its .user.ini cache expires. It does nothing and is removed shortly.\n";
+}
+
+/**
+ * Remove the stand-in, and the folder, once no PHP worker can still be prepending it: the firewall
+ * is not installed again and the stand-in is older than PHP's .user.ini cache plus a margin.
+ */
+function prepend_cleanup_stub(): void
+{
+    $engine = prepend_engine_path();
+    if (!is_file($engine) || is_link($engine) || prepend_record() !== null) {
+        return;
+    }
+    $head = (string) @file_get_contents($engine, false, null, 0, 512);
+    if (!str_contains($head, PREPEND_STUB_NOTE) || !str_contains($head, Runtime\public_name(PREPEND_MARKER))) {
+        return;
+    }
+    $ttl = max(300, (int) ini_get('user_ini.cache_ttl'));
+    $mtime = @filemtime($engine);
+    if ($mtime === false || time() - $mtime < $ttl + 60) {
+        return;
+    }
+    $root = prepend_root();
+    foreach (['firewall.php', '.htaccess', 'index.php'] as $name) {
+        $file = $root . '/' . $name;
+        if (is_file($file) && !is_link($file)) {
+            @unlink($file);
+        }
+    }
+    @rmdir($root);
 }
 
 /**
@@ -251,11 +312,11 @@ function sync_prepend_state(): bool
     $engine = prepend_engine_path();
     $source = @file_get_contents(prepend_engine_source());
     // A plugin update ships a newer engine; carry it over the next time the state is written.
-    if (is_string($source) && str_contains($source, PREPEND_MARKER) && (!is_file($engine) || hash_file('sha256', $engine) !== hash('sha256', $source)) && (!file_exists($engine) || prepend_is_ours($engine))) {
+    if (is_string($source) && str_contains($source, Runtime\public_name(PREPEND_MARKER)) && (!is_file($engine) || hash_file('sha256', $engine) !== hash('sha256', $source)) && (!file_exists($engine) || prepend_is_ours($engine))) {
         prepend_write($engine, $source);
     }
     $state = prepend_state();
-    $php = "<?php\n// " . PREPEND_MARKER . ": state written by the plugin. Do not edit.\nreturn " . var_export($state, true) . ";\n";
+    $php = "<?php\n// " . Runtime\public_name(PREPEND_MARKER) . ": state written by the plugin. Do not edit.\nreturn " . var_export($state, true) . ";\n";
     return prepend_write($root . '/state.php', $php);
 }
 
@@ -283,7 +344,7 @@ function prepend_state(?int $now = null): array
         }
     }
     return [
-        'enabled' => !(defined('GOBUILDWP_DISABLE_PROTECTION') && constant('GOBUILDWP_DISABLE_PROTECTION') === true),
+        'enabled' => !Runtime\flag('WPPILOT_KIT_DISABLE_PROTECTION'),
         'written_at' => $now,
         'ip_source' => $settings['ip_source'],
         'trusted_proxies' => trusted_proxies(),

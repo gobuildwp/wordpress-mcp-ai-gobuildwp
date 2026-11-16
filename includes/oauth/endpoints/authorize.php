@@ -129,6 +129,12 @@ function handle(): void
         return;
     }
 
+    // New-app approval: an unapproved client never reaches the consent screen.
+    if (function_exists('WPPilot\\OAuth\\AppApproval\\is_approved') && !\WPPilot\OAuth\AppApproval\is_approved($client_id)) {
+        \WPPilot\OAuth\AppApproval\die_pending($client_id, $client->getName());
+        return;
+    }
+
     // RFC 8252 §7.3: a native/desktop client binds an ephemeral loopback port that can differ from
     // the one it registered, so league's validator matches 127.0.0.1/[::1] ignoring the port (and
     // requires an exact match otherwise). This is the same check league runs at the consent step, so

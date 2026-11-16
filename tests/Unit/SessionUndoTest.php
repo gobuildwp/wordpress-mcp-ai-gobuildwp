@@ -150,6 +150,43 @@ final class SessionUndoTest extends TestCase
         self::assertSame('stdio-session-b', $report['conflicts'][0]['later_changes'][0]['session_id']);
     }
 
+    public function testSkipConflictsUndoesTheRestAndLeavesTheLaterEditAlone(): void
+    {
+        $this->write('title', 'Agent');
+        $this->write('color', 'red');
+        $this->write('title', 'Agent again');
+        $this->inSession('stdio-session-b');
+        $this->write('title', 'Person');
+
+        $report = wppilot_undo_session('stdio-session-a', skip_conflicts: true);
+
+        self::assertSame('completed', $report['status']);
+        self::assertCount(1, $report['undone'], 'only the color change');
+        self::assertSame('Person', $GLOBALS['wppilot_test_kv']['title'], 'the later edit survives');
+        self::assertNotSame('red', $GLOBALS['wppilot_test_kv']['color'] ?? null);
+        // Both of the session's title writes are skipped: undoing the older one would overwrite the edit too.
+        self::assertCount(2, $report['skipped_conflicts']);
+        foreach ($report['skipped_conflicts'] as $skipped) {
+            self::assertSame('kv:title', $skipped['target']);
+            self::assertStringStartsWith('Skipped: ', $skipped['reason']);
+        }
+        self::assertStringContainsString('skipped_conflicts', $report['message']);
+    }
+
+    public function testSkipConflictsWithOnlyConflictedTargetsChangesNothing(): void
+    {
+        $this->write('title', 'Agent');
+        $this->inSession('stdio-session-b');
+        $this->write('title', 'Person');
+
+        $report = wppilot_undo_session('stdio-session-a', skip_conflicts: true);
+
+        self::assertSame('nothing-to-do', $report['status']);
+        self::assertSame([], $report['undone']);
+        self::assertCount(1, $report['skipped_conflicts']);
+        self::assertSame('Person', $GLOBALS['wppilot_test_kv']['title']);
+    }
+
     public function testAnEditOutsideTheLedgerBetweenTwoSessionWritesIsAConflict(): void
     {
         $this->write('title', 'First');

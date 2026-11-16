@@ -1,0 +1,32 @@
+{
+    "slug": "launch-check",
+    "version": "1.0.0",
+    "namespace": "WPPilot\\Kits\\LaunchCheck",
+    "tier": "free",
+    "runtime": "^1.2",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9",
+        "kits": ["content-audit"]
+    },
+    "categories": {
+        "diagnostics": {
+            "label": "Diagnostics",
+            "description": "Read-only operational, performance, security, and integration diagnostics."
+        }
+    },
+    "abilities": [
+        {
+            "name": "wppilot/launch-checklist",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": [
+        "launch-check"
+    ],
+    "tests": [
+        "tests/Unit/Kits/LaunchCheck"
+    ]
+}

@@ -68,6 +68,14 @@ wp_register_ability('wppilot/write-file', [
                 'items' => ['type' => 'string'],
             ],
             'size' => ['type' => 'integer', 'description' => 'Final file size in bytes.'],
+            'syntax_checked' => [
+                'type' => 'boolean',
+                'description' => 'Whether PHP content was parsed before writing. Content that does not parse is refused and nothing is written.',
+            ],
+            'verification' => [
+                'type' => 'object',
+                'description' => 'Post-write loopback check of the home page and wp-admin, run for PHP and PHP execution control files. When the write broke the site, the previous file is put back and the call fails with write_rolled_back instead.',
+            ],
         ],
     ],
     'execute_callback' => 'wppilot_write_file',
@@ -85,6 +93,12 @@ wp_register_ability('wppilot/write-file', [
                 '- For ZIPs, plugins, themes, media, binary files, or other large uploads, use wppilot/create-upload-link instead.',
                 '- The sandbox is not security isolation for all filesystem writes; it is for generated PHP loading and crash recovery.',
                 '- Sandbox plugins are loaded by a mu-plugin loader on every request.',
+                '',
+                'WRITE CHECKS:',
+                '- PHP content is parsed before it is written; a syntax error is refused and nothing changes.',
+                '- The file is written to a temporary file and renamed into place, so it is never half-written.',
+                '- After writing a PHP or execution control file, the home page and wp-admin are fetched logged out.',
+                '  If either shows a fatal, the previous version is put back and the call fails with write_rolled_back.',
                 '',
                 'CRASH RECOVERY:',
                 '- If a sandbox plugin causes a fatal error, the loader auto-detects the crash',
@@ -169,20 +183,22 @@ function wppilot_write_file($input)
         return $directories_created;
     }
 
-    $flags = LOCK_EX;
-    if ($mode === 'append') {
-        $flags |= FILE_APPEND;
+    $full_content = $content;
+    if ($mode === 'append' && is_file($resolved)) {
+        $existing = file_get_contents($resolved);
+        if ($existing === false) {
+            return new WP_Error('read_failed', sprintf('Could not read file to append to: %s', $resolved));
+        }
+        $full_content = $existing . $content;
     }
 
-    $bytes_written = file_put_contents($resolved, $content, $flags);
-    if ($bytes_written === false) {
-        return new WP_Error('write_failed', sprintf('Failed to write file: %s', $resolved));
+    // Lint, temp-file-and-rename, then a loopback check that puts the old file back on a fatal.
+    // See includes/file-write-guard.php.
+    $written = wppilot_guarded_write_file($resolved, $full_content);
+    if (is_wp_error($written)) {
+        return $written;
     }
-
-    if ($created) {
-        // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink,WordPress.WP.AlternativeFunctions.rename_rename,WordPress.WP.AlternativeFunctions.file_system_operations_fopen,WordPress.WP.AlternativeFunctions.file_system_operations_fclose,WordPress.WP.AlternativeFunctions.file_system_operations_fread,WordPress.WP.AlternativeFunctions.file_system_operations_fwrite,WordPress.WP.AlternativeFunctions.file_system_operations_chmod,WordPress.WP.AlternativeFunctions.file_system_operations_mkdir,WordPress.WP.AlternativeFunctions.file_system_operations_rmdir,WordPress.WP.AlternativeFunctions.file_system_operations_readfile,WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- WP_Filesystem is not usable here: it takes credentials from an interactive admin form, which a REST/MCP request has no way to show. Writing the requested path is the ability itself, bounded by the path guard and gated to Developer Full Access.
-        chmod(filename: $resolved, permissions: 0644);
-    }
+    $bytes_written = strlen($content);
 
     return [
         'path' => $resolved,
@@ -190,5 +206,7 @@ function wppilot_write_file($input)
         'created' => $created,
         'directories_created' => $directories_created,
         'size' => filesize($resolved),
+        'syntax_checked' => $written['lint']['checked'],
+        'verification' => $written['verification'],
     ];
 }

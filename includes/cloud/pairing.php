@@ -316,7 +316,9 @@ function wppilot_cloud_parse_policy(array $body): array|WP_Error
     if (!is_string($hint) || trim($hint) === '' || !is_string($ceiling)) {
         return new WP_Error('invalid_response', __('GoBuildWP Cloud sent an incomplete answer.', domain: 'wppilot'));
     }
-    if (!in_array($ceiling, wppilot_token_ceiling_ids(), strict: true)) {
+    // Not wppilot_token_ceiling_ids(): wppilot_cloud_safety_profile() derives the Cloud's profile
+    // from the ceiling and knows nothing of Drafts only, so the Cloud may not ask for it.
+    if (!in_array($ceiling, ['readonly', 'production'], strict: true)) {
         return new WP_Error('invalid_response', __('GoBuildWP Cloud asked for an access level this site does not know.', domain: 'wppilot'));
     }
 

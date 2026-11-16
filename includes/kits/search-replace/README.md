@@ -1,7 +1,8 @@
 # search-replace kit
 
-Find and replace across post titles, content, excerpts and post meta. The kit works from a stored
-plan that a person reviewed, and every changed post can be undone on its own.
+Find and replace across post titles, content, excerpts and post meta, or across site options
+(`target: "options"`). The kit works from a stored plan that a person reviewed, and every changed
+post or option can be undone on its own.
 
 | Ability | Kind | What it does |
 |---|---|---|
@@ -13,7 +14,7 @@ plan that a person reviewed, and every changed post can be undone on its own.
 ## How values are changed
 
 - **Fields**: `post_title`, `post_content` and `post_excerpt`, written through `wp_update_post()`
-  with `wp_slash()`. `guid` and options are never touched.
+  with `wp_slash()`. `guid` is never touched, and options only with `target: "options"`.
 - **Serialized meta** is read raw and unserialized with `allowed_classes => false`. Any value that
   contains an object is skipped and reported. Arrays are walked, their strings replaced, and the
   result stored through `update_post_meta()`.
@@ -29,6 +30,29 @@ plan that a person reviewed, and every changed post can be undone on its own.
   empty string is refused. Preview and apply batches also stop after 20 seconds and return a cursor.
 - Every write is read back. A meta value is compared byte for byte with the preview. A field is
   compared after save, so content filtered by kses is reported as a warning.
+
+## Options target
+
+`target: "options"` searches `wp_options` instead of posts. It needs `manage_options` for both
+preview and apply, and takes `options` (exact names or `*` patterns, default every option) in
+place of the post scope keys. Values are handled exactly like meta: serialized arrays are walked
+without instantiating objects, JSON is walked, and plain text is replaced as text. Each option is
+written with `update_option()` and read back.
+
+Some options are never searched, previewed or written, whatever the caller names
+(`src/options.php` lists each with its reason): `siteurl`, `home`, `active_plugins`, `template`,
+`stylesheet`, `cron`, `rewrite_rules`, the eight auth/secure-auth/logged-in/nonce keys and
+salts, `{prefix}user_roles`, `default_role`, `users_can_register`, the admin email options,
+database version options, `uninstall_plugins`, `recently_activated`, transients, this kit's own
+plan options, and any option whose name reads like a credential (password, secret, token, API
+key, licence key, OAuth). A host can add prefixes through the `protected-option-prefixes`
+extension point, never remove any; the bundled host protects its own option prefixes this way.
+An option whose match sits under a credential-like key inside a serialized or JSON value is left
+out as a whole, and the match is not shown. Network options (`wp_sitemeta`) are not covered.
+
+Each written option gets one `kits/search-replace-option` ledger row holding its exact stored
+bytes. Undo puts those bytes back, and refuses (409 `kit_sr_option_changed_since`) when the option
+was changed or deleted after the apply, unless the undo is forced.
 
 ## Undo
 

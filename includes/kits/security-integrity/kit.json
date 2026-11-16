@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "namespace": "GoBuildWP\\Kits\\SecurityIntegrity",
     "tier": "free",
-    "runtime": "^1.4",
+    "runtime": "^1.5",
     "requires": {
         "php": "8.0",
         "wp": "6.9"

@@ -579,6 +579,9 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityIntegrity {
         /** What `cloud-verified` answers: whether this request came signed from the Cloud. */
         public bool $cloudVerified = false;
 
+        /** @var array<string, mixed> Any other extension point => what it answers. */
+        public array $extensions = [];
+
         public function __construct()
         {
             $this->jobs = new Runtime\Runner();
@@ -616,7 +619,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityIntegrity {
 
         public function extension(string $point): mixed
         {
-            return $point === 'cloud-verified' ? $this->cloudVerified : null;
+            return $point === 'cloud-verified' ? $this->cloudVerified : ($this->extensions[$point] ?? null);
         }
 
         public function admin_parent_slug(): string

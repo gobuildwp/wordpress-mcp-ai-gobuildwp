@@ -615,9 +615,15 @@ function latest_revision_id(int $target_id): int
 }
 
 /**
+ * Normalizes block specs. With $allow_raw, a top-level entry may instead be a raw spec,
+ * {raw, patch?}: saved block markup the Block Editor Queue parses as it stands, optionally
+ * re-creating one block in it with new attributes. Only the queue's own writers
+ * (gutenberg-edit-block, markdown-to-blocks) store raw specs; agent-supplied block_spec never
+ * reaches this with $allow_raw, so it cannot carry hand-written markup past the raw HTML check.
+ *
  * @return list<array<string, mixed>>|WP_Error
  */
-function normalize_blocks(mixed $value): array|WP_Error
+function normalize_blocks(mixed $value, bool $allow_raw = false): array|WP_Error
 {
     if (!is_array($value)) {
         return new WP_Error('gutenberg_invalid_block_spec', 'block_spec must be an array of Gutenberg block objects.');
@@ -630,7 +636,9 @@ function normalize_blocks(mixed $value): array|WP_Error
     $blocks = [];
     $values = array_values($value);
     for ($index = 0; $index < count($values); ++$index) {
-        $normalized = normalize_block($values[$index], sprintf('block_spec[%s]', (string) $index));
+        $normalized = $allow_raw && is_array($values[$index]) && array_key_exists('raw', $values[$index])
+            ? normalize_raw_spec($values[$index], sprintf('block_spec[%s]', (string) $index))
+            : normalize_block($values[$index], sprintf('block_spec[%s]', (string) $index));
         if (is_wp_error($normalized)) {
             return $normalized;
         }
@@ -642,6 +650,35 @@ function normalize_blocks(mixed $value): array|WP_Error
     }
 
     return $blocks;
+}
+
+/**
+ * @param array<array-key, mixed> $value
+ * @return array<string, mixed>|WP_Error
+ */
+function normalize_raw_spec(array $value, string $path): array|WP_Error
+{
+    if (!is_string($value['raw']) || trim($value['raw']) === '') {
+        return new WP_Error('gutenberg_invalid_block_spec', sprintf('%s.raw must be non-empty block markup.', $path));
+    }
+    $spec = ['raw' => $value['raw']];
+    if (!array_key_exists('patch', $value) || $value['patch'] === null) {
+        return $spec;
+    }
+
+    $patch = $value['patch'];
+    $route = is_array($patch) ? ($patch['path'] ?? null) : null;
+    if (!is_array($route) || !block_path_is_valid($route)) {
+        return new WP_Error('gutenberg_invalid_block_spec', sprintf('%s.patch.path must be a list of block indexes.', $path));
+    }
+    $attributes = $patch['attributes'] ?? [];
+    $spec['patch'] = [
+        'path' => array_map('intval', array_values($route)),
+        'name' => is_string($patch['name'] ?? null) ? $patch['name'] : '',
+        'attributes' => is_array($attributes) ? $attributes : [],
+    ];
+
+    return $spec;
 }
 
 /**
@@ -1079,7 +1116,7 @@ function item_blocks(WP_Post $item): array|WP_Error
         ));
     }
 
-    return normalize_blocks($decoded);
+    return normalize_blocks($decoded, allow_raw: true);
 }
 
 /**

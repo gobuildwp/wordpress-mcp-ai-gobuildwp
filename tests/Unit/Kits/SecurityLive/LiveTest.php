@@ -10,17 +10,17 @@ namespace GoBuildWP\Kits\SecurityLive {
     if (!function_exists(__NAMESPACE__ . '\get_userdata')) {
         function get_userdata(int $id): object|false
         {
-            return isset($GLOBALS['gobuildwp_sl_test_users'][$id]) ? (object) ['ID' => $id, 'user_login' => $GLOBALS['gobuildwp_sl_test_users'][$id]] : false;
+            return isset($GLOBALS['kit_test_sl_users'][$id]) ? (object) ['ID' => $id, 'user_login' => $GLOBALS['kit_test_sl_users'][$id]] : false;
         }
 
         function user_can(int $id, string $capability): bool
         {
-            return in_array($id, $GLOBALS['gobuildwp_sl_test_admins'] ?? [], true);
+            return in_array($id, $GLOBALS['kit_test_sl_admins'] ?? [], true);
         }
 
         function get_attached_file(int $id, bool $unfiltered = false): string|false
         {
-            return $GLOBALS['gobuildwp_sl_test_attachments'][$id] ?? false;
+            return $GLOBALS['kit_test_sl_attachments'][$id] ?? false;
         }
     }
 }
@@ -33,11 +33,12 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
     use GoBuildWP\Kits\SecurityIntegrity as SI;
     use GoBuildWP\Kits\SecurityIntegrity\TestNet;
     use GoBuildWP\Kits\SecurityLive as SL;
+    use GoBuildWP\Tests\Unit\Kits\SecurityIntegrity\FakeHost;
     use GoBuildWP\Tests\Unit\Kits\SecurityIntegrity\Fixture;
     use PHPUnit\Framework\Attributes\DataProvider;
     use PHPUnit\Framework\TestCase;
     use WP_Error;
-    use WPPilot_Test_State;
+    use Kit_Test_State;
 
     use function GoBuildWP\Tests\Unit\Kits\SecurityIntegrity\reset_state;
 
@@ -54,10 +55,10 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
         protected function setUp(): void
         {
             reset_state();
-            unset(WPPilot_Test_State::$cron[SL\CRON_HOOK], WPPilot_Test_State::$cron[SL\CRON_HOOK . '_soon']);
-            $GLOBALS['gobuildwp_sl_test_users'] = [];
-            $GLOBALS['gobuildwp_sl_test_admins'] = [];
-            $GLOBALS['gobuildwp_sl_test_attachments'] = [];
+            unset(\Kit_Test_State::$cron[SL\CRON_HOOK], \Kit_Test_State::$cron[SL\CRON_HOOK . '_soon']);
+            $GLOBALS['kit_test_sl_users'] = [];
+            $GLOBALS['kit_test_sl_admins'] = [];
+            $GLOBALS['kit_test_sl_attachments'] = [];
             $this->site = new Fixture();
         }
 
@@ -65,7 +66,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
         {
             $this->site->remove();
             reset_state();
-            unset(WPPilot_Test_State::$cron[SL\CRON_HOOK], WPPilot_Test_State::$cron[SL\CRON_HOOK . '_soon']);
+            unset(\Kit_Test_State::$cron[SL\CRON_HOOK], \Kit_Test_State::$cron[SL\CRON_HOOK . '_soon']);
         }
 
         /** Snippets assembled so this file does not itself match the rules. */
@@ -145,7 +146,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             $store = SL\event_store();
             self::assertCount(SL\MAX_EVENTS, $store['items']);
             self::assertSame(SL\MAX_EVENTS + 13, SL\last_event_id(), 'ids keep counting past the ring');
-            self::assertFalse($GLOBALS['wppilot_test_option_autoload'][SL\EVENTS_OPTION] ?? null, 'events are not autoloaded');
+            self::assertFalse(\Kit_Test_State::option_autoload(SL\EVENTS_OPTION), 'events are not autoloaded');
         }
 
         public function test_nothing_is_recorded_when_off(): void
@@ -179,7 +180,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
         {
             $result = SL\configure($input);
             self::assertInstanceOf(WP_Error::class, $result);
-            self::assertSame('gobuildwp_live_invalid', $result->get_error_code());
+            self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_live_invalid'), $result->get_error_code());
             self::assertSame(15, SL\settings()['interval_minutes'], 'nothing changed');
         }
 
@@ -189,11 +190,11 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             self::assertIsArray($result);
             self::assertSame(['wp-content/cache'], $result['excluded_paths']);
             self::assertSame(30, SL\settings()['interval_minutes']);
-            self::assertArrayHasKey(SL\CRON_HOOK, WPPilot_Test_State::$cron);
+            self::assertArrayHasKey(SL\CRON_HOOK, \Kit_Test_State::$cron);
             self::assertSame(1800, SL\cron_schedules([])[SL\CRON_SCHEDULE]['interval']);
 
             SL\configure(['enabled' => false]);
-            self::assertArrayNotHasKey(SL\CRON_HOOK, WPPilot_Test_State::$cron, 'turning it off removes the scheduled run');
+            self::assertArrayNotHasKey(SL\CRON_HOOK, \Kit_Test_State::$cron, 'turning it off removes the scheduled run');
         }
 
         // ------------------------------------------------------------ change watch
@@ -263,18 +264,18 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             self::assertSame(['high file_added live.mu_plugin_added wp-content/mu-plugins/x.php'], self::events());
         }
 
-        public function test_a_file_a_gobuildwp_plugin_vouches_for_is_info(): void
+        public function test_a_file_another_plugin_vouches_for_is_info(): void
         {
-            add_filter('gobuildwp_live_known_file', static fn($known, string $abs, string $path) => str_ends_with($path, '/gobuildwp-rescue.php') && is_file($abs) ? 'ours' : $known, 10, 3);
+            add_filter('wppilot_kit_live_known_file', static fn($known, string $abs, string $path) => str_ends_with($path, '/kit-rescue.php') && is_file($abs) ? 'ours' : $known, 10, 3);
             $this->core();
             $this->pass();
             SL\check_extras(self::NOW, true);
-            $this->site->put('wp-content/mu-plugins/gobuildwp-rescue.php', "<?php // rescue\n");
+            $this->site->put('wp-content/mu-plugins/kit-rescue.php', "<?php // rescue\n");
             $this->site->put('wp-content/mu-plugins/other.php', "<?php // other\n");
             self::assertSame(2, SL\check_extras(self::NOW + 301, true));
             self::assertSame([
                 'high file_added live.mu_plugin_added wp-content/mu-plugins/other.php',
-                'info file_added live.mu_plugin_added wp-content/mu-plugins/gobuildwp-rescue.php',
+                'info file_added live.mu_plugin_added wp-content/mu-plugins/kit-rescue.php',
             ], self::sorted(self::events()));
         }
 
@@ -334,11 +335,11 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             $this->site->put('wp-content/plugins/gone/gone.php', '<?php');
             $this->pass();
             $option = SL\index_option('plugin:gone');
-            self::assertArrayHasKey($option, WPPilot_Test_State::$options);
+            self::assertArrayHasKey($option, \Kit_Test_State::$options);
             unlink($this->site->root . '/wp-content/plugins/gone/gone.php');
             rmdir($this->site->root . '/wp-content/plugins/gone');
             $this->pass();
-            self::assertArrayNotHasKey($option, WPPilot_Test_State::$options);
+            self::assertArrayNotHasKey($option, \Kit_Test_State::$options);
         }
 
         public function test_updates_queue_their_folders_first(): void
@@ -347,13 +348,13 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             $this->site->put('wp-content/plugins/akismet/akismet.php', '<?php');
             $this->pass();
             SL\on_upgrade(null, ['type' => 'plugin', 'action' => 'update', 'plugins' => ['akismet/akismet.php', 'hello.php']]);
-            self::assertSame(['plugin:akismet', 'plugins'], WPPilot_Test_State::$options[SL\QUEUE_OPTION]);
+            self::assertSame(['plugin:akismet', 'plugins'], \Kit_Test_State::$options[SL\QUEUE_OPTION]);
             SL\on_upgrade(null, ['type' => 'theme', 'themes' => ['twenty']]);
-            self::assertContains('theme:twenty', WPPilot_Test_State::$options[SL\QUEUE_OPTION]);
+            self::assertContains('theme:twenty', \Kit_Test_State::$options[SL\QUEUE_OPTION]);
 
             $cursor = SL\take_queued(['buckets' => SL\discover_buckets(), 'pos' => 0, 'walk' => null]);
             self::assertSame(['plugins', 'plugin:akismet', 'theme:twenty'], array_slice(array_column($cursor['buckets'], 'id'), 0, 3));
-            self::assertArrayNotHasKey(SL\QUEUE_OPTION, WPPilot_Test_State::$options);
+            self::assertArrayNotHasKey(SL\QUEUE_OPTION, \Kit_Test_State::$options);
         }
 
         public function test_a_pass_walks_the_risky_folders_first(): void
@@ -372,18 +373,18 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             add_option(SL\LOCK_OPTION, self::NOW);
             self::assertSame('busy', SL\run_watch(5, self::NOW + 10)['reason']);
             self::assertTrue(SL\run_watch(5, self::NOW + SL\LOCK_SECONDS + 1)['ran'], 'a stale lock is taken over');
-            self::assertArrayNotHasKey(SL\LOCK_OPTION, WPPilot_Test_State::$options, 'the lock is released');
+            self::assertArrayNotHasKey(SL\LOCK_OPTION, \Kit_Test_State::$options, 'the lock is released');
         }
 
         // ------------------------------------------------------------ instant checks
 
         public function test_new_administrators_are_high_events_with_the_fix_fields(): void
         {
-            $GLOBALS['gobuildwp_sl_test_users'] = [7 => 'eve', 8 => 'bob'];
+            $GLOBALS['kit_test_sl_users'] = [7 => 'eve', 8 => 'bob'];
             SL\on_set_user_role(7, 'administrator', ['subscriber']);
             SL\on_set_user_role(8, 'editor', ['subscriber']);
             SL\on_set_user_role(8, 'administrator', ['administrator']);
-            $GLOBALS['gobuildwp_sl_test_admins'] = [7];
+            $GLOBALS['kit_test_sl_admins'] = [7];
             SL\on_user_register(7);
             SL\on_grant_super_admin(8);
 
@@ -423,7 +424,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             SL\on_upload_prefilter(['name' => 'clean.jpg', 'tmp_name' => $this->site->put('tmp/b', 'GIF89a')]);
             self::assertSame('upload', SL\on_upload_prefilter('upload'), 'the filter passes anything through');
 
-            $GLOBALS['gobuildwp_sl_test_attachments'] = [
+            $GLOBALS['kit_test_sl_attachments'] = [
                 5 => $this->site->put('wp-content/uploads/2026/10/x.php.jpg', 'GIF89a'),
                 6 => $this->site->put('wp-content/uploads/2026/10/y.gif', 'GIF89a <?php echo 1;'),
                 7 => $this->site->put('wp-content/uploads/2026/10/z.png', 'PNG'),
@@ -510,15 +511,23 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             self::assertSame(400, $out->get_error_data()['status']);
         }
 
-        public function test_route_uses_the_cloud_permission(): void
+        public function test_route_uses_the_hosts_cloud_namespace_and_permission(): void
         {
-            if (!function_exists('wppilot_cloud_rest_permission')) {
-                self::markTestSkipped('The Cloud module is not loaded in this run.');
+            if (!function_exists('register_rest_route')) {
+                self::markTestSkipped('No register_rest_route() double in this run.');
             }
-            $GLOBALS['wppilot_test_rest_routes'] = [];
+            $permission = static fn(): bool => true;
+            $host = new FakeHost();
+            \WPPilot\Kits\Runtime\host($host);
+            Kit_Test_State::rest_routes(true);
             SL\register_route();
-            self::assertSame('wppilot_cloud_rest_permission', $GLOBALS['wppilot_test_rest_routes']['gobuildwp/v1/cloud/live']['permission_callback'] ?? null);
-            self::assertSame('POST', $GLOBALS['wppilot_test_rest_routes']['gobuildwp/v1/cloud/live']['methods'] ?? null);
+            self::assertSame([], Kit_Test_State::rest_routes(), 'no Cloud namespace, no route');
+
+            $host->extensions = ['cloud-rest-namespace' => 'kit-test/v1', 'cloud-rest-permission' => $permission];
+            SL\register_route();
+            $route = Kit_Test_State::rest_routes()['kit-test/v1/cloud/live'] ?? [];
+            self::assertSame($permission, $route['permission_callback'] ?? null);
+            self::assertSame('POST', $route['methods'] ?? null);
         }
 
         public function test_kit_manifest_lists_the_abilities_with_their_annotations(): void
@@ -529,7 +538,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityLive {
             foreach ($bootstrap['ability_files'] as $file) {
                 $source = (string) file_get_contents($file);
                 self::assertStringContainsString("Runtime\\can_run() && current_user_can('manage_options')", $source);
-                self::assertMatchesRegularExpression("/wp_register_ability\\('gobuildwp\\/security-live-/", $source);
+                self::assertMatchesRegularExpression("#wp_register_ability\\('gobuildwp/security-live-#", $source);
             }
             $readonly = array_column($kit['abilities'], 'readonly', 'name');
             self::assertSame([

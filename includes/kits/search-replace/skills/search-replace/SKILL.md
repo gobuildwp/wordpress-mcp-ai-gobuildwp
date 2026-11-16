@@ -29,8 +29,18 @@ Start narrow and widen if you need to:
   `_yoast_wpseo_*`.
 - `post_ids` limits the search to specific posts.
 
-Never searched or changed: `guid`, options, revisions, and bookkeeping meta such as edit locks,
+Never searched or changed: `guid`, revisions, and bookkeeping meta such as edit locks,
 old slugs, attachment file paths and builder CSS caches.
+
+To change a setting stored in an option (a widget's text, a theme mod, a plugin's saved URL), pass
+`target: "options"` with `options` naming the options or `*` patterns, instead of the post scope
+keys. It needs `manage_options`. The site address, active plugins and theme, cron, roles, secret
+keys and salts, transients and anything named like a credential are never searched; they are
+counted in `totals.protected`. Do not move a site to a new domain this way: `siteurl` and `home`
+are protected on purpose, because a wrong value locks everyone out. The diff comes back under
+`options` instead of `posts`, and apply takes `options` instead of `post_ids` to apply part of it.
+A `kit_sr_option_credential` skip means a match sits inside a stored secret: tell the person, and
+do not show or change it.
 
 Read the result:
 

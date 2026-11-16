@@ -282,6 +282,36 @@ final class ConfirmationTest extends TestCase
         self::assertSame('wppilot_human_confirmation_required', $second->get_error_code(), 'single use');
     }
 
+    public function testApprovalIsVoidWhenTheTargetChangesBeforeTheCallRuns(): void
+    {
+        $saved = WPPilot_Test_State::$posts;
+        $post = new \WP_Post();
+        $post->ID = 3;
+        $post->post_modified_gmt = '2026-11-13 10:00:00';
+        WPPilot_Test_State::$posts[3] = $post;
+        try {
+            $id = $this->openRequest(['post_id' => 3]);
+            self::assertTrue(wppilot_confirmation_decide($id, approve: true, decided_by: 1));
+
+            // Someone edits the post between the approval and the retry.
+            $post->post_modified_gmt = '2026-11-13 10:01:00';
+            $stale = wppilot_gate_ability_call($this->destructive(), ['post_id' => 3, 'confirm' => true], 'rest');
+            self::assertInstanceOf(WP_Error::class, $stale, 'the approval was for the post as it was');
+
+            $post->post_modified_gmt = '2026-11-13 10:00:00';
+            self::assertSame(['post_id' => 3], wppilot_gate_ability_call($this->destructive(), ['post_id' => 3, 'confirm' => true], 'rest'));
+        } finally {
+            WPPilot_Test_State::$posts = $saved;
+        }
+    }
+
+    public function testCallHashFoldsInTheTargetStateOnly(): void
+    {
+        self::assertSame(wppilot_confirmation_input_hash(['title' => 'x']), wppilot_confirmation_call_hash('wppilot/create-post', ['title' => 'x']), 'no target, input alone');
+        self::assertNotSame(wppilot_confirmation_input_hash(['post_id' => 99]), wppilot_confirmation_call_hash('wppilot/delete-post', ['post_id' => 99]));
+        self::assertSame(['post:99:missing'], wppilot_confirmation_target_state('wppilot/delete-post', ['post_id' => 99]));
+    }
+
     public function testApprovalIsBoundToTheRequestingUser(): void
     {
         $id = $this->openRequest(['post_id' => 3]);
@@ -319,7 +349,7 @@ final class ConfirmationTest extends TestCase
 
         self::assertSame('wppilot/delete-post', $request['ability']);
         self::assertSame(7, $request['user_id']);
-        self::assertSame(wppilot_confirmation_input_hash(['post_id' => 3, 'password' => 'hunter2']), $request['input_sha256']);
+        self::assertSame(wppilot_confirmation_call_hash('wppilot/delete-post', ['post_id' => 3, 'password' => 'hunter2']), $request['input_sha256']);
         self::assertStringContainsString('"post_id": 3', $request['input_json']);
         self::assertStringNotContainsString('hunter2', $request['input_json']);
         self::assertStringNotContainsString('hunter2', (string) json_encode(WPPilot_Test_State::$options[WPPILOT_CONFIRMATION_REQUESTS_OPTION]));

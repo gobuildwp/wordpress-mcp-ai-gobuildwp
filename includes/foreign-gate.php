@@ -64,7 +64,7 @@ function wppilot_foreign_gate(mixed $pre, string $ability_name, mixed $input, mi
         return $allowed;
     }
 
-    if (wppilot_ability_requires_confirmation($ability)) {
+    if (wppilot_ability_requires_confirmation($ability, $input)) {
         $approved = wppilot_foreign_gate_approval($ability, $input);
         if ($approved instanceof WP_Error) {
             return $approved;
@@ -94,7 +94,7 @@ function wppilot_foreign_gate_approval(WP_Ability $ability, mixed $input): strin
         );
     }
     $name = $ability->get_name();
-    $hash = wppilot_confirmation_input_hash($input);
+    $hash = wppilot_confirmation_call_hash($name, $input);
     if (wppilot_confirmation_claim_approval($name, $hash, $user_id)) {
         return 'approval-url';
     }
@@ -104,6 +104,9 @@ function wppilot_foreign_gate_approval(WP_Ability $ability, mixed $input): strin
             __('A person denied this exact call in wp-admin. Do not retry it; ask the user what they want instead.', domain: 'wppilot'),
             ['status' => 403, 'ability' => $name],
         );
+    }
+    if (function_exists('wppilot_confirmation_session_covers') && wppilot_confirmation_session_covers($ability, $hash, $user_id)) {
+        return 'session';
     }
 
     return wppilot_confirmation_approval_url_error($ability, $input, 'foreign', $hash, $user_id);

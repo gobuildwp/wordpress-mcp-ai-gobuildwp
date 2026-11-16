@@ -3,6 +3,8 @@
 // SPDX-FileCopyrightText: 2026 GoBuildWP <dev@gobuildwp.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+// wppilot-kit pre-WordPress firewall: the marker the kit looks for before it rewrites this file.
+
 /*
  * GoBuildWP pre-WordPress firewall (auto_prepend_file). Do not edit: the plugin rewrites this file.
  *
@@ -18,10 +20,10 @@ declare(strict_types=1);
 
 namespace GoBuildWP\Kits\SecurityProtection\Prepend;
 
-if (\PHP_SAPI === 'cli' || \PHP_SAPI === 'phpdbg' || defined('GOBUILDWP_FIREWALL_RAN')) {
+if (\PHP_SAPI === 'cli' || \PHP_SAPI === 'phpdbg' || defined('WPPILOT_KIT_FIREWALL_RAN')) {
     return;
 }
-define('GOBUILDWP_FIREWALL_RAN', true);
+define('WPPILOT_KIT_FIREWALL_RAN', true);
 if (($_SERVER['SCRIPT_FILENAME'] ?? '') !== '' && realpath((string) $_SERVER['SCRIPT_FILENAME']) === __FILE__) {
     exit();
 }

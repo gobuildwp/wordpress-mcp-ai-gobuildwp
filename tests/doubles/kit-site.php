@@ -57,6 +57,30 @@ final class Kit_Test_Site
         WPPilot_Test_State::$current_user_id = $user_id;
     }
 
+    /**
+     * Every stored option, name => value, the way the options table holds them: for a kit test
+     * that stands in for $wpdb over the whole table.
+     *
+     * @return array<string, mixed>
+     */
+    public static function options(): array
+    {
+        return WPPilot_Test_State::$options;
+    }
+
+    /**
+     * Replace every stored option with $options, returning what was there so the test can put it back.
+     *
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
+    public static function replace_options(array $options): array
+    {
+        $previous = WPPilot_Test_State::$options;
+        WPPilot_Test_State::$options = $options;
+        return $previous;
+    }
+
     public static function register_post_types(string ...$types): void
     {
         foreach ($types as $type) {

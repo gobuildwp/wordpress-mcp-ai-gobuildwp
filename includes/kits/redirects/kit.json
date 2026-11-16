@@ -1,0 +1,52 @@
+{
+    "slug": "redirects",
+    "version": "1.0.0",
+    "namespace": "WPPilot\\Kits\\Redirects",
+    "tier": "free",
+    "runtime": "^1.1",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9",
+        "kits": ["not-found-log"]
+    },
+    "categories": {
+        "seo": {
+            "label": "SEO",
+            "description": "One post's SEO title, meta description and robots (index and follow) in whichever SEO plugin the site runs: Yoast SEO, Rank Math, All in One SEO, SEOPress, The SEO Framework, Slim SEO or SmartCrawl. Every write is recorded with a before-image the Changes screen can restore."
+        }
+    },
+    "abilities": [
+        {
+            "name": "wppilot/redirect-list",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "wppilot/redirect-create",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "restore:kits/redirect-rule"
+        },
+        {
+            "name": "wppilot/redirect-delete",
+            "readonly": false,
+            "destructive": true,
+            "ledger": "restore:kits/redirect-rule"
+        },
+        {
+            "name": "wppilot/redirect-suggest",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "wppilot/redirect-test",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        }
+    ],
+    "skills": ["redirects"],
+    "tests": ["tests/Unit/Kits/Redirects"]
+}

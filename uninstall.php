@@ -67,6 +67,8 @@ function wppilot_uninstall_tables(): array
         $wpdb->prefix . 'wppilot_oauth_auth_codes',
         $wpdb->prefix . 'wppilot_oauth_access_tokens',
         $wpdb->prefix . 'wppilot_oauth_refresh_tokens',
+        $wpdb->prefix . 'wppilot_approval_log',
+        $wpdb->prefix . 'wppilot_mcp_request_log',
     ];
 }
 
@@ -108,6 +110,7 @@ function wppilot_uninstall_options(): array
         'wppilot_changes_schema_version',
         'wppilot_changes_storage',
         'wppilot_changes_migration',
+        'wppilot_ledger_chain_head',
         'wppilot_changes_storage_error',
         // includes/admin/instructions.php
         'wppilot_instructions_enabled',
@@ -120,8 +123,33 @@ function wppilot_uninstall_options(): array
         'wppilot_confirmation_mode',
         'wppilot_confirmation_requests',
         'wppilot_confirmation_nonces',
+        // includes/approvals/: session approvals, the always-ask list and the log's schema.
+        'wppilot_confirmation_session_grants',
+        'wppilot_confirmation_always_ask',
+        'wppilot_approval_log_schema_version',
         // includes/foreign-gate.php
         'wppilot_foreign_mcp_gate',
+        // includes/mcp/tool-modes.php
+        'wppilot_mcp_compact_tools',
+        'wppilot_mcp_strict_schemas',
+        // includes/mcp/request-log.php
+        'wppilot_mcp_request_log_schema_version',
+        // includes/access/ip-allowlist.php
+        'wppilot_mcp_ip_allowlist',
+        // includes/access/connection-survival.php
+        'wppilot_mcp_rest_fallback',
+        // includes/access/connection-levels.php
+        'wppilot_connection_levels',
+        'wppilot_ability_hold',
+        'wppilot_ability_hold_state',
+        'wppilot_ability_hold_activated',
+        // includes/oauth/app-approval.php
+        'wppilot_oauth_require_app_approval',
+        'wppilot_oauth_approved_clients',
+        'wppilot_oauth_pending_clients',
+        // includes/oauth/discovery-cache.php
+        'wppilot_discovery_cache_purge_pending',
+        'wppilot_discovery_cache_last_purge',
         // includes/kits/pagespeed: the site owner's Google API key.
         'wppilot_kit_pagespeed_api_key',
         // includes/kits/content-audit: the job index.
@@ -169,6 +197,10 @@ function wppilot_uninstall_options(): array
         'wppilot_kit_site_issues_php_errors',
         // includes/kits/not-found-log: the rolled-up 404 log.
         'wppilot_kit_not_found_log',
+        // includes/kits/maintenance-mode: the maintenance mode switch.
+        'wppilot_kit_maintenance_mode',
+        // includes/kits/admin-lock: the admin IP allowlist.
+        'wppilot_kit_admin_lock',
     ];
 }
 
@@ -250,6 +282,8 @@ function wppilot_uninstall_cron_hooks(): array
         'wppilot_gutenberg_cleanup',
         // includes/change-log-table.php
         'wppilot_changes_prune',
+        // includes/approvals/log.php
+        'wppilot_approval_log_prune',
         // includes/telemetry/settings.php
         'wppilot_telemetry_ping',
         // includes/kits/scheduled-audits: the hourly repair of the routines' schedule.

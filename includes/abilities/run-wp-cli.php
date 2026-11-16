@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('wppilot/run-wp-cli', [
     'label' => __('Run WP-CLI Command', domain: 'wppilot'),
     'description' => __(
-        'Runs a WP-CLI command on the server. Can be run synchronously (default) or asynchronously in the background.',
+        'Runs a WP-CLI command on the server. Can be run synchronously (default) or asynchronously in the background. This site has WP-CLI command rules: by default db drop/reset/clean, eval, shell, application-password create, config set on keys and salts and config shuffle-salts are refused, an administrator may add an allow list, and in Read Mode only read commands run. --exec, --require, --path, --ssh, --http and @aliases are always refused. Pass expect to refuse the run unless WordPress, PHP, plugins or themes are at the versions the command was written for. When the host disables proc_open or has no WP-CLI, core version, plugin list, theme list and option get are answered in-process and the result says in_process.',
         domain: 'wppilot',
     ),
     'category' => 'code-execution',
@@ -51,6 +51,17 @@ wp_register_ability('wppilot/run-wp-cli', [
                 'type' => 'boolean',
                 'description' => 'Whether to run the command asynchronously in the background.',
                 'default' => false,
+            ],
+            'expect' => [
+                'type' => 'object',
+                'description' => 'Versions the command was written for, e.g. {"core": "6.9.1", "plugin": {"woocommerce": "10.2"}}. A pin matches itself and longer versions under it ("10.2" accepts 10.2.1, not 10.3). Any mismatch refuses the run with status 409 and runs nothing.',
+                'properties' => [
+                    'core' => ['type' => 'string', 'minLength' => 1],
+                    'php' => ['type' => 'string', 'minLength' => 1],
+                    'plugin' => ['type' => 'object', 'additionalProperties' => ['type' => 'string', 'minLength' => 1]],
+                    'theme' => ['type' => 'object', 'additionalProperties' => ['type' => 'string', 'minLength' => 1]],
+                ],
+                'additionalProperties' => false,
             ],
         ],
         'required' => ['args'],
@@ -78,6 +89,10 @@ wp_register_ability('wppilot/run-wp-cli', [
             'job_id' => [
                 'type' => 'string',
                 'description' => 'The generated background job ID. Absent for a synchronous run.',
+            ],
+            'in_process' => [
+                'type' => 'boolean',
+                'description' => 'True when proc_open is disabled or WP-CLI is not installed and GoBuildWP answered the command inside PHP instead of running WP-CLI.',
             ],
             'pid' => [
                 'type' => 'integer',
@@ -194,15 +209,40 @@ function wppilot_run_wp_cli(array $input)
 
     $async = ($input['async'] ?? null) === true;
 
+    $read_mode = function_exists('wppilot_read_mode_enabled') && wppilot_read_mode_enabled();
+    $refused = wppilot_wp_cli_policy_check($args, wppilot_wp_cli_policy(), $read_mode);
+    if ($refused instanceof WP_Error) {
+        return $refused;
+    }
+    $mismatch = wppilot_wp_cli_expect_check($input['expect'] ?? null);
+    if ($mismatch instanceof WP_Error) {
+        return $mismatch;
+    }
+
     if (!function_exists('proc_open') || !function_exists('exec')) {
-        return new WP_Error('process_execution_disabled', __(
-            'Process execution (proc_open or exec) is disabled in PHP configuration.',
-            domain: 'wppilot',
+        $answered = $async ? null : wppilot_wp_cli_run_in_process($args);
+        if ($answered !== null) {
+            return $answered;
+        }
+
+        return new WP_Error('process_execution_disabled', sprintf(
+            /* translators: %s: comma-separated list of WP-CLI commands */
+            __(
+                'Process execution (proc_open or exec) is disabled in PHP configuration, so WP-CLI cannot be started. Without it only these commands run, synchronously and in-process: %s.',
+                domain: 'wppilot',
+            ),
+            implode(', ', wppilot_wp_cli_in_process_commands()),
         ));
     }
 
     $wp_command = wppilot_find_wp_cli_command();
     if ($wp_command === null) {
+        // A host without the wp binary can still answer the same reads a host without proc_open can.
+        $answered = $async ? null : wppilot_wp_cli_run_in_process($args);
+        if ($answered !== null) {
+            return $answered;
+        }
+
         return new WP_Error('wp_cli_not_found', wppilot_wp_cli_not_found_message(PHP_OS_FAMILY));
     }
 

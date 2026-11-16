@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
 register_core_ability('wppilot/update-post', [
     'label' => __('Update Post', domain: 'wppilot'),
     'description' => __(
-        'Updates an existing WordPress post of any post type with partial-update semantics. A non-empty `content` / `post_content` write to a Breakdance-owned post is gated and rejected unless the user explicitly confirms the raw WordPress write and the re-call sets `allow_raw_content_on_breakdance_post:true`; use `wppilot/breakdance-set-content` plus the element abilities for the native canvas. Use this ability for status, title/slug, featured-image, and ordinary-meta changes. Identifies the target via `post_id` (short alias: `id`). Accepts both short names (title, slug, status, content, excerpt, parent, author, date) and WordPress-native aliases (post_title, post_name, post_status, post_content, post_excerpt, post_parent, post_author, post_date).',
+        'Updates an existing WordPress post of any post type with partial-update semantics. A non-empty `content` / `post_content` write to a Breakdance-owned post is gated and rejected unless the user explicitly confirms the raw WordPress write and the re-call sets `allow_raw_content_on_breakdance_post:true`; use `wppilot/breakdance-set-content` plus the element abilities for the native canvas. Use this ability for status, title/slug, featured-image, and ordinary-meta changes. A `content` write that removes more than half the visible text or media, or overwrites an edit someone made after you read the post, is refused unless the user agrees and you re-call with `confirm_content_loss:true`. Identifies the target via `post_id` (short alias: `id`). Accepts both short names (title, slug, status, content, excerpt, parent, author, date) and WordPress-native aliases (post_title, post_name, post_status, post_content, post_excerpt, post_parent, post_author, post_date).',
         domain: 'wppilot',
     ),
     'category' => 'wordpress',
@@ -66,6 +66,11 @@ register_core_ability('wppilot/update-post', [
                 'type' => 'boolean',
                 'default' => false,
                 'description' => 'Set true ONLY after the user has explicitly confirmed they want raw post_content on a post owned by Elementor, Bricks or Beaver Builder — where it changes nothing visitors see. Never set it on your own initiative; use that builder\'s own abilities to change the page.',
+            ],
+            'confirm_content_loss' => [
+                'type' => 'boolean',
+                'default' => false,
+                'description' => 'Set true only when the user wants this content write even though it removes more than half the visible text or media, or overwrites an edit made after you read the post. Without it such a write is refused with wppilot_content_loss or wppilot_post_changed_since_read.',
             ],
             'excerpt' => [
                 'type' => 'string',
@@ -128,6 +133,7 @@ register_core_ability('wppilot/update-post', [
                 'type' => 'string',
                 'description' => 'WordPress-native alias for date.',
             ],
+            'wait_seconds' => \wppilot_post_lock_wait_schema(),
         ],
         'additionalProperties' => false,
         'anyOf' => [
@@ -227,6 +233,12 @@ function wordpress_update_post(array $input): array|WP_Error
         );
     }
 
+    // Someone with the post open in the editor would lose their work, or ours, on their next save.
+    $locked = \wppilot_post_lock_guard($post_id, \wppilot_post_lock_wait_seconds($input['wait_seconds'] ?? 0));
+    if ($locked instanceof WP_Error) {
+        return $locked;
+    }
+
     // A status change is a separate grant from an edit: moving a draft to
     // publish must satisfy the type's publish capability even when the caller
     // may otherwise edit the post freely.
@@ -261,6 +273,15 @@ function wordpress_update_post(array $input): array|WP_Error
         return $builder_gate;
     }
 
+    // A whole-body replacement that loses most of the page, or erases an edit made after the
+    // agent read the post, is refused before anything is written.
+    if (array_key_exists('content', $input)) {
+        $loss = \wppilot_content_write_guard($post, (string) $input['content'], ($input['confirm_content_loss'] ?? false) === true);
+        if ($loss !== null) {
+            return $loss;
+        }
+    }
+
     $updated_fields = [];
 
     $core_error = wordpress_update_post_core_fields($post_id, $input, $updated_fields);
@@ -274,6 +295,10 @@ function wordpress_update_post(array $input): array|WP_Error
     }
 
     wordpress_update_post_meta_fields($post_id, $input, $updated_fields);
+    if (in_array('content', $updated_fields, strict: true)) {
+        // The agent now knows this content: its own write is not a newer edit to warn about.
+        \wppilot_content_note_read($post_id);
+    }
     $warnings = [
         ...wordpress_breakdance_content_warnings($input, $post_id),
         ...wordpress_postmeta_builder_content_warnings($input, $post_id),

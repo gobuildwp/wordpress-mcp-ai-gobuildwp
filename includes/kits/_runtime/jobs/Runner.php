@@ -77,7 +77,7 @@ final class Runner implements SteppableJobs
             'created_at' => $now,
             'updated_at' => $now,
         ]);
-        $this->update_index(static fn(array $index): array => [...$index, $id]);
+        $this->update_index(static fn(array $index): array => array_merge($index, [$id]));
         $this->schedule(0);
         return $id;
     }

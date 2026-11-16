@@ -1,0 +1,37 @@
+{
+    "slug": "admin-lock",
+    "version": "1.0.0",
+    "namespace": "WPPilot\\Kits\\AdminLock",
+    "tier": "free",
+    "runtime": "^1.1",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "admin-lock": {
+            "label": "Admin IP lock",
+            "description": "Restrict wp-login.php and wp-admin to a list of IP addresses and ranges. The front end, the REST API, admin-ajax and WP-Cron are never restricted, a list that would lock out the person saving it is refused, and a wp-config.php constant or a WP-CLI command switches it off."
+        }
+    },
+    "abilities": [
+        {
+            "name": "wppilot/admin-lock-status",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "wppilot/set-admin-lock",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "restore:kits/admin-lock"
+        }
+    ],
+    "skills": [
+        "admin-lock"
+    ],
+    "tests": [
+        "tests/Unit/Kits/AdminLock"
+    ]
+}

@@ -8,6 +8,11 @@
         "php": "8.0",
         "wp": "6.9"
     },
+    "vendor_storage": {
+        "option": [
+            "woocommerce_custom_orders_table_enabled"
+        ]
+    },
     "categories": {
         "security-recovery": {
             "label": "Security recovery",

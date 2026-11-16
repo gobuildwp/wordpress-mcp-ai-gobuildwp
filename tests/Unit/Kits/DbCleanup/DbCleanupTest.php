@@ -55,7 +55,7 @@ final class DbCleanupTest extends TestCase
         Calls::$failDelete = [];
         Runtime\host(self::host());
         $this->savedWpdb = $GLOBALS['wpdb'] ?? null;
-        $this->db = new TablesWpdb(new \WPPilot_Test_Sqlite_Wpdb());
+        $this->db = new TablesWpdb(new \Kit_Test_Sqlite_Wpdb());
         $GLOBALS['wpdb'] = $this->db;
         $this->seed();
     }

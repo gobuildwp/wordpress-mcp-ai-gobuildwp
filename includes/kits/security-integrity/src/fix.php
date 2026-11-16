@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace GoBuildWP\Kits\SecurityIntegrity;
 
+use WPPilot\Kits\Runtime;
+
 if (!defined('ABSPATH')) {
     exit();
 }
@@ -35,7 +37,8 @@ const THEME_SOURCE_URL = 'https://themes.svn.wordpress.org/%s/%s/%s';
 
 /** Options clean_option never touches: the site breaks or its access changes without them. */
 const FIX_PROTECTED_OPTIONS = ['siteurl', 'home', 'active_plugins', 'cron', 'template', 'stylesheet', 'admin_email', 'users_can_register', 'default_role', 'rewrite_rules', 'wp_user_roles'];
-const FIX_PROTECTED_OPTION_PREFIXES = ['gobuildwp_', 'wppilot_'];
+/** The kits' own; the host adds its own through `protected-option-prefixes`. */
+const FIX_PROTECTED_OPTION_PREFIXES = ['gobuildwp_kit_', 'wppilot_kit_'];
 
 /** Files whose loss breaks the site or leaks secrets; never quarantined, whatever a scan said. */
 const FIX_PROTECTED = ['wp-config.php', 'wp-settings.php', 'wp-load.php', 'wp-blog-header.php', 'index.php', '.htaccess'];
@@ -93,7 +96,7 @@ function put_fix(array $fix): void
 
 function fix_error(string $code, string $message): \WP_Error
 {
-    return new \WP_Error('gobuildwp_security_fix_' . $code, $message, ['status' => 400]);
+    return new \WP_Error(Runtime\public_name('wppilot_kit_security_fix_' . $code), $message, ['status' => 400]);
 }
 
 /**
@@ -104,8 +107,10 @@ function quarantine_dir(): string|\WP_Error
 {
     /** @var mixed $name */
     $name = get_option(QUARANTINE_OPTION, '');
-    if (!is_string($name) || preg_match('/^gobuildwp-quarantine-[a-z0-9]{16}$/', $name) !== 1) {
-        $name = 'gobuildwp-quarantine-' . bin2hex(random_bytes(8));
+    // The host's public folder prefix, so a site keeps the quarantine folder it already has.
+    $prefix = Runtime\public_name('wppilot-kit-quarantine-');
+    if (!is_string($name) || preg_match('/^' . preg_quote($prefix, '/') . '[a-z0-9]{16}$/', $name) !== 1) {
+        $name = $prefix . bin2hex(random_bytes(8));
         update_option(QUARANTINE_OPTION, $name, autoload: false);
     }
     $dir = content_root() . '/' . $name;
@@ -386,7 +391,7 @@ function replace_file(array $p, string $body): array|\WP_Error
     } elseif (!make_dir(dirname($p['abs']))) {
         return fix_error('write_failed', 'The folder for this file could not be created.');
     }
-    $tmp = $p['abs'] . '.gobuildwp-' . bin2hex(random_bytes(4));
+    $tmp = $p['abs'] . '.wppilot-kit-' . bin2hex(random_bytes(4));
     if (file_put_contents($tmp, $body) !== strlen($body) || !@rename($tmp, $p['abs'])) {
         @unlink($tmp);
         return fix_error('write_failed', 'The new file could not be written. Check the folder\'s permissions.');
@@ -888,7 +893,7 @@ function option_protected(string $name): bool
     if (in_array($name, FIX_PROTECTED_OPTIONS, strict: true) || $name === strtolower($wpdb->prefix . 'user_roles') || str_ends_with($name, '_user_roles')) {
         return true;
     }
-    foreach (FIX_PROTECTED_OPTION_PREFIXES as $prefix) {
+    foreach (array_merge(FIX_PROTECTED_OPTION_PREFIXES, host_option_prefixes('protected-option-prefixes')) as $prefix) {
         if (str_starts_with($name, $prefix)) {
             return true;
         }
@@ -1161,7 +1166,7 @@ function unpublish_post(string $target): array|\WP_Error
         return fix_error('unchanged', 'This post is not public.');
     }
     $previous = $post->post_status;
-    $res = wp_update_post(['ID' => $id, 'post_status' => 'draft'], true);
+    $res = wp_update_post(wp_slash(['ID' => $id, 'post_status' => 'draft']), true);
     if (is_wp_error($res)) {
         return fix_error('write_failed', 'The post could not be unpublished.');
     }
@@ -1266,7 +1271,7 @@ function restore_post(array $u): bool|\WP_Error
     if (!get_post($id) instanceof \WP_Post) {
         return fix_error('missing', 'The post no longer exists.');
     }
-    $res = wp_update_post(['ID' => $id, 'post_status' => (string) ($u['status'] ?? 'publish')], true);
+    $res = wp_update_post(wp_slash(['ID' => $id, 'post_status' => (string) ($u['status'] ?? 'publish')]), true);
     return is_wp_error($res) ? fix_error('write_failed', 'The post could not be republished.') : true;
 }
 

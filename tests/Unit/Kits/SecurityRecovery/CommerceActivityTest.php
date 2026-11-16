@@ -8,7 +8,7 @@ declare(strict_types=1);
 namespace GoBuildWP\Tests\Unit\Kits\SecurityRecovery;
 
 use PHPUnit\Framework\TestCase;
-use WPPilot_Test_State;
+use Kit_Test_State;
 
 use function GoBuildWP\Kits\SecurityRecovery\activity_since;
 
@@ -30,14 +30,14 @@ final class CommerceActivityTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->savedOptions = WPPilot_Test_State::$options;
-        WPPilot_Test_State::$multisite = false;
+        $this->savedOptions = \Kit_Test_State::$options;
+        \Kit_Test_State::$multisite = false;
     }
 
     protected function tearDown(): void
     {
-        WPPilot_Test_State::$options = $this->savedOptions;
-        WPPilot_Test_State::$multisite = false;
+        \Kit_Test_State::$options = $this->savedOptions;
+        \Kit_Test_State::$multisite = false;
         parent::tearDown();
     }
 
@@ -109,12 +109,12 @@ final class CommerceActivityTest extends TestCase
 
     public function testHposIsReadFromTheOptionWithoutOrderUtil(): void
     {
-        WPPilot_Test_State::$options['woocommerce_custom_orders_table_enabled'] = 'yes';
+        \Kit_Test_State::$options['woocommerce_custom_orders_table_enabled'] = 'yes';
         $db = new CountingWpdb();
         activity_since(self::SINCE, self::NOW, woo: true, db: $db);
         self::assertCount(1, $db->matching('wp_wc_orders'));
 
-        WPPilot_Test_State::$options['woocommerce_custom_orders_table_enabled'] = 'no';
+        \Kit_Test_State::$options['woocommerce_custom_orders_table_enabled'] = 'no';
         $db = new CountingWpdb();
         activity_since(self::SINCE, self::NOW, woo: true, db: $db);
         self::assertSame([], $db->matching('wc_orders'));
@@ -134,7 +134,7 @@ final class CommerceActivityTest extends TestCase
 
     public function testFormEntriesOnlyForTablesThatExist(): void
     {
-        WPPilot_Test_State::$options['gmt_offset'] = 2;
+        \Kit_Test_State::$options['gmt_offset'] = 2;
         $db = new CountingWpdb();
         $db->tables = ['wp_wpforms_entries', 'wp_fluentform_submissions'];
         $result = activity_since(self::SINCE, self::NOW, woo: false, db: $db);
@@ -154,7 +154,7 @@ final class CommerceActivityTest extends TestCase
 
     public function testOnANetworkOnlyThisSitesUsersCount(): void
     {
-        WPPilot_Test_State::$multisite = true;
+        \Kit_Test_State::$multisite = true;
         $db = new CountingWpdb();
         $db->blog_prefix = 'wp_3_';
         $result = activity_since(self::SINCE, self::NOW, woo: true, hpos: true, db: $db);

@@ -36,4 +36,18 @@ final class ProductCounterSnapshotTest extends TestCase
             wppilot_post_snapshot_fingerprint(['post' => $post, 'meta' => ['_price' => ['4']], 'terms' => []]),
         );
     }
+
+    public function test_a_new_comment_does_not_fail_an_exact_restore(): void
+    {
+        // wp_insert_post() never writes comment_count back, so a restore made after a visitor
+        // commented put the post back exactly and still reported "did not match".
+        $post = ['ID' => 7, 'post_type' => 'post', 'post_title' => 'Hello', 'comment_count' => '0'];
+        $restored = ['post' => array_merge($post, ['comment_count' => '1']), 'meta' => [], 'terms' => []];
+
+        $this->assertSame(
+            wppilot_post_snapshot_fingerprint(['post' => $post, 'meta' => [], 'terms' => []]),
+            wppilot_post_snapshot_fingerprint($restored),
+        );
+        $this->assertSame([], wppilot_post_snapshot_mismatch(['post' => $post, 'meta' => [], 'terms' => []], $restored));
+    }
 }

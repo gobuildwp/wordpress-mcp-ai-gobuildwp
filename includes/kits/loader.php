@@ -29,6 +29,7 @@ function boot(): void
         return;
     }
     Runtime\host(new Runtime\Hosts\WPPilotHost());
+    Runtime\Hosts\bridge_legacy_filters();
     Runtime\PostPartial\register(Runtime\host()->ledger());
     Runtime\load_kits(__DIR__);
 }

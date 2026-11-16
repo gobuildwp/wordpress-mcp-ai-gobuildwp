@@ -56,6 +56,9 @@ function wppilot_current_token_id(): int
 /**
  * The limits of the token behind this request, or null when no token is in play.
  *
+ * Without a token, the limits of the OAuth app or application password behind the request when
+ * it has a connection level (those policies carry `connection` and `level` keys and id 0).
+ *
  * A token whose row cannot be read (revoked mid-request, or its owner deleted)
  * comes back as a policy that allows nothing. Treating a missing row as "no
  * limits" would turn a failed lookup into full access.
@@ -65,7 +68,12 @@ function wppilot_current_token_id(): int
 function wppilot_current_token_policy(): ?array
 {
     $token_id = wppilot_current_token_id();
-    if ($token_id <= 0 || !function_exists('wppilot_token_policy')) {
+    if ($token_id <= 0) {
+        // An OAuth app or application password with a level set on the Connect screen carries
+        // the same kind of policy; see includes/access/connection-levels.php.
+        return function_exists('wppilot_connection_policy') ? wppilot_connection_policy() : null;
+    }
+    if (!function_exists('wppilot_token_policy')) {
         return null;
     }
 
@@ -117,8 +125,34 @@ function wppilot_token_scope_allows(?array $scope, WP_Ability $ability): bool
 function wppilot_agent_profile_ceiling(): string
 {
     $policy = wppilot_current_token_policy();
+    if ($policy === null) {
+        return '';
+    }
 
-    return $policy === null ? '' : $policy['ceiling'];
+    // Drafts only is Production Safe as a profile; what it narrows is enforced by
+    // wppilot_drafts_only_scope_error() and wppilot_drafts_only_input_error().
+    return $policy['ceiling'] === 'drafts' ? 'production' : $policy['ceiling'];
+}
+
+/**
+ * The refusal for an ability the site's profile allows but this request's token or connection
+ * level does not, or null when the ceiling is not what blocked it.
+ *
+ * A Read Only connection lowers the profile rather than narrowing the scope, so without this the
+ * agent was told "not allowed by the active safety profile (readonly)": it named the site's
+ * setting, which the owner had not changed, instead of the connection they had limited.
+ */
+function wppilot_agent_ceiling_error(string $ability_name): ?WP_Error
+{
+    $policy = wppilot_current_token_policy();
+    if ($policy === null || wppilot_agent_profile_ceiling() === '') {
+        return null;
+    }
+    if (wppilot_safety_profile_before_read_mode() === wppilot_get_safety_profile()) {
+        return null;
+    }
+
+    return wppilot_agent_limit_error($policy, $ability_name);
 }
 
 /**
@@ -151,7 +185,34 @@ function wppilot_agent_scope_error(WP_Ability $ability): ?WP_Error
     }
 
     if (wppilot_token_scope_allows($policy['scope'], $ability)) {
-        return null;
+        return function_exists('wppilot_drafts_only_scope_error') ? wppilot_drafts_only_scope_error($ability) : null;
+    }
+
+    return wppilot_agent_limit_error($policy, $name);
+}
+
+/**
+ * The refusal for a limit the site owner set on this request's connection or access token.
+ *
+ * @param array{id: int, name: string, connection?: string, level?: string} $policy
+ */
+function wppilot_agent_limit_error(array $policy, string $name): WP_Error
+{
+    if (isset($policy['connection'])) {
+        return new WP_Error(
+            'wppilot_connection_level_denied',
+            sprintf(
+                /* translators: 1: connection name, 2: connection level, 3: ability name */
+                __(
+                    'The connection "%1$s" is at the level "%2$s", which does not include "%3$s". This is a limit the site owner set on the connection, not a fault: do not retry. Ask them to change the connection on the GoBuildWP Connect screen if the task needs it.',
+                    domain: 'wppilot',
+                ),
+                $policy['name'],
+                (string) ($policy['level'] ?? ''),
+                $name,
+            ),
+            ['status' => 403, 'ability' => $name, 'level' => (string) ($policy['level'] ?? '')],
+        );
     }
 
     return new WP_Error(

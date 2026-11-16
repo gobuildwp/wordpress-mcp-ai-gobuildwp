@@ -28,10 +28,22 @@ const MAX_BYTES = 262_144;
  * download everything at once.
  *
  * @param array<string, mixed> $input
- * @return array<string, mixed>
+ * @return array<string, mixed>|\WP_Error
  */
-function export(array $input): array
+function export(array $input): array|\WP_Error
 {
+    // A time the ledger cannot read used to drop that filter silently, so a report "since last
+    // Monday" spelled wrongly exported the whole history as if it were the requested window.
+    foreach (['since', 'until'] as $key) {
+        $value = trim((string) ($input[$key] ?? ''));
+        if ($value !== '' && strtotime($value) === false) {
+            return new \WP_Error(
+                'invalid_argument',
+                sprintf('%s is not a date or time the ledger can read: use a date (2026-09-27) or an ISO time.', $key),
+                ['status' => 400, 'field' => $key],
+            );
+        }
+    }
     $ledger = Runtime\host()->ledger();
     $filters = array_filter(
         [
@@ -119,7 +131,7 @@ wp_register_ability('wppilot/export-changes', [
             'download_url' => ['type' => 'string'],
         ],
     ],
-    'execute_callback' => static fn(array $input = []): array => export($input),
+    'execute_callback' => static fn(array $input = []): array|\WP_Error => export($input),
     'permission_callback' => static fn(): bool => Runtime\can_run(),
     'meta' => [
         'show_in_rest' => true,

@@ -87,6 +87,11 @@ function wppilot_cloud_rest_permission(): bool|WP_Error
  */
 function wppilot_cloud_safety_profile(): string
 {
+    // Read Mode holds the Cloud to reads like every other connection.
+    if (function_exists('wppilot_read_mode_enabled') && wppilot_read_mode_enabled()) {
+        return 'readonly';
+    }
+
     $site = wppilot_get_safety_profile();
     $link = wppilot_cloud_link();
     $policy = $link !== null && function_exists('wppilot_token_policy') ? wppilot_token_policy($link['token_id']) : null;
@@ -118,6 +123,10 @@ function wppilot_cloud_rest_status(): WP_REST_Response|WP_Error
         'php_version' => $versions['php'],
         'pro_version' => $versions['pro'],
         'safety_profile' => wppilot_cloud_safety_profile(),
+        // {paused, pinned, by, at}: a person paused every agent here; resume needs a person on the site.
+        'agents_paused' => function_exists('wppilot_agents_pause_status') ? wppilot_agents_pause_status() : null,
+        // Requests Cloud jobs queued here for a person to approve, and where each stands.
+        'cloud_approvals' => function_exists('wppilot_cloud_approvals_status') ? wppilot_cloud_approvals_status() : [],
         'abilities_enabled' => (bool) wppilot_is_enabled(),
         'home_url' => home_url(),
         'updates' => wppilot_cloud_pending_updates(),

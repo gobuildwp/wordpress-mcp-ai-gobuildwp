@@ -137,7 +137,7 @@ final class JobsTest extends TestCase
             $allowed = (Kit_Test_Site::registration($name)['permission_callback'])();
             if (in_array($name, $writes, true)) {
                 self::assertInstanceOf(WP_Error::class, $allowed, $name);
-                self::assertSame('gobuildwp_cloud_pro_required', $allowed->get_error_code(), $name);
+                self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_cloud_pro_required'), $allowed->get_error_code(), $name);
                 self::assertSame(403, $allowed->get_error_data()['status'], $name);
             } else {
                 self::assertTrue($allowed, $name);

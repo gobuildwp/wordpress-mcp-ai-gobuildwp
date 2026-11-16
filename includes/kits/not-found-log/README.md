@@ -8,6 +8,8 @@ To turn recording off, return false from the filter `wppilot_kit_not_found_log_e
 |---|---|
 | `wppilot/not-found-log` | Read-only. `{entries: [{path, hits, referrer, last_seen}], tracked_paths, max_paths, recording}` |
 
+<!-- kit-export:omit -->
 GoBuildWP Cloud reads it daily for the broken-link monitor.
+<!-- /kit-export:omit -->
 
 Tests: `tests/Unit/Kits/NotFoundLog`.

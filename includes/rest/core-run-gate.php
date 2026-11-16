@@ -48,8 +48,10 @@ function wppilot_gate_core_rest_run(mixed $result, WP_REST_Request $request, str
         return $result;
     }
 
-    // The matched route is core's pattern; the request carries the real path.
-    if (preg_match('#^/wp-abilities/v1/abilities/(?P<name>[a-z0-9-]+(?:/[a-z0-9-]+)+)/run$#', $request->get_route(), $matches) !== 1) {
+    // The matched route is core's pattern; the request carries the real path, exactly as the
+    // caller typed it. WordPress matches routes case-insensitively, so compare in lowercase or
+    // /WP-ABILITIES/... reaches core's runner past this gate.
+    if (preg_match('#^/wp-abilities/v1/abilities/(?P<name>[a-z0-9-]+(?:/[a-z0-9-]+)+)/run$#', strtolower($request->get_route()), $matches) !== 1) {
         return $result;
     }
 
@@ -74,7 +76,7 @@ function wppilot_gate_core_rest_run(mixed $result, WP_REST_Request $request, str
         return wppilot_rest_classify_ability_error($output);
     }
 
-    return rest_ensure_response($output);
+    return rest_ensure_response(wppilot_output_guard_rest_response(wppilot_output_guard($ability->get_name(), $output, 'rest')));
 }
 
 /**

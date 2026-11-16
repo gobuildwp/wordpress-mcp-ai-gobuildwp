@@ -1,0 +1,51 @@
+{
+    "slug": "image-optimize",
+    "version": "1.0.0",
+    "namespace": "GoBuildWP\\Kits\\ImageOptimize",
+    "tier": "free",
+    "runtime": "^1.0",
+    "requires": {
+        "php": "8.0",
+        "wp": "6.9"
+    },
+    "categories": {
+        "media": {
+            "label": "Media",
+            "description": "Edit images in the media library."
+        }
+    },
+    "abilities": [
+        {
+            "name": "gobuildwp/image-optimize-status",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/image-optimize-estimate",
+            "readonly": true,
+            "destructive": false,
+            "ledger": "self"
+        },
+        {
+            "name": "gobuildwp/image-optimize-run",
+            "readonly": false,
+            "destructive": true,
+            "ledger": "items"
+        },
+        {
+            "name": "gobuildwp/image-optimize-restore",
+            "readonly": false,
+            "destructive": true,
+            "ledger": "irreversible:puts the kept original back and deletes the WebP/AVIF copies; running image-optimize-run again redoes the optimisation"
+        },
+        {
+            "name": "gobuildwp/image-optimize-serving",
+            "readonly": false,
+            "destructive": false,
+            "ledger": "restore:image-optimize/serving"
+        }
+    ],
+    "skills": ["image-optimize"],
+    "tests": ["tests/Unit/Kits/ImageOptimize", "tests/Unit/Kits/media-doubles.php"]
+}

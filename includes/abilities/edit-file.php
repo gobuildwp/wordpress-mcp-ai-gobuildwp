@@ -51,6 +51,14 @@ wp_register_ability('wppilot/edit-file', [
             'path' => ['type' => 'string', 'description' => 'Absolute path to the edited file.'],
             'replacements' => ['type' => 'integer', 'description' => 'Number of replacements made.'],
             'size' => ['type' => 'integer', 'description' => 'Final file size in bytes.'],
+            'syntax_checked' => [
+                'type' => 'boolean',
+                'description' => 'Whether the edited PHP was parsed before writing. An edit that leaves the file unparseable is refused and nothing is written.',
+            ],
+            'verification' => [
+                'type' => 'object',
+                'description' => 'Post-write loopback check of the home page and wp-admin, run for PHP and PHP execution control files. When the edit broke the site, the previous file is put back and the call fails with write_rolled_back instead.',
+            ],
         ],
     ],
     'execute_callback' => 'wppilot_edit_file',
@@ -166,14 +174,18 @@ function wppilot_edit_file($input)
         ? str_replace($old_string, $new_string, $content)
         : wppilot_edit_replace_first($content, $old_string, $new_string);
 
-    $bytes_written = file_put_contents($resolved, $new_content, LOCK_EX);
-    if ($bytes_written === false) {
-        return new WP_Error('write_failed', sprintf('Failed to write file: %s', $resolved));
+    // Lint, temp-file-and-rename, then a loopback check that puts the old file back on a fatal.
+    // See includes/file-write-guard.php.
+    $written = wppilot_guarded_write_file($resolved, $new_content);
+    if (is_wp_error($written)) {
+        return $written;
     }
 
     return [
         'path' => $resolved,
         'replacements' => $count,
-        'size' => $bytes_written,
+        'size' => $written['bytes'],
+        'syntax_checked' => $written['lint']['checked'],
+        'verification' => $written['verification'],
     ];
 }

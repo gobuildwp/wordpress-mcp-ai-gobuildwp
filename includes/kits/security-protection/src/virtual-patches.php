@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace GoBuildWP\Kits\SecurityProtection;
 
 use WP_Error;
+use WPPilot\Kits\Runtime;
 
 if (!defined('ABSPATH')) {
     exit();
@@ -53,7 +54,7 @@ const VP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
  */
 function sanitize_virtual_patch(mixed $rule): array|WP_Error
 {
-    $bad = static fn(string $what): WP_Error => new WP_Error('gobuildwp_vpatch_invalid', sprintf('Invalid virtual patch: %s.', $what));
+    $bad = static fn(string $what): WP_Error => new WP_Error(Runtime\public_name('wppilot_kit_vpatch_invalid'), sprintf('Invalid virtual patch: %s.', $what));
     if (!is_array($rule)) {
         return $bad('a rule must be an object');
     }
@@ -190,7 +191,7 @@ function sanitize_virtual_patch(mixed $rule): array|WP_Error
  */
 function sanitize_virtual_patch_param(string $id, mixed $param): array|WP_Error
 {
-    $bad = static fn(string $what): WP_Error => new WP_Error('gobuildwp_vpatch_invalid', sprintf('Invalid virtual patch: %s: %s.', $id, $what));
+    $bad = static fn(string $what): WP_Error => new WP_Error(Runtime\public_name('wppilot_kit_vpatch_invalid'), sprintf('Invalid virtual patch: %s: %s.', $id, $what));
     if (!is_array($param)) {
         return $bad('match.param must be an object');
     }
@@ -288,8 +289,9 @@ function vp_regex(string $pattern): string
  */
 function set_virtual_patches(array $rules, ?int $now = null): array|WP_Error
 {
-    if (!array_is_list($rules) || count($rules) > MAX_VPATCHES) {
-        return new WP_Error('gobuildwp_vpatch_invalid', 'Invalid virtual patch: rules must be a list of at most ' . MAX_VPATCHES . ' rules.');
+    // array_values() equal to the array itself is array_is_list(), which needs PHP 8.1.
+    if (array_values($rules) !== $rules || count($rules) > MAX_VPATCHES) {
+        return new WP_Error(Runtime\public_name('wppilot_kit_vpatch_invalid'), 'Invalid virtual patch: rules must be a list of at most ' . MAX_VPATCHES . ' rules.');
     }
     $clean = [];
     foreach ($rules as $rule) {
@@ -298,7 +300,7 @@ function set_virtual_patches(array $rules, ?int $now = null): array|WP_Error
             return $one;
         }
         if (isset($clean[$one['id']])) {
-            return new WP_Error('gobuildwp_vpatch_invalid', sprintf('Invalid virtual patch: id %s appears twice.', $one['id']));
+            return new WP_Error(Runtime\public_name('wppilot_kit_vpatch_invalid'), sprintf('Invalid virtual patch: id %s appears twice.', $one['id']));
         }
         $clean[$one['id']] = $one;
     }
@@ -684,7 +686,7 @@ function vp_applies_to(array $rule, bool $signed_in, callable $can): bool
 // ---------------------------------------------------------------- the guard
 
 /** @var list<array<string, mixed>>|null Rules hit by a REST call that carries credentials. */
-$GLOBALS['gobuildwp_sp_vp_deferred'] = null;
+$GLOBALS['wppilot_kit_sp_vp_deferred'] = null;
 
 /**
  * Apply the active rules to this request. Most requests match no endpoint and cost a few string
@@ -714,7 +716,7 @@ function guard_virtual_patches(array $rules, array $settings): void
     $has_auth_header = !empty($_SERVER['HTTP_AUTHORIZATION']) || !empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) || !empty($_SERVER['PHP_AUTH_USER']);
     if ($req['rest_route'] !== null && $has_auth_header) {
         // WordPress hasn't checked the application password yet: decide once it has.
-        $GLOBALS['gobuildwp_sp_vp_deferred'] = ['rules' => $hits, 'ip' => $ip, 'path' => $req['path']];
+        $GLOBALS['wppilot_kit_sp_vp_deferred'] = ['rules' => $hits, 'ip' => $ip, 'path' => $req['path']];
         add_filter('rest_authentication_errors', __NAMESPACE__ . '\\filter_rest_virtual_patches', 100, 1);
         // WordPress serves REST on parse_request and exits; a request that gets past it was never
         // authenticated as REST, so the rules apply as they would without the header.
@@ -782,11 +784,11 @@ function vp_json_body(string $raw): array
 /** Applies virtual-patch rules whose decision waited for REST authentication that never came. */
 function enforce_vp_deferred(): void
 {
-    $d = $GLOBALS['gobuildwp_sp_vp_deferred'] ?? null;
+    $d = $GLOBALS['wppilot_kit_sp_vp_deferred'] ?? null;
     if (!is_array($d)) {
         return;
     }
-    $GLOBALS['gobuildwp_sp_vp_deferred'] = null;
+    $GLOBALS['wppilot_kit_sp_vp_deferred'] = null;
     $user_id = cookie_user_id();
     $can = static fn(string $cap): bool => $user_id > 0 && user_can($user_id, $cap);
     foreach ($d['rules'] as $rule) {
@@ -799,11 +801,11 @@ function enforce_vp_deferred(): void
 
 function filter_rest_virtual_patches(mixed $result): mixed
 {
-    $d = $GLOBALS['gobuildwp_sp_vp_deferred'] ?? null;
+    $d = $GLOBALS['wppilot_kit_sp_vp_deferred'] ?? null;
     if (!is_array($d) || is_wp_error($result)) {
         return $result;
     }
-    $GLOBALS['gobuildwp_sp_vp_deferred'] = null;
+    $GLOBALS['wppilot_kit_sp_vp_deferred'] = null;
     if (cloud_token_call()) {
         return $result;
     }
@@ -814,7 +816,7 @@ function filter_rest_virtual_patches(mixed $result): mixed
             $decision = vp_decision($rule);
             $event = record_event($decision['type'], 'blocked', (string) $d['ip'], $decision['rule'], (string) $d['path'], $decision['detail']);
             escalate((string) $d['ip']);
-            return new WP_Error('gobuildwp_blocked', 'Blocked by website protection. Reference: ' . $event['id'], ['status' => 403]);
+            return new WP_Error(Runtime\public_name('wppilot_kit_blocked'), 'Blocked by website protection. Reference: ' . $event['id'], ['status' => 403]);
         }
     }
     return $result;

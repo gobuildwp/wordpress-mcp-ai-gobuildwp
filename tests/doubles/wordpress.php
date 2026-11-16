@@ -13,6 +13,15 @@ declare(strict_types=1);
  * a scenario and reset it in tearDown().
  */
 
+// WordPress's time constants (wp-includes/default-constants.php). Defined here, not only by the
+// sqlite double, so code reading them at class load (Runner::RETENTION) works in any test order.
+foreach (['MINUTE_IN_SECONDS' => 60, 'HOUR_IN_SECONDS' => 3_600, 'DAY_IN_SECONDS' => 86_400, 'WEEK_IN_SECONDS' => 604_800] as $wppilot_test_constant => $wppilot_test_seconds) {
+    if (!defined($wppilot_test_constant)) {
+        define($wppilot_test_constant, $wppilot_test_seconds);
+    }
+}
+unset($wppilot_test_constant, $wppilot_test_seconds);
+
 /**
  * Mutable WordPress state for the doubles.
  */
@@ -214,6 +223,46 @@ final class WPPilot_Test_State
 
         self::$post_types[$name] = $type;
     }
+
+    /** The autoload argument the last add_option()/update_option() gave $option, as passed; null when none. */
+    public static function option_autoload(string $option): mixed
+    {
+        return $GLOBALS['wppilot_test_option_autoload'][$option] ?? null;
+    }
+
+    /**
+     * Installed themes for the theme doubles (cloud.php): stylesheet => headers; null removes them.
+     *
+     * @param array<string, array<string, string>>|null $themes
+     */
+    public static function set_themes(?array $themes): void
+    {
+        if ($themes === null) {
+            unset($GLOBALS['wppilot_test_themes']);
+            return;
+        }
+        $GLOBALS['wppilot_test_themes'] = $themes;
+    }
+
+    /**
+     * Routes the register_rest_route() double (cloud.php) recorded, keyed namespace . route;
+     * reset first so a test sees only its own.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function rest_routes(bool $reset = false): array
+    {
+        if ($reset) {
+            $GLOBALS['wppilot_test_rest_routes'] = [];
+        }
+        return $GLOBALS['wppilot_test_rest_routes'] ?? [];
+    }
+}
+
+// Kit tests are exported with their kit (scripts/export-kit.php) and must not name this plugin,
+// so they reach the state above as Kit_Test_State; a receiving plugin's harness provides its own.
+if (!class_exists('Kit_Test_State', false)) {
+    class_alias(WPPilot_Test_State::class, 'Kit_Test_State');
 }
 
 if (!class_exists('WP_Post_Type')) {
@@ -362,6 +411,18 @@ if (!class_exists('WP_REST_Request')) {
         public function get_params(): array
         {
             return $this->params;
+        }
+
+        public function get_param(string $key): mixed
+        {
+            return $this->params[$key] ?? null;
+        }
+
+        public function get_header(string $key): ?string
+        {
+            $values = $this->headers[strtolower(str_replace('-', '_', $key))] ?? null;
+
+            return is_array($values) && $values !== [] ? implode(',', $values) : null;
         }
     }
 }
@@ -871,6 +932,24 @@ if (!function_exists('apply_filters')) {
         }
 
         return $value;
+    }
+}
+
+if (!function_exists('do_action')) {
+    /**
+     * Run the recorded callbacks for an action, lowest priority first.
+     *
+     * @param mixed ...$args
+     */
+    function do_action(string $hook, mixed ...$args): void
+    {
+        $registered = $GLOBALS['wp_filter'][$hook] ?? [];
+        ksort($registered);
+        foreach ($registered as $callbacks) {
+            foreach ($callbacks as $entry) {
+                $entry['callback'](...array_slice($args, offset: 0, length: max(1, (int) $entry['args'])));
+            }
+        }
     }
 }
 

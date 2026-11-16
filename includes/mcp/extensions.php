@@ -9,7 +9,7 @@ namespace WPPilot\Mcp;
 
 /**
  * The hook-in points the modern transport and server/discover call for optional extensions:
- * Tasks (tasks.php) and MCP Apps (apps.php).
+ * Tasks (tasks.php), MCP Apps (apps.php) and the approval card (approval-card.php).
  *
  * Kept out of transport.php so that file changes by one line per hook, and so each extension can
  * be left unloaded without the transport noticing: every call here checks the module is present.
@@ -68,6 +68,46 @@ function decorate_tool(array $tool, array $meta): array
     }
 
     return $tool;
+}
+
+/**
+ * Add the tools the extensions own (not abilities) to a tools/list.
+ *
+ * @param list<array<string, mixed>> $tools
+ * @return list<array<string, mixed>>
+ */
+function with_extension_tools(array $tools): array
+{
+    if (function_exists('WPPilot\Mcp\ApprovalCard\decide_tool')) {
+        $tools[] = ApprovalCard\decide_tool();
+    }
+
+    return $tools;
+}
+
+/**
+ * Answer a tools/call for a tool an extension owns, or return null for an ability's tool.
+ *
+ * @param array<string, mixed> $params
+ * @return array{status: int, body: array<string, mixed>}|null
+ */
+function call_extension_tool(string $name, array $params, mixed $id): ?array
+{
+    return function_exists('WPPilot\Mcp\ApprovalCard\call') ? ApprovalCard\call($name, $params, $id) : null;
+}
+
+/**
+ * Let the extensions add to a gate refusal's tool result: the approval card links itself here.
+ *
+ * @param array{status: int, body: array<string, mixed>} $outcome
+ * @param array<string, mixed> $params
+ * @return array{status: int, body: array<string, mixed>}
+ */
+function decorate_refusal(array $outcome, \WP_Error $error, array $params): array
+{
+    return function_exists('WPPilot\Mcp\ApprovalCard\decorate_refusal')
+        ? ApprovalCard\decorate_refusal($outcome, $error, $params)
+        : $outcome;
 }
 
 /**

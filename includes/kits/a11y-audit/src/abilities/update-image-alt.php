@@ -50,6 +50,7 @@ wp_register_ability('wppilot/update-image-alt', [
             'skipped' => ['type' => 'integer'],
             'failed' => ['type' => 'integer'],
             'group' => ['type' => ['string', 'null']],
+            'change_ids' => ['type' => 'array', 'items' => ['type' => 'string']],
             'results' => ['type' => 'array', 'items' => ['type' => 'object']],
         ],
     ],

@@ -61,7 +61,7 @@ function client_supports_form_elicitation(array $capabilities): bool
  * The gate context for one modern `tools/call`.
  *
  * @param array<string, mixed> $params
- * @return array{elicitation: array{supported: bool, state: string, response: mixed}}
+ * @return array{elicitation: array{supported: bool, state: string, response: mixed}, cloud_job?: string}
  */
 function confirmation_context(array $params): array
 {
@@ -70,13 +70,20 @@ function confirmation_context(array $params): array
     $responses = is_array($params['inputResponses'] ?? null) ? $params['inputResponses'] : [];
     $key = defined('WPPILOT_CONFIRMATION_INPUT_KEY') ? (string) constant('WPPILOT_CONFIRMATION_INPUT_KEY') : 'wppilot_confirmation';
 
-    return [
+    $context = [
         'elicitation' => [
             'supported' => client_supports_form_elicitation($capabilities),
             'state' => is_string($params['requestState'] ?? null) ? $params['requestState'] : '',
             'response' => $responses[$key] ?? null,
         ],
     ];
+    // Only a call whose Cloud signature this site verified; see includes/cloud/approvals.php.
+    $job = function_exists('wppilot_cloud_approval_job_from_meta') ? \wppilot_cloud_approval_job_from_meta($meta) : '';
+    if ($job !== '') {
+        $context['cloud_job'] = $job;
+    }
+
+    return $context;
 }
 
 /**

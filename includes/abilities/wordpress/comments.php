@@ -89,7 +89,7 @@ register_core_ability('wppilot/create-comment', [
             'content' => ['type' => 'string', 'minLength' => 1],
             'parent_id' => ['type' => 'integer', 'description' => 'Comment being replied to.'],
             'author_name' => ['type' => 'string', 'description' => 'Requires moderate_comments.'],
-            'author_email' => ['type' => 'string', 'description' => 'Requires moderate_comments.'],
+            'author_email' => ['type' => 'string', 'format' => 'email', 'description' => 'Requires moderate_comments.'],
             'status' => [
                 'type' => 'string',
                 'enum' => ['approve', 'hold'],
@@ -363,7 +363,18 @@ function wordpress_create_comment(array $input): array|WP_Error
         }
     }
 
+    if (isset($input['author_email']) && !is_email((string) $input['author_email'])) {
+        return new WP_Error(
+            'invalid_comment_author_email',
+            'author_email is not a valid email address.',
+            ['status' => 422],
+        );
+    }
+
     $user = wp_get_current_user();
+    // A comment given a different (guest) author must not be attributed to the
+    // calling account, so user_id is only set when no author is named.
+    $named_author = isset($input['author_name']) || isset($input['author_email']);
     // wp_insert_comment()/wp_update_comment() unslash internally, so unslashed
     // input arrives one round of backslash-stripping short.
     $commentarr = [
@@ -372,7 +383,7 @@ function wordpress_create_comment(array $input): array|WP_Error
         'comment_parent' => (int) ($input['parent_id'] ?? 0),
         'comment_type' => 'comment',
         'comment_approved' => $status === 'approve' ? 1 : 0,
-        'user_id' => (int) $user->ID,
+        'user_id' => $named_author ? 0 : (int) $user->ID,
         'comment_author' => wp_slash((string) ($input['author_name'] ?? $user->display_name)),
         'comment_author_email' => wp_slash((string) ($input['author_email'] ?? $user->user_email)),
     ];

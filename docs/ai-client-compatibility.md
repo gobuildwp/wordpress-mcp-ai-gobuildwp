@@ -116,6 +116,19 @@ legacy alias. New configurations should use the canonical path.
 4. A refusal on a call that used to work is usually the safety profile or a
    WordPress capability rather than authentication - the two read differently in
    the error text.
+5. **A host or proxy strips `Authorization`.** Send the access token as
+   `X-GoBuildWP-Authorization: Bearer <token>` instead. The site reads it only
+   over HTTPS, only on the MCP, OAuth and ability-run routes, and only when no
+   `Authorization` header arrived. It is never logged.
+6. **`/wp-json/` answers 403 or 404.** Use the fallback form
+   `https://example.com/?rest_route=/mcp/wppilot`. Diagnostics switches the
+   Connect screen to it automatically when it works and `/wp-json/` does not.
+7. **The MCP IP allowlist blocks GoBuildWP Cloud.** Diagnostics → Repairs →
+   *Allow GoBuildWP Cloud* fetches the Cloud's published addresses, shows what
+   would change, and adds them only after you confirm. The change is a ledger
+   row you can undo. Wordfence, Solid Security and All-In-One Security keep
+   their own allowlists; the preview names them so you can add the same
+   addresses there.
 
 ## Related
 

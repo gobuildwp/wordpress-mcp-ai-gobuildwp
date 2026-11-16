@@ -209,11 +209,14 @@ function wppilot_token_clean_name(string $name): string
  * token could be granted more than the site allows. A ceiling only ever takes
  * access away.
  *
+ * `drafts` is Production Safe narrowed to reading and drafting content; see
+ * includes/access/drafts-only.php.
+ *
  * @return list<string>
  */
 function wppilot_token_ceiling_ids(): array
 {
-    return ['readonly', 'production'];
+    return ['readonly', 'drafts', 'production'];
 }
 
 /**
@@ -324,6 +327,7 @@ function wppilot_token_update_policy(
     if ($policy instanceof WP_Error) {
         return $policy;
     }
+    $before = wppilot_token_policy($token_id);
 
     $updated = $wpdb->update(
         wppilot_tokens_table(),
@@ -338,6 +342,22 @@ function wppilot_token_update_policy(
     );
 
     wppilot_token_policy_cache($token_id, forget: true);
+
+    if (is_int($updated) && $updated > 0 && $before !== null && function_exists('wppilot_ledger_record_items')
+        && ($before['scope'] !== $policy['scope'] || $before['ceiling'] !== $policy['ceiling'])) {
+        // A grant change is ledgered. Irreversible from the Changes screen: an undo could widen the
+        // token, and only its owner, in wp-admin, may do that.
+        wppilot_ledger_record_items('wppilot/connection-level', [[
+            'input' => ['token' => $token_id, 'ceiling' => $policy['ceiling'], 'scope' => $policy['scope']],
+            'before' => null,
+            'result' => [
+                'connection' => $before['name'],
+                'from' => ['ceiling' => $before['ceiling'], 'scope' => $before['scope']],
+                'to' => ['ceiling' => $policy['ceiling'], 'scope' => $policy['scope']],
+            ],
+            'irreversible_reason' => 'The owner changes an access token level on the Connect screen; it is not undone from the ledger.',
+        ]]);
+    }
 
     return $updated !== false;
 }

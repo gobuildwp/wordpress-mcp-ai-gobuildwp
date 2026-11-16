@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace GoBuildWP\Kits\SecurityProtection;
 
+use WPPilot\Kits\Runtime;
+
 if (!defined('ABSPATH')) {
     exit();
 }
@@ -21,6 +23,16 @@ const CLOUDFLARE_RANGES = [
     '162.158.0.0/15', '104.16.0.0/13', '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
     '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32', '2405:8100::/32',
     '2a06:98c0::/29', '2c0f:f248::/32',
+];
+
+/**
+ * Networks a connection only comes from when a proxy, load balancer or container network sits in
+ * front of PHP: private, loopback, carrier-grade NAT, link-local and unique-local. Listed here
+ * rather than taken from FILTER_FLAG_NO_RES_RANGE, whose ranges change between PHP versions.
+ */
+const PROXY_NETWORK_RANGES = [
+    '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '127.0.0.0/8', '100.64.0.0/10', '169.254.0.0/16',
+    '::1/128', 'fc00::/7', 'fe80::/10',
 ];
 
 /**
@@ -58,21 +70,43 @@ function client_ip(array $server, string $source): string
 }
 
 /**
- * Cloudflare's ranges, normalized. The gobuildwp_protection_cloudflare_ranges filter replaces the
+ * Whether the address client_ip() settled on is a proxy many visitors share, not a visitor: the
+ * connection came from Cloudflare's edge or from a private, loopback or reserved address (a
+ * reverse proxy, load balancer or container network), and the IP source did not resolve the
+ * visitor behind it. Locking out that address would lock out everyone, so lockouts skip it.
+ * Neither case can be forged from the internet, unlike a forwarding header.
+ *
+ * @param array<string, mixed> $server
+ */
+function ip_is_shared_proxy(array $server, string $ip): bool
+{
+    $remote = is_string($server['REMOTE_ADDR'] ?? null) ? trim($server['REMOTE_ADDR']) : '';
+    if ($ip === '' || !is_ip($remote) || $ip !== normalize_ip($remote)) {
+        return false;
+    }
+    if (ip_in_list($ip, cloudflare_ranges())) {
+        return true;
+    }
+
+    return ip_in_list($ip, PROXY_NETWORK_RANGES);
+}
+
+/**
+ * Cloudflare's ranges, normalized. The wppilot_kit_protection_cloudflare_ranges filter replaces the
  * list when Cloudflare publishes new ranges before the plugin ships them.
  *
  * @return list<string>
  */
 function cloudflare_ranges(): array
 {
-    $ranges = function_exists('apply_filters') ? apply_filters('gobuildwp_protection_cloudflare_ranges', CLOUDFLARE_RANGES) : CLOUDFLARE_RANGES;
+    $ranges = function_exists('apply_filters') ? apply_filters('wppilot_kit_protection_cloudflare_ranges', CLOUDFLARE_RANGES) : CLOUDFLARE_RANGES;
     return cidr_list($ranges);
 }
 
 /**
- * The proxies whose X-Forwarded-For header is believed: the GOBUILDWP_TRUSTED_PROXIES constant
+ * The proxies whose X-Forwarded-For header is believed: the WPPILOT_KIT_TRUSTED_PROXIES constant (or the host's public name for it)
  * (an array or a comma-separated string of addresses and ranges), the trusted_proxies setting, then the
- * gobuildwp_protection_trusted_proxies filter. Empty by default, so the header is ignored until
+ * wppilot_kit_protection_trusted_proxies filter. Empty by default, so the header is ignored until
  * the owner names their proxy.
  *
  * @return list<string>
@@ -80,15 +114,15 @@ function cloudflare_ranges(): array
 function trusted_proxies(): array
 {
     $list = [];
-    if (defined('GOBUILDWP_TRUSTED_PROXIES')) {
-        $constant = constant('GOBUILDWP_TRUSTED_PROXIES');
+    $constant = Runtime\constant_value('WPPILOT_KIT_TRUSTED_PROXIES');
+    if ($constant !== null) {
         $list = is_array($constant) ? $constant : (is_string($constant) ? explode(',', $constant) : []);
     }
     if (function_exists(__NAMESPACE__ . '\settings')) {
         $list = array_merge($list, (array) (settings()['trusted_proxies'] ?? []));
     }
     if (function_exists('apply_filters')) {
-        $list = apply_filters('gobuildwp_protection_trusted_proxies', $list);
+        $list = apply_filters('wppilot_kit_protection_trusted_proxies', $list);
     }
     return cidr_list($list);
 }

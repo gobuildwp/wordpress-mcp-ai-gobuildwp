@@ -89,6 +89,28 @@ final class AbilityRunnerTest extends TestCase
     }
 
     /**
+     * The Cloud and option-name points the security kits read through the host instead of calling
+     * GoBuildWP functions or naming its prefixes themselves.
+     */
+    public function testTheSecurityKitPointsAnswerFromTheHost(): void
+    {
+        $host = new WPPilotHost();
+
+        self::assertSame(['gobuildwp_', 'wppilot_'], $host->extension('protected-option-prefixes'));
+        self::assertSame(['wppilot_preview_'], $host->extension('unscanned-option-prefixes'));
+        self::assertSame('gobuildwp/v1', $host->extension('cloud-rest-namespace'));
+        self::assertSame(
+            function_exists('wppilot_cloud_rest_permission') ? 'wppilot_cloud_rest_permission' : null,
+            $host->extension('cloud-rest-permission'),
+        );
+        $note = $host->extension('cloud-note-event');
+        self::assertSame(function_exists('wppilot_cloud_note_event'), is_callable($note));
+        if (!function_exists('wppilot_current_token_id')) {
+            self::assertFalse($host->extension('cloud-token-call'));
+        }
+    }
+
+    /**
      * A destructive inner ability needs its own confirm: approving the outer call is not a human
      * approval of this one.
      */

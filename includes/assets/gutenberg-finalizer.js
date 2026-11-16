@@ -270,6 +270,11 @@
             if ( typeof block.name === 'string' && block.name !== '' ) {
                 refs.push( { name: block.name, path: pathText } );
             }
+            if ( block.patch && typeof block.patch.name === 'string' && block.patch.name !== '' ) {
+                // The rest of a raw spec is parsed as saved; a block whose plugin is gone
+                // stays core/missing and keeps its markup. Only the edited block must exist.
+                refs.push( { name: block.patch.name, path: pathText } );
+            }
             refs.push( ...collectBlockRefs( block.innerBlocks || [], pathText ) );
         } );
         return refs;
@@ -362,6 +367,48 @@
         spec.attributes && ! Array.isArray( spec.attributes ) ? spec.attributes : {},
         ( spec.innerBlocks || [] ).map( ( innerSpec ) => toBlock( blocksApi, innerSpec ) )
     );
+
+    // A raw spec is saved markup kept as it stands, with at most one block in it re-created
+    // with new attributes so its own save() regenerates the markup (gutenberg-edit-block).
+    const patchParsedBlocks = ( blocksApi, blocks, patch ) => {
+        const route = Array.isArray( patch.path ) ? patch.path : [];
+        const changes = patch.attributes && ! Array.isArray( patch.attributes ) ? patch.attributes : {};
+        let found = false;
+        const walk = ( list, depth ) => list.map( ( block, index ) => {
+            if ( index !== route[ depth ] ) {
+                return block;
+            }
+            if ( depth < route.length - 1 ) {
+                return { ...block, innerBlocks: walk( block.innerBlocks || [], depth + 1 ) };
+            }
+            if ( patch.name && block.name !== patch.name ) {
+                throw new Error( `The block at path ${ route.join( '.' ) } is ${ block.name }, not ${ patch.name }.` );
+            }
+            found = true;
+            const attributes = { ...block.attributes };
+            Object.keys( changes ).forEach( ( key ) => {
+                if ( changes[ key ] === null ) {
+                    delete attributes[ key ];
+                } else {
+                    attributes[ key ] = changes[ key ];
+                }
+            } );
+            return blocksApi.createBlock( block.name, attributes, block.innerBlocks || [] );
+        } );
+        const patched = walk( blocks, 0 );
+        if ( ! found ) {
+            throw new Error( `No block at path ${ route.join( '.' ) } in the saved content.` );
+        }
+        return patched;
+    };
+
+    const blocksFromSpec = ( blocksApi, spec ) => {
+        if ( spec && typeof spec.raw === 'string' ) {
+            const parsed = blocksApi.parse( spec.raw );
+            return spec.patch ? patchParsedBlocks( blocksApi, parsed, spec.patch ) : parsed;
+        }
+        return [ toBlock( blocksApi, spec ) ];
+    };
 
     const blockName = ( block ) => block.name || block.blockName || '';
 
@@ -510,7 +557,7 @@
     const serializeJob = async ( job ) => {
         const blocks = job.blocks || [];
         const blocksApi = await loadEditorBlocksApi( job.editor_url || '', blocks );
-        const created = blocks.map( ( spec ) => toBlock( blocksApi, spec ) );
+        const created = blocks.flatMap( ( spec ) => blocksFromSpec( blocksApi, spec ) );
         // The fallback runtime is this page's own wp.blocks, not the frame's, so its blocks
         // must not be handed to the frame's store.
         const mounted = usingFallbackRuntime ? null : await mountBlocksInEditor( created );

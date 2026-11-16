@@ -9,6 +9,7 @@ namespace GoBuildWP\Kits\SecurityTwoFactor;
 
 use WP_Error;
 use WP_User;
+use WPPilot\Kits\Runtime;
 
 if (!defined('ABSPATH')) {
     exit();
@@ -22,12 +23,13 @@ const COOKIE = 'gobuildwp_kit_2fa';
 /**
  * Hook the second step into the login and the setup into the profile page.
  *
- * GOBUILDWP_DISABLE_2FA (true in wp-config.php) switches all of it off, for an owner locked out
- * with neither phone nor backup codes and no other administrator to reset them.
+ * WPPILOT_KIT_DISABLE_2FA (true in wp-config.php; or the host's public name for it) switches all of
+ * it off, for an owner locked out with neither phone nor backup codes and no other administrator to
+ * reset them.
  */
 function install_hooks(): void
 {
-    if (defined('GOBUILDWP_DISABLE_2FA') && constant('GOBUILDWP_DISABLE_2FA') === true) {
+    if (Runtime\flag('WPPILOT_KIT_DISABLE_2FA')) {
         return;
     }
     // After the password checks (20) and login protection (99), so only a correct password gets here.
@@ -111,14 +113,14 @@ function posted_string(string $key): string
 function remember_application_password_user($user): void
 {
     if ($user instanceof WP_User) {
-        $GLOBALS['gobuildwp_2fa_app_password_users'][] = (int) $user->ID;
+        $GLOBALS['wppilot_kit_2fa_app_password_users'][] = (int) $user->ID;
     }
 }
 
 /** @return list<int> Users that signed in with an application password during this request. */
 function application_password_users(): array
 {
-    $ids = $GLOBALS['gobuildwp_2fa_app_password_users'] ?? [];
+    $ids = $GLOBALS['wppilot_kit_2fa_app_password_users'] ?? [];
     return is_array($ids) ? array_values(array_map('intval', $ids)) : [];
 }
 
@@ -292,7 +294,7 @@ function backup_codes_html(array $codes): string
     foreach ($codes as $code) {
         $items .= '<li><code>' . esc_html($code) . '</code></li>';
     }
-    return '<div class="gobuildwp-2fa-codes"><p>'
+    return '<div class="wppilot-kit-2fa-codes"><p>'
         . esc_html__('Backup codes let you sign in if you lose your phone. Each works once. Store them somewhere safe: they are not shown again.', domain: 'wppilot')
         . '</p><ul style="columns:2;font-size:15px;list-style:none;margin:0 0 1em;padding:0">' . $items . '</ul></div>';
 }
@@ -303,7 +305,7 @@ function setup_html(string $secret, WP_User $user): string
     $uri = otpauth_uri($secret, $user->user_login, issuer_name());
     $grouped = trim(chunk_split(base32_encode($secret), 4, ' '));
     return '<p>' . esc_html__('Scan this code with an authenticator app (for example Google Authenticator, Microsoft Authenticator, 1Password or Authy), then enter the six-digit code it shows.', domain: 'wppilot') . '</p>'
-        . '<p class="gobuildwp-2fa-qr" style="background:#fff;display:inline-block;margin:8px 0">' . qr_svg($uri) . '</p>'
+        . '<p class="wppilot-kit-2fa-qr" style="background:#fff;display:inline-block;margin:8px 0">' . qr_svg($uri) . '</p>'
         . '<p>' . esc_html__('Or enter this key in the app:', domain: 'wppilot') . '<br><code style="font-size:14px;user-select:all">' . esc_html($grouped) . '</code></p>';
 }
 

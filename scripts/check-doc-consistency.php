@@ -130,6 +130,31 @@ if (preg_match('/## What the free plugin can do(.*?)\n## /s', $readme, $m) === 1
 }
 
 // ---------------------------------------------------------------------------
+// 2a. What a fresh install registers on the default profile is a measured number
+// (scripts/measure-default-abilities.php on a real WordPress), and the total beside it is the
+// source count. Both used to be typed in by hand; the default-profile one was never re-measured.
+// ---------------------------------------------------------------------------
+
+if (!is_int($facts['free_abilities_default_profile'] ?? null)) {
+    $fail('product-facts.json has no integer free_abilities_default_profile (measure it with scripts/measure-default-abilities.php)');
+} else {
+    $default = $facts['free_abilities_default_profile'];
+    $wordpressMcp = $read($root . '/docs/wordpress-mcp.md');
+    $claims = [
+        'README.md' => [$readme, "registers {$default} on the default profile"],
+        'README.md FAQ' => [$readme, "with {$facts['free_abilities']} abilities"],
+        'docs/wordpress-mcp.md' => [$wordpressMcp, "registers {$default}."],
+        'docs/wordpress-mcp.md total' => [$wordpressMcp, "ships {$facts['free_abilities']} abilities"],
+    ];
+    foreach ($claims as $where => [$text, $claim]) {
+        // The docs wrap lines, so compare with runs of whitespace folded to one space.
+        if (!str_contains((string) preg_replace('/\s+/', ' ', $text), $claim)) {
+            $fail("{$where} does not state \"{$claim}\" (product-facts.json)");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // 3. Elementor is free, and says so in the same numbers everywhere.
 // ---------------------------------------------------------------------------
 

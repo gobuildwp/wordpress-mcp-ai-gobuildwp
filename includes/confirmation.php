@@ -40,6 +40,12 @@ const WPPILOT_CONFIRMATION_TTL = 300;
 /** How long an approval link waits for a person before it lapses. */
 const WPPILOT_CONFIRMATION_REQUEST_TTL = 900;
 
+/** How long a request a GoBuildWP Cloud job queued waits for a person: a bulk job is not watched live. */
+const WPPILOT_CONFIRMATION_CLOUD_REQUEST_TTL = 86400;
+
+/** How long an approval a person gave to a Cloud job's request stays usable: long enough for Cloud's next poll. */
+const WPPILOT_CONFIRMATION_CLOUD_TTL = 3600;
+
 /** Approval requests kept at once; the oldest go first so a looping agent cannot grow the option without bound. */
 const WPPILOT_CONFIRMATION_REQUEST_MAX = 100;
 
@@ -64,11 +70,14 @@ function wppilot_confirmation_mode(): string
 /**
  * Decide whether a call is confirmed, and say how.
  *
- * @param array{human_approved?: bool, elicitation?: array{supported?: bool, state?: string, response?: mixed}} $context
+ * @param array{human_approved?: bool, elicitation?: array{supported?: bool, state?: string, response?: mixed}, cloud_job?: string} $context
  *        `elicitation` is set only by the modern MCP transport: `supported` when the client declared
  *        form elicitation, and on a retry the `state` (requestState) and the user's `response`.
+ *        `cloud_job` likewise, and only for a tools/call whose GoBuildWP Cloud signature this site
+ *        verified: the bulk job it belongs to (includes/cloud/approvals.php).
  * @return string|WP_Error How the call was confirmed (`argument`, `elicitation`, `approval-url`,
- *         `chat`, `approval-queue`), `not-required` for an ability that needs none, or the refusal.
+ *         `cloud-approval`, `chat`, `approval-queue`), `not-required` for an ability that needs
+ *         none, or the refusal.
  */
 function wppilot_confirm_ability_call(WP_Ability $ability, mixed $input, string $transport, array $context = []): string|WP_Error
 {
@@ -83,8 +92,24 @@ function wppilot_confirm_ability_call(WP_Ability $ability, mixed $input, string 
         };
     }
 
-    if (!wppilot_ability_requires_confirmation($ability)) {
+    // A Cloud bulk job never confirms for the site: a call it may not run alone is queued here for
+    // a person in wp-admin, whatever the confirmation mode, and any confirm it sent is ignored.
+    $job = is_string($context['cloud_job'] ?? null) ? $context['cloud_job'] : '';
+    if ($job !== '' && $transport === 'mcp' && function_exists('wppilot_cloud_approval_gate')) {
+        $queued = wppilot_cloud_approval_gate($ability, $input, $job);
+        if ($queued !== null) {
+            return $queued;
+        }
+    }
+
+    if (!wppilot_ability_requires_confirmation($ability, $input)) {
         return 'not-required';
+    }
+
+    // A call that can never run must say so before anyone is asked to approve it.
+    $invalid = wppilot_confirmation_input_error($ability, $input);
+    if ($invalid instanceof WP_Error) {
+        return $invalid;
     }
 
     if (wppilot_confirmation_mode() !== 'human') {
@@ -104,7 +129,7 @@ function wppilot_confirm_ability_call(WP_Ability $ability, mixed $input, string 
     }
 
     $name = $ability->get_name();
-    $hash = wppilot_confirmation_input_hash($input);
+    $hash = wppilot_confirmation_call_hash($name, $input);
 
     if (wppilot_confirmation_claim_approval($name, $hash, $user_id)) {
         return 'approval-url';
@@ -117,6 +142,12 @@ function wppilot_confirm_ability_call(WP_Ability $ability, mixed $input, string 
             __('A person denied this exact call in wp-admin. Do not retry it; ask the user what they want instead.', domain: 'wppilot'),
             ['status' => 403, 'ability' => $name],
         );
+    }
+
+    // A session approval covers later calls to this ability from the same user and connection.
+    // Checked after the denial so a person's "no" to this exact call is never overridden.
+    if (function_exists('wppilot_confirmation_session_covers') && wppilot_confirmation_session_covers($ability, $hash, $user_id)) {
+        return 'session';
     }
 
     $elicitation = $context['elicitation'] ?? null;
@@ -134,6 +165,51 @@ function wppilot_confirm_ability_call(WP_Ability $ability, mixed $input, string 
     }
 
     return wppilot_confirmation_approval_url_error($ability, $input, $transport, $hash, $user_id);
+}
+
+/**
+ * The input-schema error execute() would return for this call, checked before the confirmation
+ * is asked for. `confirm` itself is left out of the check: it is stripped before execute() when
+ * the ability does not declare it, and when it does, its absence is the confirmation refusal's to
+ * report. Never a pass: execute() validates again, so this can only refuse earlier.
+ */
+function wppilot_confirmation_input_error(WP_Ability $ability, mixed $input): ?WP_Error
+{
+    $schema = $ability->get_input_schema();
+    if (!is_array($schema) || $schema === [] || !function_exists('rest_validate_value_from_schema')) {
+        return null;
+    }
+    // As execute() sees it: the schema default, plus whatever the normalize filter adds.
+    if (method_exists($ability, 'normalize_input')) {
+        $input = $ability->normalize_input($input);
+        if ($input instanceof WP_Error) {
+            return null;
+        }
+    } elseif ($input === null && array_key_exists('default', $schema)) {
+        $input = $schema['default'];
+    }
+    if (is_array($input)) {
+        if (wppilot_ability_schema_has_property($ability, property: 'confirm')) {
+            $input['confirm'] = true;
+        } else {
+            unset($input['confirm']);
+        }
+    }
+    $valid = rest_validate_value_from_schema($input, $schema, 'input');
+    if (!$valid instanceof WP_Error) {
+        return null;
+    }
+
+    return new WP_Error(
+        'ability_invalid_input',
+        sprintf(
+            /* translators: 1: ability name, 2: validation error. */
+            __('Ability "%1$s" has invalid input. Reason: %2$s', domain: 'wppilot'),
+            $ability->get_name(),
+            $valid->get_error_message(),
+        ),
+        ['status' => 400, 'ability' => $ability->get_name()],
+    );
 }
 
 /**
@@ -165,6 +241,16 @@ function wppilot_confirmation_answer(string $token, mixed $response, string $abi
     if (!wppilot_confirmation_claim_nonce($claims['n'], $claims['e'])) {
         return null;
     }
+    if (function_exists('wppilot_approval_log_record')) {
+        wppilot_approval_log_record($approved ? 'elicitation-approved' : 'elicitation-declined', [
+            'ability' => $ability_name,
+            'user_id' => $user_id,
+            'actor_id' => $user_id,
+            'agent' => wppilot_approval_log_current_agent(),
+            'input_sha256' => $hash,
+            'detail' => $approved ? '' : 'action ' . substr($action, 0, 32),
+        ]);
+    }
     if ($approved) {
         return 'elicitation';
     }
@@ -192,6 +278,66 @@ function wppilot_confirmation_input_hash(mixed $input): string
         wppilot_confirmation_canonical($input),
         JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION,
     ));
+}
+
+/**
+ * Hash one call the way an approval is bound to it: the exact input and the state of what it
+ * writes to.
+ *
+ * Folding the target's state in means an approval voids itself when the post or file it was given
+ * for changes before the call runs, through any route: the person approved deleting the page as
+ * they saw it, not as someone else left it a minute later. Calls with no recognisable target
+ * hash as their input alone.
+ */
+function wppilot_confirmation_call_hash(string $ability_name, mixed $input): string
+{
+    $hash = wppilot_confirmation_input_hash($input);
+    $state = wppilot_confirmation_target_state($ability_name, $input);
+
+    return $state === [] ? $hash : hash('sha256', $hash . '|' . implode('|', $state));
+}
+
+/**
+ * What a call's target looks like now: a post's modified time, a file's mtime and size.
+ *
+ * @return list<string>
+ */
+function wppilot_confirmation_target_state(string $ability_name, mixed $input): array
+{
+    $values = is_array($input) ? $input : [];
+    $state = [];
+
+    foreach (['post_id', 'attachment_id', 'page_id'] as $key) {
+        $id = $values[$key] ?? null;
+        if (is_int($id) || (is_string($id) && ctype_digit($id))) {
+            $post = (int) $id > 0 ? get_post((int) $id) : null;
+            $modified = is_object($post) ? (string) ($post->post_modified_gmt ?? '') : '';
+            $state[] = 'post:' . (int) $id . ':' . ($modified !== '' ? $modified : (is_object($post) ? 'present' : 'missing'));
+        }
+    }
+
+    $path = $values['path'] ?? null;
+    if (is_string($path) && $path !== '' && function_exists('wppilot_resolve_path')) {
+        $resolved = wppilot_resolve_path($path, false);
+        if (is_string($resolved)) {
+            clearstatcache(true, $resolved);
+            // Only paths the file abilities could reach are looked at: the resolver keeps to the base directory.
+            $state[] = is_file($resolved)
+                ? 'file:' . $resolved . ':' . (int) filemtime($resolved) . ':' . (int) filesize($resolved)
+                : 'file:' . $resolved . ':' . (is_dir($resolved) ? 'dir:' . (int) filemtime($resolved) : 'missing');
+        }
+    }
+
+    /**
+     * Add the state of other targets (a term, an order, a table row) to what binds an approval.
+     *
+     * @param list<string>         $state        One string per target; any change voids the approval.
+     * @param string               $ability_name
+     * @param array<string, mixed> $input
+     */
+    $state = apply_filters('wppilot_confirmation_target_state', $state, $ability_name, $values);
+
+    return is_array($state) ? array_values(array_map('strval', array_filter($state, 'is_scalar'))) : [];
 }
 
 function wppilot_confirmation_canonical(mixed $value): mixed
@@ -440,10 +586,15 @@ function wppilot_confirmation_claim_approval(string $ability_name, string $hash,
 
 /**
  * Open (or reuse) an approval request for one exact call and return its id.
+ *
+ * @param array{cloud_job?: string} $extra A GoBuildWP Cloud job's request also records its job, waits
+ *        WPPILOT_CONFIRMATION_CLOUD_REQUEST_TTL, and is only reused by the same job.
  */
-function wppilot_confirmation_open_request(WP_Ability $ability, mixed $input, string $transport, string $hash, int $user_id): string
+function wppilot_confirmation_open_request(WP_Ability $ability, mixed $input, string $transport, string $hash, int $user_id, array $extra = []): string
 {
-    return wppilot_confirmation_locked(WPPILOT_CONFIRMATION_REQUESTS_OPTION, static function () use ($ability, $input, $transport, $hash, $user_id): string {
+    $job = is_string($extra['cloud_job'] ?? null) ? $extra['cloud_job'] : '';
+
+    return wppilot_confirmation_locked(WPPILOT_CONFIRMATION_REQUESTS_OPTION, static function () use ($ability, $input, $transport, $hash, $user_id, $job): string {
         $requests = wppilot_confirmation_requests();
         foreach ($requests as $id => $request) {
             // An agent retrying before the person has answered gets the same link, not a new one each time.
@@ -452,6 +603,7 @@ function wppilot_confirmation_open_request(WP_Ability $ability, mixed $input, st
                 && ($request['input_sha256'] ?? null) === $hash
                 && (int) ($request['user_id'] ?? 0) === $user_id
                 && ($request['status'] ?? null) === 'pending'
+                && (string) ($request['cloud_job'] ?? '') === $job
             ) {
                 return $id;
             }
@@ -472,11 +624,16 @@ function wppilot_confirmation_open_request(WP_Ability $ability, mixed $input, st
             'user_id' => $user_id,
             'user_login' => (string) ($user->user_login ?? ''),
             'agent' => is_string($agent['label'] ?? null) && $agent['label'] !== '' ? $agent['label'] : (string) ($agent['client'] ?? ''),
+            // Binds a session approval to the connection that asked; empty for a direct call.
+            'credential' => is_string($agent['credential'] ?? null) ? $agent['credential'] : '',
             'transport' => $transport,
             'created_at' => $now,
-            'expires_at' => $now + WPPILOT_CONFIRMATION_REQUEST_TTL,
+            'expires_at' => $now + ($job !== '' ? WPPILOT_CONFIRMATION_CLOUD_REQUEST_TTL : WPPILOT_CONFIRMATION_REQUEST_TTL),
             'status' => 'pending',
         ];
+        if ($job !== '') {
+            $requests[$id]['cloud_job'] = $job;
+        }
         wppilot_confirmation_save_requests($requests);
 
         return $id;
@@ -490,22 +647,40 @@ function wppilot_confirmation_open_request(WP_Ability $ability, mixed $input, st
  * agent asked. A denial is kept as long, so the agent's retry is told it was denied rather than
  * being handed a fresh link to ask again.
  */
-function wppilot_confirmation_decide(string $id, bool $approve, int $decided_by): bool
+// @mago-expect lint:no-boolean-flag-parameter
+function wppilot_confirmation_decide(string $id, bool $approve, int $decided_by, bool $log = true): bool
 {
-    return wppilot_confirmation_locked(WPPILOT_CONFIRMATION_REQUESTS_OPTION, static function () use ($id, $approve, $decided_by): bool {
+    /** @var array<string, mixed>|null $decided */
+    $decided = wppilot_confirmation_locked(WPPILOT_CONFIRMATION_REQUESTS_OPTION, static function () use ($id, $approve, $decided_by): ?array {
         $requests = wppilot_confirmation_requests();
         if (($requests[$id]['status'] ?? null) !== 'pending') {
-            return false;
+            return null;
         }
         $now = time();
         $requests[$id]['status'] = $approve ? 'approved' : 'denied';
         $requests[$id]['decided_by'] = $decided_by;
         $requests[$id]['decided_at'] = $now;
-        $requests[$id]['expires_at'] = $now + WPPILOT_CONFIRMATION_TTL;
+        // Cloud retries on its next poll, not the moment the person clicks, so its approval lasts longer.
+        $requests[$id]['expires_at'] = $now + ((string) ($requests[$id]['cloud_job'] ?? '') !== '' ? WPPILOT_CONFIRMATION_CLOUD_TTL : WPPILOT_CONFIRMATION_TTL);
         wppilot_confirmation_save_requests($requests);
 
-        return true;
+        return $requests[$id];
     });
+    if (!is_array($decided)) {
+        return false;
+    }
+
+    if ($log && function_exists('wppilot_approval_log_record')) {
+        wppilot_approval_log_record($approve ? 'approved' : 'denied', [
+            'ability' => (string) ($decided['ability'] ?? ''),
+            'user_id' => (int) ($decided['user_id'] ?? 0),
+            'actor_id' => $decided_by,
+            'agent' => (string) ($decided['agent'] ?? ''),
+            'input_sha256' => (string) ($decided['input_sha256'] ?? ''),
+        ]);
+    }
+
+    return true;
 }
 
 function wppilot_confirmation_request_url(string $id): string
@@ -660,7 +835,7 @@ function wppilot_confirmation_note(string $ability_name, ?string $method = null,
     static $notes = [];
     if ($method !== null) {
         $note = ['method' => $method];
-        if ($method === 'approval-url' && wppilot_confirmation_last_approver() > 0) {
+        if (in_array($method, ['approval-url', 'session', 'cloud-approval'], strict: true) && wppilot_confirmation_last_approver() > 0) {
             $note['approved_by'] = wppilot_confirmation_last_approver();
         }
         $notes[$ability_name] = $note;

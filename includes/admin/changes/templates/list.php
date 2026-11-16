@@ -270,6 +270,7 @@ $active_session = (string) ($filters['session'] ?? '');
                 <button type="submit" name="format" value="csv" class="button"><?php esc_html_e('Download CSV', domain: 'wppilot'); ?></button>
                 <button type="submit" name="format" value="json" class="button"><?php esc_html_e('Download JSON', domain: 'wppilot'); ?></button>
             </form>
+            <?php \wppilot_ledger_render_controls(); ?>
         </div>
 
         <?php if ($visible === []) { ?>

@@ -44,9 +44,15 @@ final class ScopeRepository implements ScopeRepositoryInterface
         ClientEntityInterface $clientEntity,
         mixed $userIdentifier = null,
     ): array {
-        // Every accepted authorization and refresh flow converges on the single full-access grant.
-        $mcp = new ScopeEntity();
-        $mcp->setIdentifier('mcp');
-        return [$mcp];
+        // A grant asked for as `mcp:read` alone stays read-only; every other accepted flow converges
+        // on the full-access grant. Refresh keeps the original scopes without coming through here,
+        // and League refuses a refresh that asks for a scope the original grant lacked.
+        $identifiers = [];
+        foreach ($scopes as $scope) {
+            $identifiers[] = $scope->getIdentifier();
+        }
+        $granted = new ScopeEntity();
+        $granted->setIdentifier(array_values(array_unique($identifiers)) === ['mcp:read'] ? 'mcp:read' : 'mcp');
+        return [$granted];
     }
 }

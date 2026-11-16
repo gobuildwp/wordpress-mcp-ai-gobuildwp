@@ -61,6 +61,11 @@ function run_all(?string $method = null): array
 
     $results[] = check_rest_reachable();
 
+    // Picks the ?rest_route= fallback URL for the Connect screen when /wp-json/ is blocked.
+    if (function_exists('wppilot_rest_fallback_check')) {
+        $results[] = \wppilot_rest_fallback_check();
+    }
+
     // Straight after REST reachability, because it answers the question the
     // rest of this screen only circles: does MCP itself respond?
     $results[] = $abilities['status'] === 'fail'
@@ -141,6 +146,19 @@ function check_change_ledger(): array
         return info('change_ledger', $label, __('The change ledger is not loaded.', domain: 'wppilot'));
     }
     $status = \wppilot_change_storage_status();
+    // The hash chain (includes/ledger-chain.php) covers the table and the option store alike.
+    $chain = function_exists('wppilot_ledger_chain_verify') ? \wppilot_ledger_chain_verify() : null;
+    if (is_array($chain) && ($chain['intact'] ?? true) === false) {
+        return warn(
+            'change_ledger',
+            $label,
+            \wppilot_ledger_chain_summary($chain),
+            __(
+                'Someone with database access changed the ledger outside GoBuildWP. Compare the rows around this one with a database backup or an earlier signed audit export, and check who has database credentials for this site.',
+                domain: 'wppilot',
+            ),
+        );
+    }
     if ($status['storage'] === 'table') {
         return ok('change_ledger', $label, sprintf(
             /* translators: 1: number of recorded changes, 2: database table name */
@@ -449,25 +467,47 @@ function check_sandbox_exposure(): array
     );
 }
 
+/**
+ * The OAuth tables this site is missing. Empty when all of them are installed.
+ *
+ * @return list<string>
+ */
+function missing_oauth_tables(): array
+{
+    // @mago-expect lint:no-global
+    global $wpdb;
+    /** @var \wpdb $wpdb */
+    $missing = [];
+    foreach (['clients', 'auth_codes', 'access_tokens', 'refresh_tokens'] as $suffix) {
+        $table = $wpdb->prefix . 'wppilot_oauth_' . $suffix;
+        // @mago-expect analysis:possibly-invalid-argument
+        $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)));
+        if (!is_string($found) || $found !== $table) {
+            $missing[] = $table;
+        }
+    }
+
+    return $missing;
+}
+
 /** @return array{id: string, status: string, label: string, message: string, remedy: string, action: string, copy: string} */
 function check_schema(): array
 {
     $label = __('OAuth storage', domain: 'wppilot');
-    // @mago-expect lint:no-global
-    global $wpdb;
-    /** @var \wpdb $wpdb */
-    $table = $wpdb->prefix . 'wppilot_oauth_clients';
-    // @mago-expect analysis:possibly-invalid-argument
-    $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
-    if (is_string($found) && $found === $table) {
+    $missing = missing_oauth_tables();
+    if ($missing === []) {
         return ok('schema', $label, __('The OAuth tables are installed.', domain: 'wppilot'));
     }
     return fail(
         'schema',
         $label,
-        __('The OAuth tables are missing, so no OAuth client can register or authenticate.', domain: 'wppilot'),
+        sprintf(
+            /* translators: %s: comma-separated table names */
+            __('Some OAuth tables are missing (%s), so OAuth clients cannot register or authenticate.', domain: 'wppilot'),
+            implode(', ', $missing),
+        ),
         __(
-            'Deactivate and reactivate GoBuildWP to re-run the installer, then run these checks again.',
+            'Use "Repair OAuth tables" under Repairs on the Diagnostics screen to re-run the installer, then run these checks again. If the tables still do not appear, the database user lacks the CREATE privilege: ask your host to grant it.',
             domain: 'wppilot',
         ),
     );

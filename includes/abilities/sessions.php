@@ -64,19 +64,28 @@ $wppilot_session_run_schema = [
     'required' => ['session_id'],
     'additionalProperties' => false,
 ];
+// Undo only: skipping a conflicted target leaves the later human edit in place,
+// which is what the person who made it wants. Redo keeps refusing outright.
+$wppilot_session_undo_schema = $wppilot_session_run_schema;
+$wppilot_session_undo_schema['properties']['skip_conflicts'] = [
+    'type' => 'boolean',
+    'default' => false,
+    'description' => 'Undo everything else and leave alone every target that was changed by something else after the session wrote to it (for example a person editing the page afterwards). Skipped changes are listed under skipped_conflicts with the reason. Without it, any conflict refuses the whole run.',
+];
 
 wp_register_ability('wppilot/undo-session', [
     'label' => __('Undo Agent Session', domain: 'wppilot'),
     'description' => __(
-        'Undoes every change one agent session made, newest first, each restored and verified against its before-image. Before touching anything it checks that no target was changed by something else after the session wrote to it; if one was, nothing is changed and the conflicts are listed. It stops at the first change that fails verification and reports what was undone, what failed and what was not attempted. Changes that cannot be undone are listed, never skipped silently: the run is refused unless allow_partial is true. Check wppilot/list-sessions with the session_id first to see the plan. Undone changes can usually be put back with wppilot/redo-session; a created term or comment the undo deleted, or a target too large to copy, cannot be redone. Requires explicit confirmation.',
+        'Undoes every change one agent session made, newest first, each restored and verified against its before-image. Before touching anything it checks that no target was changed by something else after the session wrote to it; if one was, nothing is changed and the conflicts are listed. It stops at the first change that fails verification and reports what was undone, what failed and what was not attempted. Pass skip_conflicts: true to undo the rest and leave conflicted targets as they are; they are reported under skipped_conflicts. Changes that cannot be undone are listed, never skipped silently: the run is refused unless allow_partial is true. Check wppilot/list-sessions with the session_id first to see the plan. Undone changes can usually be put back with wppilot/redo-session; a created term or comment the undo deleted, or a target too large to copy, cannot be redone. Requires explicit confirmation.',
         domain: 'wppilot',
     ),
     'category' => 'changes',
-    'input_schema' => $wppilot_session_run_schema,
+    'input_schema' => $wppilot_session_undo_schema,
     'output_schema' => ['type' => 'object'],
     'execute_callback' => static fn(array $input): array|WP_Error => wppilot_undo_session(
         (string) $input['session_id'],
         allow_partial: ($input['allow_partial'] ?? false) === true,
+        skip_conflicts: ($input['skip_conflicts'] ?? false) === true,
     ),
     'permission_callback' => 'wppilot_permission_callback',
     'meta' => [
@@ -107,4 +116,4 @@ wp_register_ability('wppilot/redo-session', [
     ],
 ]);
 
-unset($wppilot_session_run_schema);
+unset($wppilot_session_run_schema, $wppilot_session_undo_schema);

@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('gobuildwp/protection-virtual-patches', [
     'label' => __('Virtual Patches', domain: 'wppilot'),
     'description' => __(
-        'Lists, or replaces, the virtual patches GoBuildWP Cloud keeps on this site: narrow rules that block a known exploit against a plugin or theme version the site still runs, until it is updated. With rules, the whole set is replaced (an empty list removes them all); without, the set is listed. Each rule names a component and version range, an endpoint (admin-ajax or admin-post action, REST route or path), optionally a request field and a test on its value, methods, and who it applies to. The site checks installed versions itself and applies a rule only while the installed version is in its range. Signed-in administrators are never blocked. Blocks are recorded as firewall events.',
+        'Lists, or replaces, the virtual patches the cloud service keeps on this site: narrow rules that block a known exploit against a plugin or theme version the site still runs, until it is updated. With rules, the whole set is replaced (an empty list removes them all); without, the set is listed. Each rule names a component and version range, an endpoint (admin-ajax or admin-post action, REST route or path), optionally a request field and a test on its value, methods, and who it applies to. The site checks installed versions itself and applies a rule only while the installed version is in its range. Signed-in administrators are never blocked. Blocks are recorded as firewall events.',
         domain: 'wppilot',
     ),
     'category' => 'security-protection',
@@ -45,7 +45,7 @@ wp_register_ability('gobuildwp/protection-virtual-patches', [
         require_once __DIR__ . '/../load.php';
         if (array_key_exists('rules', $input)) {
             if (!is_array($input['rules'])) {
-                return new \WP_Error('gobuildwp_vpatch_invalid', 'Invalid virtual patch: rules must be a list.');
+                return new \WP_Error(Runtime\public_name('wppilot_kit_vpatch_invalid'), 'Invalid virtual patch: rules must be a list.');
             }
             return set_virtual_patches($input['rules']);
         }

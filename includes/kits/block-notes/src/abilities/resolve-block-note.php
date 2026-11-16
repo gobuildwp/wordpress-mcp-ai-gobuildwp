@@ -40,7 +40,15 @@ wp_register_ability('wppilot/resolve-block-note', [
             'previous_status' => ['type' => 'string'],
         ],
     ],
-    'execute_callback' => static fn(array $input): mixed => resolve_note($input),
+    'execute_callback' => static function (array $input): mixed {
+        $result = resolve_note($input);
+        if (is_array($result) && ($result['changed'] ?? null) === false) {
+            // Already resolved: discard the ledger row the host opened for this call (an empty
+            // batch records nothing), so a no-op leaves no change-log entry.
+            Runtime\host()->ledger()->record_items('wppilot/resolve-block-note', []);
+        }
+        return $result;
+    },
     'permission_callback' => static fn(array $input = []): bool => Runtime\can_run() && can_note($input),
     'meta' => [
         'show_in_rest' => true,

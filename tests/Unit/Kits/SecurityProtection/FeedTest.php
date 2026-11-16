@@ -9,12 +9,12 @@ namespace GoBuildWP\Kits\SecurityProtection {
     if (!function_exists(__NAMESPACE__ . '\get_transient')) {
         function get_transient(string $key): mixed
         {
-            return $GLOBALS['gobuildwp_sp_test_transients'][$key] ?? false;
+            return $GLOBALS['kit_test_sp_transients'][$key] ?? false;
         }
 
         function set_transient(string $key, mixed $value, int $expiration = 0): bool
         {
-            $GLOBALS['gobuildwp_sp_test_transients'][$key] = $value;
+            $GLOBALS['kit_test_sp_transients'][$key] = $value;
             return true;
         }
     }
@@ -27,7 +27,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
     use GoBuildWP\Kits\SecurityProtection as SP;
     use PHPUnit\Framework\TestCase;
     use WP_Error;
-    use WPPilot_Test_State;
+    use Kit_Test_State;
 
     /**
      * The Cloud feed: the extra rule pack and the fleet reputation blocklist, their validation,
@@ -37,8 +37,8 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
     {
         protected function setUp(): void
         {
-            WPPilot_Test_State::$options = [];
-            $GLOBALS['gobuildwp_sp_test_transients'] = [];
+            \Kit_Test_State::$options = [];
+            $GLOBALS['kit_test_sp_transients'] = [];
         }
 
         /** @return array<string, mixed> */
@@ -101,7 +101,7 @@ namespace GoBuildWP\Tests\Unit\Kits\SecurityProtection {
             ] as $rule) {
                 $r = SP\set_feed(['rules' => [$rule]]);
                 self::assertInstanceOf(WP_Error::class, $r, json_encode($rule));
-                self::assertSame('gobuildwp_feed_invalid', $r->get_error_code());
+                self::assertSame(\WPPilot\Kits\Runtime\public_name('wppilot_kit_feed_invalid'), $r->get_error_code());
             }
             self::assertFalse(SP\feed_has_content());
         }

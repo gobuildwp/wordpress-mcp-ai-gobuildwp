@@ -6,7 +6,8 @@
 declare(strict_types=1);
 
 /**
- * WordPress media and HTTP doubles for the media-edit and a11y-audit kit tests.
+ * WordPress media and HTTP doubles for the media-edit, a11y-audit, image-optimize and media-rename
+ * kit tests.
  *
  * Posts, meta, capabilities and ability registrations are Kit_Test_Site's (tests/doubles/
  * kit-site.php, which a receiving plugin's harness replaces with its own): meta is stored raw and
@@ -18,6 +19,12 @@ declare(strict_types=1);
 
 if (!class_exists('Kit_Test_Site')) {
     require_once dirname(__DIR__, 2) . '/doubles/kit-site.php';
+}
+
+// The standalone host's job runner reads it at construction; without it these suites only pass
+// when another suite happened to define it first.
+if (!defined('DAY_IN_SECONDS')) {
+    define('DAY_IN_SECONDS', 86_400);
 }
 
 final class Kit_Media_Test_State
@@ -44,8 +51,12 @@ final class Kit_Media_Test_State
     /** @var array<string, array{code: int, body: string}|WP_Error> */
     public static array $http = [];
 
+    /** What is_admin() answers; image-optimize serves copies only on the front end. */
+    public static bool $is_admin = false;
+
     public static function reset(): void
     {
+        self::$is_admin = false;
         self::$basedir = sys_get_temp_dir() . '/kit-media-' . bin2hex(random_bytes(5));
         mkdir(self::$basedir . '/2026/09', recursive: true);
         self::$editor_factory = null;
@@ -484,3 +495,233 @@ if (!function_exists('wp_remote_retrieve_response_code')) {
     }
 }
 
+
+// --- image-optimize and media-rename ------------------------------------------------------------
+
+if (!function_exists('esc_attr')) {
+    function esc_attr(string $text): string
+    {
+        return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+if (!function_exists('sanitize_file_name')) {
+    function sanitize_file_name(string $filename): string
+    {
+        $filename = (string) preg_replace('/[^A-Za-z0-9._-]+/', '-', $filename);
+        return trim((string) preg_replace('/-+/', '-', $filename), '.-_');
+    }
+}
+
+if (!function_exists('get_post_field')) {
+    function get_post_field(string $field, mixed $post = null, string $context = 'display'): mixed
+    {
+        $post = $post instanceof WP_Post ? $post : get_post((int) $post);
+        return $post instanceof WP_Post && property_exists($post, $field) ? $post->{$field} : '';
+    }
+}
+
+if (!function_exists('is_admin')) {
+    function is_admin(): bool
+    {
+        return Kit_Media_Test_State::$is_admin;
+    }
+}
+
+if (!function_exists('is_feed')) {
+    function is_feed(mixed $feeds = ''): bool
+    {
+        return false;
+    }
+}
+
+if (!function_exists('wp_doing_ajax')) {
+    function wp_doing_ajax(): bool
+    {
+        return false;
+    }
+}
+
+if (!function_exists('wp_is_json_request')) {
+    function wp_is_json_request(): bool
+    {
+        return false;
+    }
+}
+
+/**
+ * A $wpdb that answers the fixed SELECTs the media kits run, over Kit_Test_Site's posts and raw
+ * meta, plus the ledger's GET_LOCK. It understands only the clauses those queries use: `col = '...'` and `<>`, `col IN (...)`
+ * and `NOT IN`, `col > n`, a parenthesised OR of `col LIKE '...'`, COUNT(*), ORDER BY and LIMIT.
+ * Anything else throws, so a changed query fails loudly instead of matching everything.
+ */
+final class Kit_Media_Fake_Wpdb
+{
+    private const QUOTED = "'(?:[^'\\\\]|\\\\.)*'";
+
+    public string $prefix = 'wp_';
+
+    public string $posts = 'wp_posts';
+
+    public string $postmeta = 'wp_postmeta';
+
+    /** @var list<string> */
+    public array $queries = [];
+
+    public function esc_like(string $text): string
+    {
+        return addcslashes($text, '_%\\');
+    }
+
+    public function prepare(string $query, mixed ...$args): string
+    {
+        $index = 0;
+        return (string) preg_replace_callback('/%[sd]/', static function (array $match) use (&$index, $args): string {
+            $value = $args[$index++] ?? '';
+            return $match[0] === '%d' ? (string) (int) $value : "'" . str_replace(['\\', "'"], ['\\\\', "\\'"], (string) $value) . "'";
+        }, $query);
+    }
+
+    /** @return list<string> */
+    public function get_col(string $sql): array
+    {
+        return array_map(static fn(array $row): string => (string) reset($row), $this->select($sql));
+    }
+
+    public function get_var(string $sql): ?string
+    {
+        $rows = $this->select($sql);
+        return $rows === [] ? null : (string) reset($rows[0]);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function get_results(string $sql, string $output = 'OBJECT'): array
+    {
+        return $this->select($sql);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function select(string $sql): array
+    {
+        $this->queries[] = $sql;
+        // The ledger's write lock: always granted, there is only one writer here.
+        if (preg_match('/^SELECT (GET_LOCK|RELEASE_LOCK)\(/', $sql, $lock) === 1) {
+            return [[$lock[1] => '1']];
+        }
+        if (preg_match('/^SELECT (.+?) FROM (\w+) WHERE (.+?)(?: ORDER BY \w+ ASC)?(?: LIMIT (\d+))?$/s', $sql, $m) !== 1) {
+            throw new RuntimeException('Unsupported query: ' . $sql);
+        }
+        $columns = $m[1];
+        $where = $m[3];
+        $limit = isset($m[4]) && $m[4] !== '' ? (int) $m[4] : null;
+        $rows = $m[2] === $this->posts ? $this->post_rows() : $this->meta_rows();
+        $tests = [];
+        $rest = (string) preg_replace_callback('/\(((?:\w+ LIKE ' . self::QUOTED . '(?: OR )?)+)\)/', static function (array $c) use (&$tests): string {
+            preg_match_all('/(\w+) LIKE (' . self::QUOTED . ')/', $c[1], $likes, PREG_SET_ORDER);
+            $any = [];
+            foreach ($likes as $like) {
+                $any[] = [$like[1], self::like_to_regex(self::unquote($like[2]))];
+            }
+            $tests[] = static function (array $row) use ($any): bool {
+                foreach ($any as [$column, $regex]) {
+                    if (preg_match($regex, (string) $row[$column]) === 1) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            return 'TRUE';
+        }, $where);
+        $rest = (string) preg_replace_callback('/(\w+) (NOT IN|IN) \(([^)]*)\)/', static function (array $c) use (&$tests): string {
+            preg_match_all('/' . self::QUOTED . '/', $c[3], $q);
+            $values = array_map([self::class, 'unquote'], $q[0]);
+            $want = $c[2] === 'IN';
+            $tests[] = static fn(array $row): bool => in_array((string) $row[$c[1]], $values, true) === $want;
+            return 'TRUE';
+        }, $rest);
+        $rest = (string) preg_replace_callback('/(\w+) (=|<>) (' . self::QUOTED . ')/', static function (array $c) use (&$tests): string {
+            $value = self::unquote($c[3]);
+            $equal = $c[2] === '=';
+            $tests[] = static fn(array $row): bool => ((string) $row[$c[1]] === $value) === $equal;
+            return 'TRUE';
+        }, $rest);
+        $rest = (string) preg_replace_callback('/(\w+) > (\d+)/', static function (array $c) use (&$tests): string {
+            $tests[] = static fn(array $row): bool => (int) $row[$c[1]] > (int) $c[2];
+            return 'TRUE';
+        }, $rest);
+        if (trim((string) preg_replace('/\bTRUE\b|\bAND\b/', '', $rest)) !== '') {
+            throw new RuntimeException('Unsupported WHERE: ' . $where);
+        }
+        $rows = array_values(array_filter($rows, static function (array $row) use ($tests): bool {
+            foreach ($tests as $test) {
+                if (!$test($row)) {
+                    return false;
+                }
+            }
+            return true;
+        }));
+        if (trim($columns) === 'COUNT(*)') {
+            return [['COUNT(*)' => (string) count($rows)]];
+        }
+        $names = array_flip(array_map('trim', explode(',', $columns)));
+        $rows = array_map(static fn(array $row): array => array_intersect_key($row, $names), $rows);
+        return $limit === null ? $rows : array_slice($rows, 0, $limit);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function post_rows(): array
+    {
+        $rows = [];
+        foreach (Kit_Test_Site::post_ids() as $id) {
+            $post = get_post($id);
+            if ($post instanceof WP_Post) {
+                $rows[] = [
+                    'ID' => $post->ID,
+                    'post_type' => $post->post_type,
+                    'post_mime_type' => $post->post_mime_type,
+                    'post_content' => $post->post_content,
+                    'post_excerpt' => $post->post_excerpt,
+                ];
+            }
+        }
+        return $rows;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function meta_rows(): array
+    {
+        $rows = [];
+        foreach (Kit_Test_Site::post_ids() as $id) {
+            foreach (Kit_Test_Site::raw_meta($id) as $key => $values) {
+                foreach ($values as $value) {
+                    $rows[] = ['post_id' => $id, 'meta_key' => (string) $key, 'meta_value' => (string) $value];
+                }
+            }
+        }
+        return $rows;
+    }
+
+    private static function unquote(string $quoted): string
+    {
+        return (string) preg_replace('/\\\\(.)/s', '$1', substr($quoted, 1, -1));
+    }
+
+    private static function like_to_regex(string $like): string
+    {
+        $regex = '';
+        $length = strlen($like);
+        for ($i = 0; $i < $length; $i++) {
+            $char = $like[$i];
+            if ($char === '\\' && $i + 1 < $length) {
+                $regex .= preg_quote($like[++$i], '/');
+            } elseif ($char === '%') {
+                $regex .= '.*';
+            } elseif ($char === '_') {
+                $regex .= '.';
+            } else {
+                $regex .= preg_quote($char, '/');
+            }
+        }
+        return '/^' . $regex . '$/s';
+    }
+}

@@ -258,6 +258,8 @@ function update_alts(array $input): array|WP_Error
         'skipped' => $count('skipped'),
         'failed' => $count('failed'),
         'group' => $group,
+        // Top-level ids, so the write receipt names the rows recorded here.
+        'change_ids' => $records !== [] ? array_values(array_filter(array_map('strval', (array) ($recorded['change_ids'] ?? [])), static fn(string $id): bool => $id !== '')) : [],
         'results' => $rows,
     ];
 }

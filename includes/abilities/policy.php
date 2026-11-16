@@ -197,6 +197,15 @@ function wppilot_apply_ability_policy(): void
         return;
     }
 
+    // Newly seen abilities are recorded first, on every request the Hub screen included, so the
+    // screen can offer the decision. See includes/access/ability-hold.php.
+    $held = function_exists('wppilot_ability_hold_observe')
+        ? wppilot_ability_hold_observe(wppilot_registered_abilities())
+        : [];
+    if ($held !== [] && function_exists('wppilot_ability_hold_enabled') && !wppilot_ability_hold_enabled()) {
+        $held = [];
+    }
+
     // The Hub screen lists disabled abilities with their full metadata, so do not
     // unregister them there. Enforcement still runs on REST/MCP and front-end
     // requests, which is where ability exposure actually matters.
@@ -216,18 +225,19 @@ function wppilot_apply_ability_policy(): void
         if (!$ability instanceof WP_Ability) {
             continue;
         }
-        wppilot_apply_ability_policy_rule($ability, $rules);
+        wppilot_apply_ability_policy_rule($ability, $rules, $held);
     }
 }
 
 /**
  * @param array<string, array{disabled: bool, require_confirmation?: bool, min_profile?: string}> $rules
+ * @param array<string, mixed> $held Abilities held until an admin allows them, keyed by name.
  */
-function wppilot_apply_ability_policy_rule(WP_Ability $ability, array $rules): void
+function wppilot_apply_ability_policy_rule(WP_Ability $ability, array $rules, array $held = []): void
 {
     $ability_name = $ability->get_name();
     $rule = $rules[$ability_name] ?? null;
-    $manually_disabled = ($rule['disabled'] ?? false) === true;
+    $manually_disabled = ($rule['disabled'] ?? false) === true || isset($held[$ability_name]);
     $profile_blocked =
         function_exists('wppilot_safety_profile_allows_ability') && !wppilot_safety_profile_allows_ability($ability);
 
@@ -256,6 +266,19 @@ function wppilot_enrich_disabled_ability_error(mixed $result, mixed $args): mixe
 
     $name = is_array($args) && is_string($args['ability_name'] ?? null) ? $args['ability_name'] : '';
     if ($name === '' || ($result['error'] ?? null) !== "Ability '{$name}' not found") {
+        return $result;
+    }
+
+    if (function_exists('wppilot_ability_is_held') && wppilot_ability_is_held($name)) {
+        $result['error'] = sprintf(
+            /* translators: %s: the ability name, e.g. acme/delete-orders */
+            __(
+                "Ability '%s' is new on this site and held until a site admin allows it on GoBuildWP's Abilities screen. You cannot allow it yourself; ask the admin, then retry.",
+                domain: 'wppilot',
+            ),
+            $name,
+        );
+
         return $result;
     }
 

@@ -69,6 +69,14 @@ $pretty = static fn(mixed $value): string => (string) wp_json_encode(
                             /* translators: %d: WordPress user id */
                             ? sprintf(__('A person, on the wp-admin approval link (user #%d)', domain: 'wppilot'), $approver)
                             : __('A person, on the wp-admin approval link', domain: 'wppilot'),
+                        'session' => $approver > 0
+                            /* translators: %d: WordPress user id */
+                            ? sprintf(__('A person, with a session approval (user #%d)', domain: 'wppilot'), $approver)
+                            : __('A person, with a session approval', domain: 'wppilot'),
+                        'cloud-approval' => $approver > 0
+                            /* translators: %d: WordPress user id */
+                            ? sprintf(__('A person, approving a GoBuildWP Cloud job in wp-admin (user #%d)', domain: 'wppilot'), $approver)
+                            : __('A person, approving a GoBuildWP Cloud job in wp-admin', domain: 'wppilot'),
                         'chat' => __('A person, in GoBuildWP Chat', domain: 'wppilot'),
                         'approval-queue' => __('A person, in the approval queue', domain: 'wppilot'),
                         default => $confirmed_via,

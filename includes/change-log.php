@@ -81,12 +81,15 @@ function wppilot_store_changes(array $entries): void
     if ($entries === []) {
         return;
     }
+    // Each row is sealed into the hash chain (includes/ledger-chain.php) under the ledger lock, so
+    // two requests recording at once cannot both claim the same predecessor.
     if (wppilot_change_table_active()) {
-        wppilot_change_table_store(wppilot_change_rows_before_store($entries, legacy_filter: true));
+        wppilot_ledger_chain_store(wppilot_change_rows_before_store($entries, legacy_filter: true), 'wppilot_change_table_store');
         return;
     }
     // The option write below runs the option's own pre-update filter, so only the new one here.
-    wppilot_change_option_store(wppilot_change_rows_before_store($entries, legacy_filter: false));
+    // The chain store already holds the ledger lock, so the unlocked writer is used.
+    wppilot_ledger_chain_store(wppilot_change_rows_before_store($entries, legacy_filter: false), 'wppilot_change_option_write');
 }
 
 /**
@@ -111,19 +114,32 @@ function wppilot_change_option_store(array $entries): void
         return;
     }
     wppilot_with_change_log_lock(static function () use ($entries): void {
-        $log = array_merge(wppilot_change_log_option_rows(), $entries);
-        if (count($log) > WPPILOT_CHANGE_LOG_MAX) {
-            $log = array_slice(array: $log, offset: -WPPILOT_CHANGE_LOG_MAX);
-        }
-        while (count($log) > 1) {
-            $encoded = wp_json_encode($log);
-            if (is_string($encoded) && strlen($encoded) <= WPPILOT_CHANGE_LOG_MAX_BYTES) {
-                break;
-            }
-            array_shift($log);
-        }
-        update_option(WPPILOT_CHANGE_LOG_OPTION, $log, autoload: false);
+        wppilot_change_option_write($entries);
     });
+}
+
+/**
+ * Append rows to the option ledger, trimming oldest first. The caller holds the ledger lock.
+ *
+ * @param list<array<string, mixed>> $entries
+ */
+function wppilot_change_option_write(array $entries): void
+{
+    if ($entries === []) {
+        return;
+    }
+    $log = array_merge(wppilot_change_log_option_rows(), $entries);
+    if (count($log) > WPPILOT_CHANGE_LOG_MAX) {
+        $log = array_slice(array: $log, offset: -WPPILOT_CHANGE_LOG_MAX);
+    }
+    while (count($log) > 1) {
+        $encoded = wp_json_encode($log);
+        if (is_string($encoded) && strlen($encoded) <= WPPILOT_CHANGE_LOG_MAX_BYTES) {
+            break;
+        }
+        array_shift($log);
+    }
+    update_option(WPPILOT_CHANGE_LOG_OPTION, $log, autoload: false);
 }
 
 /**
@@ -747,11 +763,17 @@ function wppilot_change_before(string $ability_name, mixed $input, mixed $abilit
         }
         return;
     }
+    if ($ability instanceof WP_Ability && wppilot_ability_call_is_dry_run($ability, $values)) {
+        // A dry run writes nothing; a row for it would offer an undo of nothing and evict real history.
+        return;
+    }
     wppilot_change_pending($ability_name, [
         'started_at' => microtime(true),
         'input_summary' => wppilot_redact_for_log($values),
         'input_sha256' => hash('sha256', (string) wp_json_encode($values)),
         'before' => wppilot_capture_before_image($ability_name, $values),
+        // Chosen now so the write's receipt can name the row before the after hook writes it.
+        'change_id' => wp_generate_uuid4(),
     ]);
 }
 
@@ -785,17 +807,41 @@ function wppilot_change_after(string $ability_name, mixed $input, mixed $result,
         return;
     }
     wppilot_change_pending($ability_name, value: null, clear: true);
+    if (($pending['replayed'] ?? false) === true) {
+        // An idempotent replay returned the first call's result and changed nothing; that call
+        // already has its row.
+        return;
+    }
+    if (is_array($result)) {
+        // The receipt describes this row; storing it inside the row says nothing new.
+        unset($result['receipt']);
+    }
     $audit_read = ($pending['audit_read'] ?? false) === true;
+    if (!$audit_read && is_array($result) && ($result['dry_run'] ?? null) === true) {
+        // A dry run by the ability's own default (no dry_run in the input) reports itself in the
+        // result; it wrote nothing, so like an explicit one it gets no row.
+        return;
+    }
     // @mago-expect analysis:mixed-assignment -- Pending data is internal and normalized below.
     $before_value = $pending['before'] ?? null;
     $before = is_array($before_value) ? wppilot_string_keyed_array($before_value) : null;
-    $rollback = $audit_read
-        ? ['reversible' => false, 'reason' => 'A read-only call, recorded for audit. Nothing changed, so there is nothing to undo.']
-        : wppilot_build_rollback_payload($ability_name, $before, $result);
+    // The write receipt worked the payload out already; building it twice could disagree.
+    $stashed = is_array($pending['rollback'] ?? null) ? wppilot_string_keyed_array($pending['rollback']) : null;
+    // A call that answered success:false (a WP_Error never reaches this hook) keeps its audit row,
+    // but must not offer to undo a change it did not make.
+    $failed = !$audit_read && is_array($result) && ($result['success'] ?? null) === false;
+    $rollback = match (true) {
+        $audit_read => ['reversible' => false, 'reason' => 'A read-only call, recorded for audit. Nothing changed, so there is nothing to undo.'],
+        $failed => ['reversible' => false, 'reason' => 'The call failed; nothing to undo.'],
+        default => $stashed ?? wppilot_build_rollback_payload($ability_name, $before, $result),
+    };
     $ability = wppilot_change_resolve_ability($ability_name, $ability);
     $risk = $ability instanceof WP_Ability ? wppilot_ability_risk($ability) : 'write';
     $user = wp_get_current_user();
-    $change_id = wp_generate_uuid4();
+    $change_id = (string) ($pending['change_id'] ?? '');
+    if ($change_id === '') {
+        $change_id = wp_generate_uuid4();
+    }
 
     wppilot_store_change([
         // 'audit-read' rows are a record of access, not of a change; the Changes screen and the
@@ -1896,6 +1942,61 @@ function wppilot_string_list_of_arrays(mixed $value): array
     return $rows;
 }
 
+/**
+ * Rollback types whose undo is refused when the post changed after the recorded change.
+ *
+ * Undoing one puts back the whole before-image of a post (or of the fields and meta keys a
+ * partial snapshot holds), so an edit someone made in between would be erased without a word.
+ * The row stores the state its write left (`after`, see wppilot_change_row_with_session()); the
+ * undo compares it with the post as it is now, the same check files, security fixes and
+ * search-replace already make through changed_since.
+ */
+const WPPILOT_CHANGE_CONFLICT_TYPES = ['restore-post', 'delete-created-post', 'kits/post-partial'];
+
+/**
+ * The refusal for undoing a post or post-meta change that something changed since, or null.
+ *
+ * Null when the row is of another type, predates the check (no `after`), or the post still looks
+ * the way the change left it. A new comment only moves comment_count, which is not an edit, so
+ * it does not count.
+ *
+ * @param array<string, mixed> $entry
+ * @param array<string, mixed> $rollback
+ */
+function wppilot_change_changed_since_error(array $entry, array $rollback): ?WP_Error
+{
+    if (
+        !in_array((string) ($rollback['type'] ?? ''), WPPILOT_CHANGE_CONFLICT_TYPES, strict: true)
+        || !function_exists('wppilot_change_digest_or_null')
+    ) {
+        return null;
+    }
+    $after = wppilot_change_digest_or_null(is_array($entry['after'] ?? null) ? $entry['after'] : null);
+    if ($after === null) {
+        return null;
+    }
+    $now = wppilot_change_state_digest(wppilot_change_current_state($rollback, bounded: false));
+    if ($now === null || hash_equals($after['fingerprint'], $now['fingerprint'])) {
+        return null;
+    }
+    $changed = array_values(array_diff(wppilot_change_digest_diff($after, $now), ['post.comment_count']));
+    if ($changed === []) {
+        return null;
+    }
+    $target = wppilot_change_payload_target($rollback);
+    $label = preg_match('/^post(?:-partial)?:(\d+)/', $target, $match) === 1 ? sprintf('Post %d', (int) $match[1]) : 'The post';
+
+    return new WP_Error(
+        'wppilot_change_changed_since',
+        sprintf(
+            '%s changed after this change was made (%s), so undoing it would overwrite those later edits. Nothing was changed. Undo with force=true to put the earlier version back anyway.',
+            $label,
+            implode(', ', $changed),
+        ),
+        ['status' => 409, 'changed' => $changed],
+    );
+}
+
 /** @return array<string, mixed>|WP_Error */
 // @mago-expect lint:cyclomatic-complexity -- The rollback transaction validates every terminal state.
 function wppilot_rollback_change(string $id, bool $force = false): array|WP_Error
@@ -1918,9 +2019,16 @@ function wppilot_rollback_change(string $id, bool $force = false): array|WP_Erro
         );
     }
 
+    if (!$force) {
+        $changed_since = wppilot_change_changed_since_error($entry, $rollback);
+        if ($changed_since !== null) {
+            return $changed_since;
+        }
+    }
+
     // The state this undo is about to replace, kept so the undo can itself be undone (redo-session).
     // Taken before the restore, which is the only moment it still exists.
-    $redo = function_exists('wppilot_change_redo_image') ? wppilot_change_redo_image($rollback) : null;
+    $redo =function_exists('wppilot_change_redo_image') ? wppilot_change_redo_image($rollback) : null;
     // `force` lets a file undo overwrite what changed after the AI's change (changed_since).
     $result = wppilot_change_run_restore($rollback, $force ? ['force' => true] + $entry : $entry);
     if ($result instanceof WP_Error) {
@@ -2234,8 +2342,9 @@ function wppilot_restore_comment_status(array $snapshot): array|WP_Error
             domain: 'wppilot',
         ));
     }
+    // wp_get_comment_status() reports "approved"; older snapshots may hold "approve".
     $status = match ((string) ($values['status'] ?? 'hold')) {
-        'approve' => 'approve',
+        'approve', 'approved' => 'approve',
         'spam' => 'spam',
         'trash' => 'trash',
         default => 'hold',
@@ -2275,8 +2384,10 @@ function wppilot_rollback_created_comment(int $comment_id): array|WP_Error
 /**
  * Post columns that move on their own and must never count as a change.
  *
- * WordPress rewrites post_modified on every save, guid is derived, and filter is
- * a runtime marker rather than stored state. The fingerprint below drops them so
+ * WordPress rewrites post_modified on every save, guid is derived, filter is
+ * a runtime marker rather than stored state, and comment_count moves whenever a
+ * visitor comments while wp_insert_post() never writes it back, so an undo after
+ * a new comment restored the post exactly and still reported a mismatch. The fingerprint below drops them so
  * an unrelated touch does not read as drift, and includes/preview/diff.php drops
  * the same list so a preview does not report them as edits.
  *
@@ -2287,7 +2398,7 @@ function wppilot_rollback_created_comment(int $comment_id): array|WP_Error
  *
  * @var list<string>
  */
-const WPPILOT_VOLATILE_POST_FIELDS = ['post_modified', 'post_modified_gmt', 'guid', 'filter'];
+const WPPILOT_VOLATILE_POST_FIELDS = ['post_modified', 'post_modified_gmt', 'guid', 'filter', 'comment_count'];
 
 /** @param array<string, mixed> $snapshot */
 function wppilot_post_snapshot_fingerprint(array $snapshot): string

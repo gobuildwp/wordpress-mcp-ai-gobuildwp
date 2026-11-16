@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace GoBuildWP\Kits\SecurityProtection;
 
 use WP_Error;
+use WPPilot\Kits\Runtime;
 
 if (!defined('ABSPATH')) {
     exit();
@@ -50,34 +51,34 @@ function feed(): array
 function sanitize_feed_rule(mixed $rule): array|WP_Error
 {
     if (!is_array($rule)) {
-        return new WP_Error('gobuildwp_feed_invalid', 'Invalid feed rule: each rule must be an object.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), 'Invalid feed rule: each rule must be an object.');
     }
     $id = is_string($rule['id'] ?? null) ? trim($rule['id']) : '';
     if (!preg_match('/^[A-Za-z0-9_-]{1,64}$/', $id)) {
-        return new WP_Error('gobuildwp_feed_invalid', 'Invalid feed rule: id must be 1–64 letters, digits, - or _.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), 'Invalid feed rule: id must be 1–64 letters, digits, - or _.');
     }
     $label = is_string($rule['label'] ?? null) ? substr(sanitize_text(trim($rule['label'])), 0, FEED_MAX_TEXT) : '';
     if ($label === '') {
-        return new WP_Error('gobuildwp_feed_invalid', sprintf('Invalid feed rule %s: label is required.', $id));
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), sprintf('Invalid feed rule %s: label is required.', $id));
     }
     $in = $rule['in'] ?? null;
     if (!is_array($in) || $in === [] || !is_list_array($in)) {
-        return new WP_Error('gobuildwp_feed_invalid', sprintf('Invalid feed rule %s: in must be a non-empty list.', $id));
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), sprintf('Invalid feed rule %s: in must be a non-empty list.', $id));
     }
     $where = [];
     foreach ($in as $w) {
         if (!is_string($w) || !in_array($w, FEED_IN, true)) {
-            return new WP_Error('gobuildwp_feed_invalid', sprintf('Invalid feed rule %s: in may only hold %s.', $id, implode(', ', FEED_IN)));
+            return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), sprintf('Invalid feed rule %s: in may only hold %s.', $id, implode(', ', FEED_IN)));
         }
         $where[$w] = true;
     }
     $pattern = is_string($rule['pattern'] ?? null) ? $rule['pattern'] : '';
     if ($pattern === '' || strlen($pattern) > VP_MAX_PATTERN) {
-        return new WP_Error('gobuildwp_feed_invalid', sprintf('Invalid feed rule %s: pattern must be 1–%d characters.', $id, VP_MAX_PATTERN));
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), sprintf('Invalid feed rule %s: pattern must be 1–%d characters.', $id, VP_MAX_PATTERN));
     }
     $problem = vp_pattern_problem($pattern);
     if ($problem !== null) {
-        return new WP_Error('gobuildwp_feed_invalid', sprintf('Invalid feed rule %s: pattern %s.', $id, $problem));
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), sprintf('Invalid feed rule %s: pattern %s.', $id, $problem));
     }
     return ['id' => $id, 'label' => $label, 'in' => array_keys($where), 'pattern' => $pattern];
 }
@@ -88,24 +89,24 @@ function sanitize_feed_rule(mixed $rule): array|WP_Error
 function sanitize_feed_block(mixed $entry): array|WP_Error
 {
     if (!is_array($entry)) {
-        return new WP_Error('gobuildwp_feed_invalid', 'Invalid blocklist entry: each entry must be an object.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), 'Invalid blocklist entry: each entry must be an object.');
     }
     $cidr = is_string($entry['ip'] ?? null) ? normalize_cidr($entry['ip']) : '';
     if ($cidr === '') {
-        return new WP_Error('gobuildwp_feed_invalid', 'Invalid blocklist entry: ip must be an IP address or CIDR range.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), 'Invalid blocklist entry: ip must be an IP address or CIDR range.');
     }
     if (str_contains($cidr, '/')) {
         $bits = (int) substr($cidr, (int) strpos($cidr, '/') + 1);
         $min = str_contains($cidr, ':') ? MIN_BLOCK_PREFIX_V6 : MIN_BLOCK_PREFIX_V4;
         if ($bits < $min) {
-            return new WP_Error('gobuildwp_feed_invalid', sprintf('Invalid blocklist entry %s: a range must be /%d or narrower.', $cidr, $min));
+            return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), sprintf('Invalid blocklist entry %s: a range must be /%d or narrower.', $cidr, $min));
         }
     }
     $expires = $entry['expires_at'] ?? null;
     if ($expires !== null) {
         $at = is_string($expires) ? strtotime($expires) : false;
         if ($at === false) {
-            return new WP_Error('gobuildwp_feed_invalid', sprintf('Invalid blocklist entry %s: expires_at must be an ISO 8601 time or null.', $cidr));
+            return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), sprintf('Invalid blocklist entry %s: expires_at must be an ISO 8601 time or null.', $cidr));
         }
         $expires = $at;
     }
@@ -129,14 +130,14 @@ function set_feed(array $input, ?int $now = null): array|WP_Error
     $rules_in = $input['rules'] ?? [];
     $list_in = $input['blocklist'] ?? [];
     if (!is_array($rules_in) || !is_list_array($rules_in) || count($rules_in) > MAX_FEED_RULES) {
-        return new WP_Error('gobuildwp_feed_invalid', 'Invalid feed: rules must be a list of at most ' . MAX_FEED_RULES . ' rules.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), 'Invalid feed: rules must be a list of at most ' . MAX_FEED_RULES . ' rules.');
     }
     if (!is_array($list_in) || !is_list_array($list_in) || count($list_in) > MAX_FEED_BLOCKLIST) {
-        return new WP_Error('gobuildwp_feed_invalid', 'Invalid feed: blocklist must be a list of at most ' . MAX_FEED_BLOCKLIST . ' entries.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), 'Invalid feed: blocklist must be a list of at most ' . MAX_FEED_BLOCKLIST . ' entries.');
     }
     $digest = $input['digest'] ?? null;
     if ($digest !== null && (!is_string($digest) || !preg_match('/^[A-Za-z0-9:_-]{1,128}$/', $digest))) {
-        return new WP_Error('gobuildwp_feed_invalid', 'Invalid feed: digest must be up to 128 letters, digits, :, - or _.');
+        return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), 'Invalid feed: digest must be up to 128 letters, digits, :, - or _.');
     }
     $rules = [];
     foreach ($rules_in as $rule) {
@@ -145,7 +146,7 @@ function set_feed(array $input, ?int $now = null): array|WP_Error
             return $one;
         }
         if (isset($rules[$one['id']])) {
-            return new WP_Error('gobuildwp_feed_invalid', sprintf('Invalid feed: rule id %s appears twice.', $one['id']));
+            return new WP_Error(Runtime\public_name('wppilot_kit_feed_invalid'), sprintf('Invalid feed: rule id %s appears twice.', $one['id']));
         }
         $rules[$one['id']] = $one;
     }

@@ -22,6 +22,8 @@ if (!defined('ABSPATH')) {
  *
  * The order is fixed:
  *
+ * 0. Pause. While an administrator has paused agents (includes/agent-pause.php) every call is
+ *    refused with `agents_paused`, reads included.
  * 1. Safety profile. Refused before anything else, so a call the profile forbids never reaches a
  *    rate bucket or an approval queue.
  * 2. Confirmation. A destructive or critical ability needs `confirm: true`, unless the caller says
@@ -43,12 +45,19 @@ if (!defined('ABSPATH')) {
  *                                              on another network site). Filters use it to decide
  *                                              what applies; the approval queue, for one, only holds
  *                                              `rest` and `mcp` calls.
- * @param array{human_approved?: bool, elicitation?: array{supported?: bool, state?: string, response?: mixed}} $context
- *        `elicitation` is set by the modern MCP transport only; see wppilot_confirm_ability_call().
+ * @param array{human_approved?: bool, elicitation?: array{supported?: bool, state?: string, response?: mixed}, cloud_job?: string} $context
+ *        `elicitation` and `cloud_job` are set by the modern MCP transport only; see wppilot_confirm_ability_call().
  * @return mixed The input to pass to execute(), or a WP_Error explaining the refusal.
  */
 function wppilot_gate_ability_call(WP_Ability $ability, mixed $input, string $transport, array $context = []): mixed
 {
+    // A paused site refuses every call before anything else, so nothing queues an approval or
+    // spends a rate bucket on it. See includes/agent-pause.php.
+    $paused = function_exists('wppilot_agents_pause_gate_error') ? wppilot_agents_pause_gate_error($ability) : null;
+    if ($paused !== null) {
+        return $paused;
+    }
+
     $allowed = wppilot_safety_check_ability($ability);
     if ($allowed instanceof WP_Error) {
         return $allowed;
@@ -64,12 +73,24 @@ function wppilot_gate_ability_call(WP_Ability $ability, mixed $input, string $tr
     // Handed to the ledger, which records how each write was confirmed.
     wppilot_confirmation_note($ability->get_name(), $confirmed);
 
+    // A person on this site approved this exact Cloud job call (includes/cloud/approvals.php), so the
+    // site confirms it now; Cloud itself never sends confirm.
+    if ($confirmed === 'cloud-approval' && is_array($input) && wppilot_ability_schema_has_property($ability, property: 'confirm')) {
+        $input['confirm'] = true;
+    }
+
     if (
         is_array($input)
         && array_key_exists(key: 'confirm', array: $input)
         && !wppilot_ability_schema_has_property($ability, property: 'confirm')
     ) {
         unset($input['confirm']);
+    }
+
+    // A secret an earlier result redacted must not be written back as the placeholder.
+    $placeholder = wppilot_output_guard_input_error($ability, $input);
+    if ($placeholder instanceof WP_Error) {
+        return $placeholder;
     }
 
     /**

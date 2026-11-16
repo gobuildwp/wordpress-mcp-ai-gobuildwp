@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 wp_register_ability('wppilot/gutenberg-get-content', [
     'label' => __('Get Gutenberg Content', domain: 'wppilot'),
     'description' => __(
-        'Reads the live saved Gutenberg post_content for one target and returns a compact parsed block tree. This also reports the Block Editor Queue runtime plus curl SSE/poll URLs so agents can ask the user to open the queue page before queueing static/native block changes. This does not read queued pending block_spec data; if a non-terminal Gutenberg queue item exists for the target, pending_gutenberg_change summarizes it separately.',
+        'Reads the live saved Gutenberg post_content for one target and returns a compact parsed block tree. Each block carries a hash, which gutenberg-edit-block takes as expected_hash along with the block path (its index at each level of this tree). This also reports the Block Editor Queue runtime plus curl SSE/poll URLs so agents can ask the user to open the queue page before queueing static/native block changes. This does not read queued pending block_spec data; if a non-terminal Gutenberg queue item exists for the target, pending_gutenberg_change summarizes it separately.',
         domain: 'wppilot',
     ),
     'category' => 'gutenberg',
@@ -113,6 +113,8 @@ function gutenberg_get_content(array $input): array|WP_Error
     if (array_key_exists('include_raw_content', $input) && $input['include_raw_content'] === true) {
         $response['raw_content'] = $target->post_content;
     }
+    // A later content write from this agent is checked against what it saw here.
+    \wppilot_content_note_read((int) $target->ID);
 
     return $response;
 }
@@ -153,6 +155,8 @@ function gutenberg_shape_parsed_blocks(array $blocks, int $max_depth, array $opt
             'name' => $name,
             'inner_block_count' => count($inner_blocks),
             'inner_html_length' => is_string($block['innerHTML'] ?? null) ? strlen($block['innerHTML']) : 0,
+            // gutenberg-edit-block's expected_hash: this block exactly as it is saved.
+            'hash' => hash('sha256', serialize_block($block)),
         ];
 
         if ($options['include_attributes']) {

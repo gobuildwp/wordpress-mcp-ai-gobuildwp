@@ -332,12 +332,25 @@ function preview(array $input): array|WP_Error
 {
     if (is_string($input['plan_id'] ?? null) && $input['plan_id'] !== '') {
         $plan = load_plan($input['plan_id']);
-        return $plan instanceof WP_Error ? $plan : present_plan($plan, $input);
+        if ($plan instanceof WP_Error) {
+            return $plan;
+        }
+        return ($plan['kind'] ?? '') === 'options' ? present_option_plan($plan, $input) : present_plan($plan, $input);
     }
 
     $matcher = matcher($input);
     if ($matcher instanceof WP_Error) {
         return $matcher;
+    }
+    $target = $input['target'] ?? 'posts';
+    if ($target === 'options') {
+        return preview_options($input, $matcher);
+    }
+    if ($target !== 'posts') {
+        return new WP_Error('kit_sr_bad_target', 'target must be "posts" or "options".', ['status' => 400]);
+    }
+    if (array_key_exists('options', $input)) {
+        return new WP_Error('kit_sr_bad_scope', 'options only applies with target=options.', ['status' => 400]);
     }
     $scope = scope($input);
     if ($scope instanceof WP_Error) {

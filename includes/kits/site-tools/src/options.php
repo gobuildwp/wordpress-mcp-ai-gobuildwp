@@ -65,6 +65,150 @@ function withheld(string $name, string $host_id, array $denied): string
     return is_secret_name($name) ? 'sensitive name' : '';
 }
 
+const REDACTED = '[redacted]';
+
+/**
+ * Redact values stored under secret-looking keys inside a serialized or JSON option value.
+ *
+ * A complete value is decoded and walked; a cut preview (or one that does not decode) is
+ * scanned token by token, which may over-redact but never leaves a secret key's value in clear.
+ *
+ * @return array{0: string, 1: int} The safe text and how many values were redacted.
+ */
+function redact_value(string $text, bool $complete): array
+{
+    $trimmed = ltrim($text);
+    if ($trimmed === '') {
+        return [$text, 0];
+    }
+    if ($complete) {
+        if (is_serialized($text)) {
+            /** @var mixed $data */
+            $data = @unserialize($text, ['allowed_classes' => false]);
+            if (is_array($data)) {
+                $count = 0;
+                $clean = redact_tree($data, $count);
+                return $count > 0 ? [serialize($clean), $count] : [$text, 0];
+            }
+        } elseif ($trimmed[0] === '{' || $trimmed[0] === '[') {
+            /** @var mixed $data */
+            $data = json_decode($text, true);
+            if (is_array($data)) {
+                $count = 0;
+                $clean = redact_tree($data, $count);
+                if ($count === 0) {
+                    return [$text, 0];
+                }
+                $json = json_encode($clean, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                if (is_string($json)) {
+                    return [$json, $count];
+                }
+            }
+        }
+    }
+    $count = 0;
+    $text = redact_serialized_text($text, $count);
+    $text = redact_json_text($text, $count);
+    return [$text, $count];
+}
+
+/**
+ * @param array<mixed> $data
+ * @return array<mixed>
+ */
+function redact_tree(array $data, int &$count, int $depth = 0): array
+{
+    foreach ($data as $key => $value) {
+        if (is_string($key) && is_secret_name($key) && $value !== null && $value !== '' && !is_array($value)) {
+            $data[$key] = REDACTED;
+            $count++;
+        } elseif (is_array($value) && $depth < 32) {
+            $data[$key] = redact_tree($value, $count, $depth + 1);
+        } elseif (is_string($value) && $value !== '' && (is_serialized($value) || in_array(ltrim($value)[0] ?? '', ['{', '['], true))) {
+            [$clean, $inner] = redact_value($value, true);
+            if ($inner > 0) {
+                $data[$key] = $clean;
+                $count += $inner;
+            }
+        }
+    }
+    return $data;
+}
+
+/**
+ * Token scan of PHP-serialized text: a value that follows a secret-looking string key is redacted.
+ */
+function redact_serialized_text(string $text, int &$count): string
+{
+    $out = '';
+    $pos = 0;
+    $len = strlen($text);
+    $secret_key = false;
+    while ($pos < $len && preg_match('/s:(\d+):"/', $text, $m, PREG_OFFSET_CAPTURE, $pos) === 1) {
+        $start = (int) $m[0][1];
+        $n = (int) $m[1][0];
+        $body = $start + strlen($m[0][0]);
+        // A scalar value (i:, d:, b:) directly after a secret key.
+        if ($secret_key && preg_match('/\G[idb]:[^;]*;?/', $text, $s, 0, $pos) === 1 && $s[0] !== '') {
+            $out .= 's:' . strlen(REDACTED) . ':"' . REDACTED . '";';
+            $count++;
+            $pos += strlen($s[0]);
+            $secret_key = false;
+            continue;
+        }
+        $out .= substr($text, $pos, $start - $pos);
+        $adjacent = $start === $pos;
+        if ($body + $n > $len) {
+            // Cut off inside this string.
+            if ($secret_key && $adjacent) {
+                $out .= 's:' . strlen(REDACTED) . ':"' . REDACTED . '"';
+                $count++;
+            } else {
+                $out .= substr($text, $start);
+            }
+            return $out;
+        }
+        $value = substr($text, $body, $n);
+        $end = $body + $n + 2; // closing `";`
+        if ($secret_key && $adjacent) {
+            $out .= 's:' . strlen(REDACTED) . ':"' . REDACTED . '";';
+            if ($value !== '') {
+                $count++;
+            }
+            $secret_key = false;
+        } else {
+            $out .= substr($text, $start, min($end, $len) - $start);
+            $secret_key = is_secret_name($value);
+        }
+        $pos = min($end, $len);
+    }
+    // A secret key's scalar value at the very end of the text.
+    if ($secret_key && $pos < $len && preg_match('/\G[idb]:[^;]*(;?)/', $text, $s, 0, $pos) === 1) {
+        $count++;
+        return $out . 's:' . strlen(REDACTED) . ':"' . REDACTED . '"' . $s[1] . substr($text, $pos + strlen($s[0]));
+    }
+    return $out . substr($text, $pos);
+}
+
+/**
+ * Regex pass over JSON text (complete or cut): `"secret_key": value` loses its value.
+ */
+function redact_json_text(string $text, int &$count): string
+{
+    $result = preg_replace_callback(
+        '/"((?:[^"\\\\]|\\\\.)*)"(\s*:\s*)("(?:[^"\\\\]|\\\\.)*(?:"|$)|-?[0-9][0-9.eE+-]*|true|false)/',
+        static function (array $m) use (&$count): string {
+            if (!is_secret_name(stripcslashes($m[1])) || $m[3] === '""') {
+                return $m[0];
+            }
+            $count++;
+            return '"' . $m[1] . '"' . $m[2] . '"' . REDACTED . '"';
+        },
+        $text,
+    );
+    return is_string($result) ? $result : $text;
+}
+
 /**
  * @return list<string>
  */
@@ -161,6 +305,11 @@ function explore(array $input): array|WP_Error
             $option['value'] = null;
             $option['redacted'] = $reason;
         } elseif ($value_length > 0) {
+            // Secrets nested under ordinary-named options (serialized or JSON settings arrays).
+            [$preview, $nested] = redact_value($preview, strlen($preview) >= $size);
+            if ($nested > 0) {
+                $option['redacted_keys'] = $nested;
+            }
             $option['value'] = strlen($preview) > $value_length ? substr($preview, 0, $value_length) . '…' : $preview;
             $option['value_truncated'] = $size > $value_length;
         }

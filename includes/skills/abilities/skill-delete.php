@@ -53,6 +53,18 @@ function register(): void
             // Only user-cpt skills can be deleted. If the slug exists in
             // an external source, refuse cleanly without raising an error.
             $post = SkillWrite\find_user_post_by_slug($slug);
+            if ($post === null && filter_var($input['permanent'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                // A trashed skill keeps its slug as "<slug>__trashed", so a
+                // permanent delete also looks for it in the trash.
+                $trashed = get_posts([
+                    'post_type' => \WPPilot\Skills\Cpt\POST_TYPE,
+                    'post_status' => 'trash',
+                    'name' => $slug . '__trashed',
+                    'posts_per_page' => 1,
+                    'no_found_rows' => true,
+                ]);
+                $post = ($trashed[0] ?? null) instanceof \WP_Post ? $trashed[0] : null;
+            }
             if ($post === null) {
                 return [
                     'success' => true,

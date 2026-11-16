@@ -374,6 +374,17 @@ final class DatabaseTest extends TestCase
         self::assertTrue(SI\skipped_option('widget_text'), 'widgets are read by the posts area');
     }
 
+    /** The host names its own unscanned prefixes; a standalone export has none of them. */
+    public function test_host_unscanned_prefixes_come_from_the_host(): void
+    {
+        $host = new FakeHost();
+        \WPPilot\Kits\Runtime\host($host);
+        self::assertFalse(SI\skipped_option('hostpreview_abc'));
+        $host->extensions['unscanned-option-prefixes'] = ['hostpreview_'];
+        self::assertTrue(SI\skipped_option('hostpreview_abc'));
+        self::assertFalse(SI\skipped_option('hostpreviewer'));
+    }
+
     public function test_php_end_of_life_and_config_file_permissions(): void
     {
         $now = (int) strtotime('2026-10-28 12:00:00 UTC');

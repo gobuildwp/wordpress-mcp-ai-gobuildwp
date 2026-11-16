@@ -423,7 +423,9 @@ function wordpress_list_terms(array $input): array|WP_Error
         }
     }
 
-    $total = wp_count_terms(['taxonomy' => $taxonomy, 'hide_empty' => $args['hide_empty']]);
+    $count_args = $args;
+    unset($count_args['number'], $count_args['offset'], $count_args['orderby'], $count_args['order']);
+    $total = wp_count_terms($count_args);
 
     return [
         'items' => $items,

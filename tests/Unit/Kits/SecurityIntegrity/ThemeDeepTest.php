@@ -40,7 +40,7 @@ final class ThemeDeepTest extends TestCase
             $this->site->remove();
         }
         reset_state();
-        unset($GLOBALS['wppilot_test_themes']);
+        \Kit_Test_State::set_themes(null);
         foreach ($this->zips as $zip) {
             @unlink($zip);
         }
@@ -197,11 +197,11 @@ final class ThemeDeepTest extends TestCase
         $this->site->put('wp-content/themes/agency/style.css', '/* Theme Name: Agency */');
         $this->site->put('wp-content/themes/child/style.css', '/* Theme Name: Child */');
         $this->site->put('wp-content/themes/index.php', "<?php\n// Silence is golden.\n");
-        $GLOBALS['wppilot_test_themes'] = [
+        \Kit_Test_State::set_themes([
             'twentyx' => ['Name' => 'X', 'Version' => '1.0'],
             'agency' => ['Name' => 'Agency', 'Version' => '2.0', 'UpdateURI' => 'https://vendor.example/agency'],
             'child' => ['Name' => 'Child', 'Version' => '1.0', 'Template' => 'twentyx'],
-        ];
+        ]);
         // A premium theme whose updater adds a WordPress.org-looking entry is still left out by its Update URI.
         self::update_check(['twentyx' => self::wporg_entry('twentyx'), 'agency' => self::wporg_entry('agency')]);
         TestNet::$responses[] = $this->zip_response([
@@ -232,7 +232,7 @@ final class ThemeDeepTest extends TestCase
     public function test_themes_are_complete_when_every_one_is_compared(): void
     {
         $this->site->put('wp-content/themes/twentyx/style.css', 'body{}');
-        $GLOBALS['wppilot_test_themes'] = ['twentyx' => ['Name' => 'X', 'Version' => '1.0']];
+        \Kit_Test_State::set_themes(['twentyx' => ['Name' => 'X', 'Version' => '1.0']]);
         self::update_check(['twentyx' => self::wporg_entry('twentyx')]);
         TestNet::$responses[] = $this->zip_response(['twentyx/style.css' => 'body{}']);
         $run = run_files(['scope' => 'themes']);
@@ -254,7 +254,7 @@ final class ThemeDeepTest extends TestCase
         $this->site->put('wp-content/themes/custom/functions.php', self::evil('shell_request'));
         $this->site->put('wp-content/themes/custom/js/site.js', 'console.log(1);');
         TestNet::$plugins = ['premium/premium.php' => ['Version' => '3.0']];
-        $GLOBALS['wppilot_test_themes'] = ['custom' => ['Name' => 'Custom', 'Version' => '1.0']];
+        \Kit_Test_State::set_themes(['custom' => ['Name' => 'Custom', 'Version' => '1.0']]);
 
         $plain = run_files(['scope' => 'all']);
         self::assertSame('skipped', $plain['state']['coverage']['deep']['state']);

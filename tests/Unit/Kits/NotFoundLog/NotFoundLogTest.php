@@ -36,7 +36,7 @@ namespace WPPilot\Tests\Unit\Kits\NotFoundLog {
 
         protected function setUp(): void
         {
-            unset(\WPPilot_Test_State::$options[NotFoundLog\OPTION]);
+            unset(\Kit_Test_State::$options[NotFoundLog\OPTION]);
             State::$is404 = true;
             $this->savedServer = $_SERVER;
             remove_all_filters(NotFoundLog\ENABLED_FILTER);
@@ -169,8 +169,8 @@ namespace WPPilot\Tests\Unit\Kits\NotFoundLog {
         {
             NotFoundLog\record('/a', '', 1);
 
-            self::assertArrayHasKey(NotFoundLog\OPTION, \WPPilot_Test_State::$options);
-            self::assertFalse($GLOBALS['wppilot_test_option_autoload'][NotFoundLog\OPTION] ?? null);
+            self::assertArrayHasKey(NotFoundLog\OPTION, \Kit_Test_State::$options);
+            self::assertFalse(\Kit_Test_State::option_autoload(NotFoundLog\OPTION));
         }
     }
 }

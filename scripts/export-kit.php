@@ -30,6 +30,7 @@ declare(strict_types=1);
  *                   ledger abilities would otherwise name something that does not exist there)
  *   storage names   wppilot_kit_…, _wppilot_kit_…    → <prefix>_kit_…, _<prefix>_kit_…
  *   handles, REST   wppilot-kit…                     → <prefix>-kit…
+ *   constants       'WPPILOT_KIT_…' (wp-config names, as strings) → '<PREFIX>_KIT_…'
  *   text domain     'wppilot' / 'wppilot-pro' as the domain argument of __(), _e(), _x(), _n(),
  *                   esc_html__() and friends          → --text-domain
  *   categories      a slug a kit declares in kit.json `categories` → <prefix>-<slug>, in kit.json
@@ -177,6 +178,8 @@ final class Rewriter
                 'wppilot-kit' => $this->prefix . '-kit',
                 'gobuildwp_kit_' => $this->prefix . '_kit_',
                 'gobuildwp-kit' => $this->prefix . '-kit',
+                'WPPILOT_KIT_' => strtoupper($this->prefix) . '_KIT_',
+                'GOBUILDWP_KIT_' => strtoupper($this->prefix) . '_KIT_',
             ],
             'text_domain' => ['wppilot' => $this->domain, 'wppilot-pro' => $this->domain],
             'categories' => $this->categories,
@@ -212,6 +215,7 @@ final class Rewriter
             $text,
         );
         $text = (string) preg_replace('/(?<![A-Za-z0-9])(?:wppilot|gobuildwp)_kit_/', $prefix . '_kit_', $text);
+        $text = (string) preg_replace('/(?<![A-Za-z0-9])(?:WPPILOT|GOBUILDWP)_KIT_/', strtoupper($prefix) . '_KIT_', $text);
         return (string) preg_replace('/(?<![A-Za-z0-9_])(?:wppilot|gobuildwp)-kit/', $prefix . '-kit', $text);
     }
 

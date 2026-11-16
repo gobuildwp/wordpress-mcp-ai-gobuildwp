@@ -33,8 +33,12 @@ if (!defined('ABSPATH')) {
  * jobs a caller steps by polling instead of waiting for WP-Cron.
  * 1.4 added require_cloud_request() and the host's `cloud-verified` extension point, for abilities
  * that run only when the host's cloud service calls them.
+ * 1.5 added public_name(), constant_value() and flag(), and the host's `public-name` and
+ * `cloud-name` extension points, so a kit spells every name the outside world sees (a result
+ * code, a wp-config constant, a folder, a file marker) in its own wppilot_kit_ form and a host
+ * that shipped the kit under older names keeps answering to them.
  */
-const API_VERSION = '1.4';
+const API_VERSION = '1.5';
 
 require_once __DIR__ . '/host.php';
 require_once __DIR__ . '/ledger/post-partial.php';
@@ -66,6 +70,58 @@ function has_host(): bool
     } catch (\LogicException) {
         return false;
     }
+}
+
+/**
+ * The name the host shows the outside world for one of the kit's own names.
+ *
+ * A kit spells a result code, a wp-config constant, a folder or a file marker in its own form
+ * (`wppilot_kit_feed_invalid`, `WPPILOT_KIT_DISABLE_2FA`, `wppilot-kit-protection`), which the
+ * exporter turns into the target plugin's. A host that shipped the kit before under other names
+ * maps them back through its `public-name` extension point, so sites, clients and wp-config files
+ * that know the old names keep working. Without a host, or a mapping, the name is returned as is.
+ */
+function public_name(string $name): string
+{
+    if (!has_host()) {
+        return $name;
+    }
+    $map = host()->extension('public-name');
+    if (is_callable($map)) {
+        $mapped = $map($name);
+        if (is_string($mapped) && $mapped !== '') {
+            return $mapped;
+        }
+    }
+    return $name;
+}
+
+/**
+ * The value of a wp-config constant the kit reads, under its own name or the host's public one
+ * (the kit's own name wins when both are defined); null when neither is defined.
+ */
+function constant_value(string $name): mixed
+{
+    foreach (array_unique([$name, public_name($name)]) as $constant) {
+        if (defined($constant)) {
+            return constant($constant);
+        }
+    }
+    return null;
+}
+
+/**
+ * Whether a wp-config switch is defined as true under the kit's own name or the host's public
+ * one. Either spelling turns it on, so an escape hatch an owner already wrote keeps working.
+ */
+function flag(string $name): bool
+{
+    foreach (array_unique([$name, public_name($name)]) as $constant) {
+        if (defined($constant) && constant($constant) === true) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -140,11 +196,12 @@ function require_cloud_request(): bool|WP_Error
     if (host()->extension('cloud-verified') === true) {
         return true;
     }
-    return new WP_Error(
-        'gobuildwp_cloud_pro_required',
-        __('This security action runs from GoBuildWP Cloud Pro. Open your site in GoBuildWP Cloud to use it.', domain: 'wppilot'),
-        ['status' => 403],
-    );
+    $cloud = host()->extension('cloud-name');
+    $message = is_string($cloud) && $cloud !== ''
+        /* translators: %1$s: the name of the plugin's cloud service. */
+        ? sprintf(__('This security action runs from %1$s Pro. Open your site in %1$s to use it.', domain: 'wppilot'), $cloud)
+        : __('This security action runs only when the plugin\'s cloud service calls it.', domain: 'wppilot');
+    return new WP_Error(public_name('wppilot_kit_cloud_pro_required'), $message, ['status' => 403]);
 }
 
 /**
@@ -488,7 +545,7 @@ function boot_failure(string $slug, \Throwable $error): string
 {
     $reason = sprintf('failed to load: %s', $error->getMessage());
     if (function_exists('error_log')) {
-        error_log(sprintf('GoBuildWP kit %s %s (%s:%d)', $slug, $reason, $error->getFile(), $error->getLine()));
+        error_log(sprintf('%s kit %s %s (%s:%d)', has_host() ? host()->id() : 'Unhosted', $slug, $reason, $error->getFile(), $error->getLine()));
     }
     return $reason;
 }

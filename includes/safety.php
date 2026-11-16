@@ -112,6 +112,22 @@ function wppilot_get_safety_profile(): string
  */
 function wppilot_effective_safety_profile(): string
 {
+    // Read Mode lowers every request to Read Only, above any site profile or token ceiling.
+    if (function_exists('wppilot_read_mode_enabled') && wppilot_read_mode_enabled()) {
+        return 'readonly';
+    }
+
+    return wppilot_safety_profile_before_read_mode();
+}
+
+/**
+ * The profile this request would have with Read Mode off: the site's, lowered by the token's ceiling.
+ *
+ * Read Mode judges its input-gated abilities (rest-request, run-wp-cli) against this, so turning
+ * Read Mode on never opens one the site's own profile keeps closed.
+ */
+function wppilot_safety_profile_before_read_mode(): string
+{
     $site = wppilot_get_safety_profile();
     $ceiling = function_exists('wppilot_agent_profile_ceiling') ? wppilot_agent_profile_ceiling() : '';
 
@@ -160,7 +176,12 @@ function wppilot_ability_is_readonly(WP_Ability $ability): bool
     }
 
     $annotations = is_array($meta['annotations'] ?? null) ? $meta['annotations'] : [];
-    return ($annotations['readonly'] ?? null) === true;
+    if (is_bool($annotations['readonly'] ?? null)) {
+        return $annotations['readonly'];
+    }
+    // Some plugins (WS Form) declare MCP's hint names instead of core's. A destructive hint wins,
+    // so a contradictory pair can never read as a read.
+    return ($annotations['readOnlyHint'] ?? null) === true && ($annotations['destructiveHint'] ?? null) !== true;
 }
 
 /**
@@ -197,7 +218,12 @@ function wppilot_ability_risk(WP_Ability $ability): string
 
     $meta = $ability->get_meta();
     $annotations = is_array($meta['annotations'] ?? null) ? $meta['annotations'] : [];
-    if (($annotations['destructive'] ?? null) === true || wppilot_ability_name_is_destructive($name)) {
+    if (
+        ($annotations['destructive'] ?? null) === true
+        // MCP's hint name, which some plugins (WS Form) declare in place of core's.
+        || ($annotations['destructiveHint'] ?? null) === true
+        || wppilot_ability_name_is_destructive($name)
+    ) {
         return 'destructive';
     }
 
@@ -223,9 +249,9 @@ function wppilot_ability_name_is_critical(string $name): bool
         'install-theme',
         'delete-theme',
         'database-query',
-        'insert-row',
-        'update-rows',
-        'delete-rows',
+        'db-insert-row',
+        'db-update-rows',
+        'db-delete-rows',
         'php-snippet',
         'code-snippets',
         'dynamic-shortcodes',
@@ -332,6 +358,11 @@ function wppilot_safety_profile_rank(string $profile): int
 
 function wppilot_safety_profile_allows_ability(WP_Ability $ability): bool
 {
+    $read_mode = function_exists('wppilot_read_mode_enabled') && wppilot_read_mode_enabled();
+    if ($read_mode && !wppilot_read_mode_allows_ability($ability)) {
+        return false;
+    }
+
     if (wppilot_ability_is_hub_protected($ability->get_name())) {
         return true;
     }
@@ -343,7 +374,11 @@ function wppilot_safety_profile_allows_ability(WP_Ability $ability): bool
         return false;
     }
 
-    $profile = wppilot_effective_safety_profile();
+    // An input-gated ability is judged by the profile without Read Mode; the permission gate then
+    // lets only a read call through (wppilot_read_mode_input_is_read()).
+    $profile = $read_mode && wppilot_read_mode_input_gated($ability->get_name())
+        ? wppilot_safety_profile_before_read_mode()
+        : wppilot_effective_safety_profile();
 
     // Checked before the risk class, because a read-only ability otherwise always passes: the
     // `readonly` annotation short-circuits wppilot_ability_risk() to `read` before it ever looks
@@ -393,6 +428,25 @@ function wppilot_safety_filter_ability_permission(
         return $permission;
     }
 
+    if (
+        function_exists('wppilot_read_mode_enabled')
+        && wppilot_read_mode_enabled()
+        && (
+            !wppilot_read_mode_allows_ability($ability)
+            || (wppilot_read_mode_input_gated($ability_name) && !wppilot_read_mode_input_is_read($ability_name, $input))
+        )
+    ) {
+        return wppilot_read_mode_ability_error($ability_name);
+    }
+
+    // Also reached by the legacy MCP adapter, which never passes through the gate pipeline.
+    if (function_exists('wppilot_output_guard_input_error')) {
+        $placeholder = wppilot_output_guard_input_error($ability, $input);
+        if ($placeholder instanceof WP_Error) {
+            return $placeholder;
+        }
+    }
+
     if (wppilot_ability_is_hub_protected($ability_name)) {
         return $permission;
     }
@@ -415,7 +469,20 @@ function wppilot_safety_filter_ability_permission(
         return $scope_error;
     }
 
+    $drafts_error = function_exists('wppilot_drafts_only_input_error') ? wppilot_drafts_only_input_error($ability_name, $input) : null;
+    if ($drafts_error !== null) {
+        return $drafts_error;
+    }
+
     if (!wppilot_safety_profile_allows_ability($ability)) {
+        if (function_exists('wppilot_read_mode_enabled') && wppilot_read_mode_enabled()) {
+            return wppilot_read_mode_ability_error($ability_name);
+        }
+        $ceiling_error = function_exists('wppilot_agent_ceiling_error') ? wppilot_agent_ceiling_error($ability_name) : null;
+        if ($ceiling_error !== null) {
+            return $ceiling_error;
+        }
+
         return new WP_Error(
             'wppilot_safety_profile_blocked',
             sprintf(
@@ -431,10 +498,19 @@ function wppilot_safety_filter_ability_permission(
     return $permission;
 }
 
-function wppilot_ability_requires_confirmation(WP_Ability $ability): bool
+/**
+ * @param mixed $input The call's input when known. A dry run (`dry_run:true` on an ability that
+ *        declares a `dry_run` input) writes nothing, so the risk class alone does not gate it; the
+ *        site owner's own always-ask and Hub rules still do.
+ */
+function wppilot_ability_requires_confirmation(WP_Ability $ability, mixed $input = null): bool
 {
     $risk = wppilot_ability_risk($ability);
-    if ($risk === 'critical' || $risk === 'destructive') {
+    if (($risk === 'critical' || $risk === 'destructive') && !wppilot_ability_call_is_dry_run($ability, $input)) {
+        return true;
+    }
+    // The always-ask list (Approvals screen) adds the requirement too, and is never session-covered.
+    if (function_exists('wppilot_confirmation_is_always_ask') && wppilot_confirmation_is_always_ask($ability->get_name())) {
         return true;
     }
 
@@ -508,8 +584,30 @@ function wppilot_safety_check_ability(WP_Ability $ability): bool|WP_Error
         return true;
     }
 
+    if (function_exists('wppilot_read_mode_enabled') && wppilot_read_mode_enabled()) {
+        return wppilot_read_mode_ability_error($ability->get_name());
+    }
+
     $profile = wppilot_effective_safety_profile();
     $profiles = wppilot_safety_profiles();
+    $connection_level = function_exists('wppilot_current_token_id') && wppilot_current_token_id() <= 0 && function_exists('wppilot_current_token_policy')
+        ? (wppilot_current_token_policy()['level'] ?? null)
+        : null;
+    if ($profile !== wppilot_get_safety_profile() && is_string($connection_level)) {
+        return new WP_Error(
+            'wppilot_safety_profile_blocked',
+            sprintf(
+                /* translators: 1: ability name, 2: connection level */
+                __(
+                    'Ability "%1$s" is blocked: the connection behind this request is at the level "%2$s". The site owner sets that level on the GoBuildWP Connect screen; do not retry.',
+                    domain: 'wppilot',
+                ),
+                $ability->get_name(),
+                $connection_level,
+            ),
+            ['status' => 403, 'ability' => $ability->get_name(), 'profile' => $profile, 'ceiling' => true, 'level' => $connection_level],
+        );
+    }
     if ($profile !== wppilot_get_safety_profile()) {
         return new WP_Error(
             'wppilot_safety_profile_blocked',
@@ -566,6 +664,18 @@ function wppilot_confirmation_required_error(WP_Ability $ability): WP_Error
         ),
         ['status' => 409, 'ability' => $ability->get_name(), 'risk' => wppilot_ability_risk($ability)],
     );
+}
+
+/**
+ * Whether a call asks for a dry run the ability itself declares. Only an explicit `true` counts,
+ * and only on an ability whose input schema has a `dry_run` property, so an undeclared flag can
+ * never talk a write out of its gate.
+ */
+function wppilot_ability_call_is_dry_run(WP_Ability $ability, mixed $input): bool
+{
+    return is_array($input)
+        && ($input['dry_run'] ?? null) === true
+        && wppilot_ability_schema_has_property($ability, property: 'dry_run');
 }
 
 function wppilot_ability_schema_has_property(WP_Ability $ability, string $property): bool

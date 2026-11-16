@@ -33,7 +33,7 @@ final class WporgStatusTest extends TestCase
         reset_state();
         delete_option(SI\WPORG_PLUGINS_OPTION);
         delete_option(SI\WPORG_THEMES_OPTION);
-        unset($GLOBALS['wppilot_test_themes']);
+        \Kit_Test_State::set_themes(null);
         TestNet::$plugins = [];
     }
 
@@ -41,7 +41,7 @@ final class WporgStatusTest extends TestCase
     {
         delete_option(SI\WPORG_PLUGINS_OPTION);
         delete_option(SI\WPORG_THEMES_OPTION);
-        unset($GLOBALS['wppilot_test_themes']);
+        \Kit_Test_State::set_themes(null);
         reset_state();
     }
 
@@ -185,10 +185,10 @@ final class WporgStatusTest extends TestCase
 
     public function test_themes_use_the_themes_api(): void
     {
-        $GLOBALS['wppilot_test_themes'] = [
+        \Kit_Test_State::set_themes([
             'twentyx' => ['Name' => 'Twenty X', 'Version' => '1.2'],
             'agency' => ['Name' => 'Agency', 'Version' => '2.0', 'UpdateURI' => 'https://vendor.example/agency'],
-        ];
+        ]);
         TestNet::$site_transients['update_themes'] = (object) ['response' => [], 'no_update' => [
             'twentyx' => (object) ['theme' => 'twentyx', 'url' => 'https://wordpress.org/themes/twentyx/', 'package' => 'https://downloads.wordpress.org/theme/twentyx.1.2.zip'],
         ]];
