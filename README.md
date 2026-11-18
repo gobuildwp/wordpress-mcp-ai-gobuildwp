@@ -13,11 +13,11 @@ Current releases: **GoBuildWP Free 1.21.0 / Pro 1.14.5**. Pro requires Free 1.18
 
 [![Download gobuildwp.zip](https://img.shields.io/badge/Download-gobuildwp.zip-6D28D9?style=for-the-badge)](https://github.com/gobuildwp/wordpress-mcp-ai-gobuildwp/releases/latest/download/gobuildwp.zip)
 
-**GoBuildWP turns your WordPress site into an MCP server.** Connect Claude, ChatGPT, Claude Code, Codex, Cursor or any other MCP client, and an AI agent can build and edit pages, Elementor layouts, Gutenberg blocks, menus, media and SEO metadata, check PageSpeed and security, and read your WooCommerce store, all through typed WordPress abilities that your user permissions, a safety profile and an undoable change ledger still govern. The free plugin in this repository is a complete WordPress MCP server and a free Elementor MCP server. [GoBuildWP Pro](https://gobuildwp.com/pro) adds WooCommerce writes, the other page builders, SEO suites, safe updates and backups. [GoBuildWP Cloud](https://app.gobuildwp.com) is an optional hosted link for many sites.
+**GoBuildWP turns your WordPress site into an MCP server.** Connect Claude, ChatGPT, Claude Code, Codex, Cursor or any other MCP client, and an AI agent can build and edit pages, Elementor layouts, Gutenberg blocks, menus, media and SEO metadata, check PageSpeed and security, and read your WooCommerce store, all through typed WordPress abilities that your user permissions, a safety profile and an undoable change ledger still govern. The free plugin in this repository is a complete WordPress MCP server and a free Elementor MCP server. [GoBuildWP Pro](https://gobuildwp.com/pro) adds WooCommerce writes, the other page builders, SEO suites, safe updates and backups. [GoBuildWP Cloud](https://app.gobuildwp.com) is an optional hosted link for many sites. ChatGPT users can also add [GoBuildWP for ChatGPT](https://chatgpt.com/plugins/plugin_asdk_app_6adbb21b3df48191bc9ee218927faf56) straight from the ChatGPT plugin directory ([how it works](#gobuildwp-for-chatgpt-add-it-from-the-chatgpt-plugin-directory)).
 
 > **GoBuildWP was previously called WPPilot.** It is the same plugin, with the same slug and settings, and existing installs keep working.
 
-Website: <https://gobuildwp.com> · Docs: <https://gobuildwp.com/docs> · Client setup guides: <https://gobuildwp.com/wordpress-mcp> · Video tutorials: <https://www.youtube.com/@Gobuildwpai> · Release notes on X: <https://x.com/gobuildwp>
+Website: <https://gobuildwp.com> · Docs: <https://gobuildwp.com/docs> · Client setup guides: <https://gobuildwp.com/wordpress-mcp> · ChatGPT plugin: <https://gobuildwp.com/chatgpt> · Video tutorials: <https://www.youtube.com/@Gobuildwpai> · Release notes on X: <https://x.com/gobuildwp>
 
 ---
 
@@ -250,7 +250,7 @@ Then run `/mcp` inside Claude Code and complete the browser sign-in.
 
 **Claude on the web and Claude Desktop.** On the web, open **Customize → Connectors → Add custom connector**. In Claude Desktop, open **Settings → Connectors → Add custom connector**. Paste `https://example.com/wp-json/mcp/wppilot-oauth` and sign in. The Connect screen also offers a `.mcpb` bundle for Claude Desktop.
 
-**ChatGPT** (WordPress MCP for ChatGPT). Open **Settings → Apps → Advanced settings → Developer mode**, then **Create app**, and use the OAuth URL above. This needs ChatGPT on the web and a site on public HTTPS. To reach several sites from ChatGPT through one link, use [GoBuildWP Cloud](#gobuildwp-cloud-every-site-behind-one-mcp-link).
+**ChatGPT** (WordPress MCP for ChatGPT). The quickest way in is the [GoBuildWP plugin in the ChatGPT directory](https://chatgpt.com/plugins/plugin_asdk_app_6adbb21b3df48191bc9ee218927faf56), which connects through GoBuildWP Cloud ([details](#gobuildwp-for-chatgpt-add-it-from-the-chatgpt-plugin-directory)). For a direct connection to one site instead, open **Settings → Apps → Advanced settings → Developer mode**, then **Create app**, and use the OAuth URL above. This needs ChatGPT on the web and a site on public HTTPS. To reach several sites from ChatGPT through one link, use [GoBuildWP Cloud](#gobuildwp-cloud-every-site-behind-one-mcp-link).
 
 **Codex CLI**
 
@@ -429,6 +429,25 @@ Where each builder keeps its layout, and what that means for an agent: [`docs/pa
 - **Limits:** GoBuildWP does not store backups or restore them. Starting a backup queues it in your backup plugin; it does not prove the backup completed or that it can be restored.
 
 [WordPress AI safe updates](https://gobuildwp.com/wordpress-ai-safe-updates)
+
+## GoBuildWP for ChatGPT: add it from the ChatGPT plugin directory
+
+GoBuildWP is listed in the ChatGPT plugin directory, so you can add it to ChatGPT without Developer mode or a custom MCP URL. ChatGPT talks to [GoBuildWP Cloud](#gobuildwp-cloud-every-site-behind-one-mcp-link), and Cloud talks to the GoBuildWP plugin on each of your sites.
+
+[![Add GoBuildWP to ChatGPT](https://img.shields.io/badge/Add_to-ChatGPT-6D28D9?style=for-the-badge)](https://chatgpt.com/plugins/plugin_asdk_app_6adbb21b3df48191bc9ee218927faf56)
+
+1. **Add GoBuildWP in ChatGPT** from [the plugin directory](https://chatgpt.com/plugins/plugin_asdk_app_6adbb21b3df48191bc9ee218927faf56). On a business workspace, an admin may need to allow it first.
+2. **Sign in to GoBuildWP Cloud** when ChatGPT asks, create a free account if you need one, and allow ChatGPT. Cloud Free covers up to 3 sites for one person.
+3. **Connect a WordPress site.** Install the free plugin from this repository, then open **GoBuildWP → Connect → GoBuildWP Cloud** in wp-admin. Pick **Read only** to start, approve, and confirm back in WordPress.
+4. **Ask in a chat.** Pick GoBuildWP and start with something small, such as a health check. ChatGPT lists your connected sites and works on the one you name.
+
+The plugin ships with three skills that tell ChatGPT how to work safely on WordPress:
+
+- **Connect your first site:** checks for connected sites, walks you through the wp-admin step and offers a read-only health check as the first job.
+- **Review and undo changes:** lists recent changes newest first, explains a change before and after, and undoes the one you name when the site's change record marks it reversible.
+- **One task across many sites:** on a Cloud plan that allows bulk work, runs a dry run first and shows which sites it would touch; nothing runs until you confirm, and each site's own approval rules still apply.
+
+ChatGPT can only do what each site's connection allows: Read only stays read-only, and ChatGPT never receives your WordPress password. A custom connection through Developer mode, with the Cloud link or your site's own MCP URL, keeps working where your ChatGPT account allows one. Full guide: <https://gobuildwp.com/chatgpt>
 
 ## GoBuildWP Cloud: every site behind one MCP link
 
